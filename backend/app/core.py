@@ -32,8 +32,8 @@ class StrategyIncompleteError(ValueError):
 
 
 def require_deterministic_strategy(config: dict[str, Any]) -> None:
-    if config.get("status") != "DETERMINISTIC":
-        raise StrategyIncompleteError("Strategy status is PARTIALLY_SPECIFIED; TBD rules must be explicitly defined before signals or trades can be generated.")
+    if config.get("status") not in {"DETERMINISTIC", "FULLY_SPECIFIED"}:
+        raise StrategyIncompleteError("Strategy implementation is not validated; signals and trades remain disabled.")
 
 
 def aggregate(bars: pd.DataFrame, timeframe: str) -> pd.DataFrame:
