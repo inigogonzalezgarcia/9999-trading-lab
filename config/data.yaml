@@ -1,0 +1,11 @@
+version: data_v1
+storage_timezone: UTC
+source_timestamp_semantics: bar_open
+supported_timeframes: [M1, M5, M15, H1]
+aggregation:
+  alignment_timezone: UTC
+  interval_closed: right
+  label: bar_close
+gap_policy: report_never_fill
+duplicate_policy: reject
+out_of_order_policy: sort_and_report
