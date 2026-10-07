@@ -1,12 +1,31 @@
-version: execution_v0
-status: TBD
-entry_model: TBD
-spread_scenarios:
-  optimistic: TBD
-  base: TBD
-  conservative: TBD
-slippage: TBD
-commission: TBD
-same_candle_stop_target: TBD
-gap_fill: TBD
-position_sizing: TBD
+version: execution_v1
+status: DETERMINISTIC_WITH_PROVIDER_SPREAD_REQUIRED
+entry_model: first_executable_m1_price_after_bos
+spread:
+  source: spread_pips_column
+  required: true
+  missing_policy: block_trade
+  conversion: instrument_pip_size
+slippage:
+  baseline_pips: 0.1
+  sensitivity_pips: [0.0, 0.1, 0.2, 0.5]
+commission:
+  baseline_per_lot: 0.0
+  unit: account_currency_per_lot
+  provider_value_overrides_baseline: true
+  avoid_double_counting_all_in_quotes: true
+same_candle_stop_target:
+  use_next_lower_timeframe_when_available: true
+  otherwise: STOP_FIRST
+exit_priority: [STOP_LOSS, TAKE_PROFIT, SESSION_EXPIRY]
+gap_fill: first_executable_price_after_signal
+missing_execution_data: DATA_GAP_NO_FILL
+position_sizing:
+  basis: R
+  baseline_risk_fraction: 0.005
+  sensitivity_risk_fractions: [0.0025, 0.005, 0.01]
+  max_trades_per_symbol_per_trading_date: 1
+  max_trades_global_per_trading_date: 2
+  max_concurrent_positions: 1
+session_end: "05:00"
+session_expiry_fill: first_executable_price_after_session_end
