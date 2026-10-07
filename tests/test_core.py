@@ -126,9 +126,9 @@ def test_spread_column_is_validated_and_reported(tmp_path):
     assert dataset.bars.spread_pips.iloc[0] == 0.8
 
 
-def test_v1_is_not_reported_fully_specified_before_engine_implementation():
+def test_v1_is_fully_specified_after_all_implementation_gates_pass():
     config = load_config(ROOT / "config" / "strategy_v1.yaml")
-    assert config["status"] == "IMPLEMENTATION_PENDING"
+    assert config["status"] == "FULLY_SPECIFIED"
 
 
 def test_fractal_is_available_only_after_two_right_bars_close():
