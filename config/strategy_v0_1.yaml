@@ -1,5 +1,6 @@
 version: strategy_v0_1
 status: PARTIALLY_SPECIFIED
+methodology: institutional_fx_liquidity_market_structure_research_hypothesis
 instruments: [EURUSD, GBPUSD]
 timezones:
   reference: Europe/Madrid
@@ -12,33 +13,37 @@ preparation_time_can_trade: false
 structure:
   external_timeframe: H1
   internal_timeframe: M15
-  swing_high_definition: TBD
-  swing_low_definition: TBD
-  minimum_swing_candles: TBD
-  fractal_lookback: TBD
-  equal_high_low_policy: TBD
-  structure_price_basis: TBD
+  swing_algorithm: strict_fractal
+  swing_left_bars: 2
+  swing_right_bars: 2
+  swing_price_basis: wick
+  equal_high_low_policy: separate_experimental_feature
   minimum_displacement: TBD
-  external_structure_algorithm: TBD
-  internal_structure_algorithm: TBD
+  external_structure_algorithm: confirmed_higher_high_higher_low_or_lower_low_lower_high
+  internal_structure_algorithm: confirmed_higher_high_higher_low_or_lower_low_lower_high
 bias:
-  algorithm: TBD
-  h1_m15_relationship: TBD
+  algorithm: h1_direction_with_m15_pullback
+  pullback_state: TBD
 liquidity:
-  enabled_types: [swing_high, swing_low]
+  enabled_types: [H1_swing_high, H1_swing_low, M15_swing_high, M15_swing_low]
   relevance_rule: TBD
-  sweep_confirmation: TBD
-  penetration_threshold: TBD
-  reclaim_rule: TBD
+  sweep_confirmation: same_completed_candle_trade_through_and_close_back
+  penetration_threshold: zero_price_cross
+  reclaim_rule: close_back_beyond_level
   previous_day_session_equal_high_low: false
+  equal_high_low:
+    enabled: false
+    tolerance_atr_multiple: 0.1
+    atr_timeframe: M15
+    atr_period: 14
 zones:
   enabled: false
-  algorithm: TBD
+  algorithm: last_opposing_candle_before_atr_displacement_and_bos
   origin_candles: TBD
   boundaries: TBD
   wick_body_policy: TBD
   displacement: TBD
-  freshness: TBD
+  freshness: fresh_until_first_post_creation_trade_into_zone
   maximum_age: TBD
   mitigation: TBD
   invalidation: TBD
@@ -48,17 +53,19 @@ zones:
 confirmation:
   allowed: [BOS, two_leg]
   bos:
-    break_basis: TBD
-    penetration_threshold: TBD
-    timeframe: TBD
-    structural_point_predates_sweep: TBD
+    break_basis: M15_close
+    penetration_threshold: close_strictly_beyond_level
+    timeframe: M15
+    structural_point_predates_sweep: true
     timeout: TBD
   two_leg:
-    first_leg: TBD
+    enabled: false
+    hypothesis_name: TWO_LEG_V1
+    first_leg: post_sweep_directional_displacement
     retracement: TBD
-    second_leg: TBD
+    second_leg: directional_move_then_bos
     structural_relationship: TBD
-    entry: TBD
+    entry: after_bos
     timeout: TBD
 execution:
   entry_model: TBD
@@ -81,3 +88,7 @@ evaluation:
   walk_forward_test_months: TBD
   monte_carlo_simulations: 1000
   classification_thresholds: TBD
+variants:
+  A_sweep_zone_bos: {enabled: false, status: TBD}
+  B_sweep_two_leg: {enabled: false, status: TBD}
+  C_sweep_two_leg_bos: {enabled: false, status: TBD}
