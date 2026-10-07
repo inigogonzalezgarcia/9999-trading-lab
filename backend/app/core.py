@@ -8,14 +8,16 @@ import numpy as np
 import pandas as pd
 import yaml
 from .data import Dataset, aggregate_bars, load_market_data
-from .timezones import convert_timestamp, scheduled_observations
+from .timezones import convert_timestamp, scheduled_observations, validate_observation_window_config
 
 REQUIRED = ["timestamp", "open", "high", "low", "close", "volume"]
 
 
 def load_config(path: str | Path) -> dict[str, Any]:
     with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+    validate_observation_window_config(config)
+    return config
 
 
 def convert_time(timestamp: str | pd.Timestamp, timezone: str) -> str:
