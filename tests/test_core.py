@@ -236,6 +236,10 @@ def test_synthetic_positive_signal_reaches_trade_and_exit_deterministically():
     no_retrace.loc[22, ["open", "high", "low", "close"]] = [1.1001, 1.1001, 1.1000, 1.1001]
     no_retrace.loc[23, ["open", "high", "low", "close"]] = [1.1001, 1.1001, 1.1000, 1.1001]
     assert _candidate_from_sweep(no_retrace, m1, h1, h1_swings, sweep, m15_swings, config, "EURUSD")["candidate_status"] == "TWO_LEG_TIMEOUT"
+    developing = _candidate_from_sweep(no_retrace.iloc[:24], m1, h1, h1_swings, sweep, m15_swings, config, "EURUSD")
+    assert developing["candidate_status"] == "TWO_LEG_TIMEOUT"
+    assert developing["zone"]["current_state"] == "CONFIRMED"
+    assert pd.Timestamp(developing["zone"]["confirmation_timestamp"]) <= no_retrace.timestamp.iloc[23]
 
     no_bos = m15.copy()
     no_bos.loc[23, "close"] = 1.1001
