@@ -48,7 +48,14 @@ def _csv(spread: bool) -> bytes:
     return ("\n".join(lines) + "\n").encode()
 
 
-def test_api_keeps_backtest_blocked_and_returns_reproducibility_metadata():
+def test_api_pending_configuration_still_blocks_backtest_and_returns_metadata(monkeypatch):
+    def pending_loader(path):
+        result = read_config(path)
+        if Path(path).name == "strategy_v1.yaml":
+            result["status"] = "IMPLEMENTATION_PENDING"
+        return result
+
+    monkeypatch.setattr(main, "load_config", pending_loader)
     client = TestClient(main.app)
     response = client.post("/api/backtest", data={"symbol": "EURUSD", "timeframe": "M1"},
                            files={"file": ("SYNTHETIC_TEST_DATA.csv", _csv(False), "text/csv")})
@@ -61,6 +68,18 @@ def test_api_keeps_backtest_blocked_and_returns_reproducibility_metadata():
     assert result["reproducibility"]["config_hash"]
     assert result["reproducibility"]["timezone_database_version"]["version"]
     assert result["reproducibility"]["software_revision"].startswith("source-sha256:")
+
+
+def test_api_uses_fully_specified_configuration_for_research_backtest():
+    client = TestClient(main.app)
+    response = client.post("/api/backtest", data={"symbol": "EURUSD", "timeframe": "M1"},
+                           files={"file": ("SYNTHETIC_TEST_DATA.csv", _csv(True), "text/csv")})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["strategy_status"] == "FULLY_SPECIFIED"
+    assert result["backtest_blocked"] is False
+    assert result["metrics"] is not None
+    assert result["reproducibility"]["strategy_version"] == "1.0"
 
 
 def test_api_preserves_missing_spread_candidate_without_trade(monkeypatch):
