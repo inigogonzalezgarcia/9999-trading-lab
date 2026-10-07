@@ -1,0 +1,12 @@
+version: execution_v0
+status: TBD
+entry_model: TBD
+spread_scenarios:
+  optimistic: TBD
+  base: TBD
+  conservative: TBD
+slippage: TBD
+commission: TBD
+same_candle_stop_target: TBD
+gap_fill: TBD
+position_sizing: TBD
