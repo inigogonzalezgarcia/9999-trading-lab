@@ -1,11 +1,20 @@
 version: execution_v1
-status: DETERMINISTIC_WITH_PROVIDER_SPREAD_REQUIRED
+status: DETERMINISTIC
 entry_model: first_executable_m1_price_after_bos
 spread:
-  source: spread_pips_column
-  required: true
-  missing_policy: block_trade
+  priority: [historical_provider, fixed_configured]
+  historical_column: spread_pips
+  fixed_fallback_pips: null
+  missing_policy: {candidate_status: SPREAD_DATA_UNAVAILABLE, source_label: NO_SPREAD_DATA, execute: false}
+  report_source_labels: [HISTORICAL_SPREAD, FIXED_CONFIGURED_SPREAD, NO_SPREAD_DATA]
   conversion: instrument_pip_size
+  parameter_metadata:
+    fixed_fallback_pips:
+      type: number_or_null
+      default: null
+      allowed_range: ">=0 or null"
+      description: Explicit fixed spread in pips used only when provider historical spread is absent.
+      rationale: Null means no fallback is configured; missing spread then blocks execution without inventing a cost.
 slippage:
   baseline_pips: 0.1
   sensitivity_pips: [0.0, 0.1, 0.2, 0.5]
