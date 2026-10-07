@@ -1,0 +1,83 @@
+version: strategy_v0_1
+status: PARTIALLY_SPECIFIED
+instruments: [EURUSD, GBPUSD]
+timezones:
+  reference: Europe/Madrid
+  market_analysis: America/New_York
+preparation_time: "01:50"
+observation_times: ["02:30", "03:30", "04:00"]
+observation_tolerance_minutes: 0
+observation_mode: discrete_exact
+preparation_time_can_trade: false
+structure:
+  external_timeframe: H1
+  internal_timeframe: M15
+  swing_high_definition: TBD
+  swing_low_definition: TBD
+  minimum_swing_candles: TBD
+  fractal_lookback: TBD
+  equal_high_low_policy: TBD
+  structure_price_basis: TBD
+  minimum_displacement: TBD
+  external_structure_algorithm: TBD
+  internal_structure_algorithm: TBD
+bias:
+  algorithm: TBD
+  h1_m15_relationship: TBD
+liquidity:
+  enabled_types: [swing_high, swing_low]
+  relevance_rule: TBD
+  sweep_confirmation: TBD
+  penetration_threshold: TBD
+  reclaim_rule: TBD
+  previous_day_session_equal_high_low: false
+zones:
+  enabled: false
+  algorithm: TBD
+  origin_candles: TBD
+  boundaries: TBD
+  wick_body_policy: TBD
+  displacement: TBD
+  freshness: TBD
+  maximum_age: TBD
+  mitigation: TBD
+  invalidation: TBD
+  multiple_zone_policy: TBD
+  liquidity_distance: TBD
+  sequence_rule: TBD
+confirmation:
+  allowed: [BOS, two_leg]
+  bos:
+    break_basis: TBD
+    penetration_threshold: TBD
+    timeframe: TBD
+    structural_point_predates_sweep: TBD
+    timeout: TBD
+  two_leg:
+    first_leg: TBD
+    retracement: TBD
+    second_leg: TBD
+    structural_relationship: TBD
+    entry: TBD
+    timeout: TBD
+execution:
+  entry_model: TBD
+  stop_model: TBD
+  target_model: TBD
+  risk_per_trade: TBD
+  maximum_trades_per_day: TBD
+  setup_expiry: TBD
+  invalidation_rules: TBD
+  news_filter: TBD
+cost_scenarios:
+  optimistic: {spread_pips: TBD, slippage_pips: TBD, commission_per_lot: TBD}
+  base: {spread_pips: TBD, slippage_pips: TBD, commission_per_lot: TBD}
+  conservative: {spread_pips: TBD, slippage_pips: TBD, commission_per_lot: TBD}
+evaluation:
+  in_sample: TBD
+  validation: TBD
+  out_of_sample: TBD
+  walk_forward_train_months: TBD
+  walk_forward_test_months: TBD
+  monte_carlo_simulations: 1000
+  classification_thresholds: TBD
