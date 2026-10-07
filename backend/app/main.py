@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 from .core import load_config, metrics
 from .data import DataQualityError, load_market_data
 from .timezones import scheduled_observations, timezone_database_version
@@ -40,17 +41,21 @@ async def run_backtest(file: UploadFile=File(...),symbol: str=Form("EURUSD"),tim
         else:
             data_by_symbol={symbol: ds.bars}
         execution=load_config(ROOT/"config"/"execution.yaml")
-        first_local_date=ds.bars.timestamp.min().tz_convert(cfg["timezones"]["reference"]).date().isoformat()
-        schedule=scheduled_observations(first_local_date,cfg)
+        local_dates=ds.bars.timestamp.dt.tz_convert(cfg["timezones"]["reference"]).dt.date
+        schedule=[]
+        for day in pd.date_range(min(local_dates), max(local_dates), freq="D"):
+            schedule.extend(scheduled_observations(day.date().isoformat(),cfg))
         timezone_version=timezone_database_version()
+        execution=load_config(ROOT/"config"/"execution.yaml")
+        reproducibility={"dataset_version":ds.version,"dataset_date_range_utc":{"start":ds.bars.timestamp.min().isoformat(),"end":ds.bars.timestamp.max().isoformat()},"strategy_version":cfg["strategy_version"],"strategy_config":cfg,"execution_config":execution,"timezone_config":cfg["timezones"],"timezone_database":timezone_version,"software_version":"0.1.0"}
         if timeframe != "M1":
             raise HTTPException(422,"Strategy V1 requires M1 data for causal fills and execution costs")
         if cfg["status"] != "FULLY_SPECIFIED":
-            return {"strategy_version":cfg["strategy_version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The V1 engine is not yet validated; no trades or performance results were generated.","quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"signal_count":None,"trades":[],"metrics":None,"report":None}
+            return {"strategy_version":cfg["strategy_version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The V1 engine is not yet validated; no trades or performance results were generated.","quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"signal_count":None,"trades":[],"metrics":None,"report":None}
         result=run_v1_portfolio(data_by_symbol,cfg,execution)
         if symbol != "PORTFOLIO":
             result["symbol"]=symbol
-        result.update({"backtest_blocked":False,"quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"metrics":metrics(result["trades"]),"report":{"spread_sources":result["spread_sources"],"candidate_count":result["candidate_count"],"executable_trade_count":result["signal_count"],"timezone_database":timezone_version,"strategy_version":cfg["strategy_version"],"execution_version":execution["version"]}})
+        result.update({"backtest_blocked":False,"quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"metrics":metrics(result["trades"]),"report":{"spread_sources":result["spread_sources"],"candidate_count":result["candidate_count"],"executable_trade_count":result["signal_count"],"timezone_database":timezone_version,"strategy_version":cfg["strategy_version"],"execution_version":execution["version"]}})
         return result
     except DataQualityError as e:
         raise HTTPException(422, {"detail": str(e), "quality": e.report}) from e
