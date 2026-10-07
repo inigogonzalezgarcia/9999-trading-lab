@@ -28,7 +28,7 @@ function App() {
     </form>
     {err && <p className="error">{err}</p>}
     {result && <>
-      <div className="notice"><strong>Strategy status: {result.strategy_status}</strong><p>{result.blocked_reason}</p><p>The original strategy rules remain partially specified. No signals, trades, or performance claims were generated.</p></div>
+      <div className="notice"><strong>Strategy status: {result.strategy_status}</strong><p>{result.blocked_reason}</p><p>The deterministic V1 rules are documented, but no signals, trades, or performance claims are generated until the causal engine is implemented and validated.</p></div>
       <h2>Data quality</h2><pre>{JSON.stringify(result.quality, null, 2)}</pre>
       <h2>Configured schedule</h2><p>Preparation is reference only. Observation points are exact Europe/Madrid timestamps.</p>
       <div className="table"><table><thead><tr><th>Type</th><th>Europe/Madrid</th><th>UTC</th><th>America/New_York</th></tr></thead><tbody>{result.scheduled_observations.map((item: any) => <tr key={item.madrid}><td>{item.kind}</td><td>{item.madrid}</td><td>{item.utc}</td><td>{item.new_york}</td></tr>)}</tbody></table></div>
