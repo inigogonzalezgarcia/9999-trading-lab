@@ -10,6 +10,7 @@ from backend.app.core import (
     load_config,
     scheduled_observations,
 )
+from backend.app.data import DataQualityError, aggregate_bars, bars_available_at, load_market_data
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,11 +22,33 @@ def test_dst_conversion_is_iana_aware():
 
 
 def test_aggregation_labels_close():
-    ts = pd.date_range("2024-01-01", periods=10, freq="min", tz="UTC")
+    ts = pd.date_range("2024-01-01T00:01:00Z", periods=10, freq="min")
     bars = pd.DataFrame({"timestamp": ts, "open": range(10), "high": range(10), "low": range(10), "close": range(10), "volume": 1})
-    out = aggregate(bars, "M5")
+    out = aggregate_bars(bars, "M5")
     assert out.timestamp.iloc[0] == pd.Timestamp("2024-01-01T00:05Z")
     assert out.close.iloc[0] == 4 and out.volume.iloc[0] == 5
+
+
+def test_source_open_timestamps_become_utc_close_timestamps(tmp_path):
+    path = tmp_path / "bars.csv"
+    path.write_text("timestamp,open,high,low,close,volume\n2024-01-01T00:00:00Z,1,1.1,0.9,1.05,2\n")
+    dataset = load_market_data(path, timeframe="M1")
+    assert dataset.bars.timestamp.iloc[0] == pd.Timestamp("2024-01-01T00:01:00Z")
+    assert dataset.quality["source_timestamp_semantics"] == "bar_open"
+
+
+def test_duplicate_normalized_timestamps_are_rejected(tmp_path):
+    path = tmp_path / "duplicate.csv"
+    row = "2024-01-01T00:00:00Z,1,1.1,0.9,1.05,2"
+    path.write_text(f"timestamp,open,high,low,close,volume\n{row}\n{row}\n")
+    with pytest.raises(DataQualityError):
+        load_market_data(path)
+
+
+def test_future_candles_are_not_available_at_prior_decision_time():
+    bars = pd.DataFrame({"timestamp": pd.date_range("2024-01-01", periods=3, freq="min", tz="UTC"), "close": [1, 2, 3]})
+    visible = bars_available_at(bars, "2024-01-01T00:01:00Z")
+    assert visible.close.tolist() == [1, 2]
 
 
 def test_exact_schedule_converts_with_both_dst_calendars():
