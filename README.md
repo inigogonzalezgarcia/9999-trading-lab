@@ -41,7 +41,7 @@ No missing candles are generated. Data validation reports duplicates, order, and
 
 ## Strategy and reproducibility
 
-The machine-readable strategy state is [config/strategy_v0_1.yaml](config/strategy_v0_1.yaml). The complete ambiguity register is in [STRATEGY_SPEC.md](STRATEGY_SPEC.md); data semantics are in [DATA_SPEC.md](DATA_SPEC.md). Rules marked TBD stay disabled. Madrid and New York timestamps use IANA zones and account for DST transitions.
+The machine-readable strategy state is [config/strategy_v0_1.yaml](config/strategy_v0_1.yaml). The complete rule and ambiguity register is in [docs/STRATEGY_SPEC.md](docs/STRATEGY_SPEC.md); decisions are tracked in [docs/DECISION_LOG.md](docs/DECISION_LOG.md), data semantics in [DATA_SPEC.md](DATA_SPEC.md), and research safeguards in [RESEARCH_METHOD.md](RESEARCH_METHOD.md). Rules marked TBD stay disabled. Madrid and New York timestamps use IANA zones and account for DST transitions.
 
 ## Tests
 
