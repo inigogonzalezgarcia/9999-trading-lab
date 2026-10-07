@@ -78,12 +78,15 @@ def load_market_data(
     duplicates = int(frame.timestamp.duplicated(keep=False).sum())
     for column in REQUIRED_COLUMNS[1:]:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    if "spread_pips" in frame.columns:
+        frame["spread_pips"] = pd.to_numeric(frame["spread_pips"], errors="coerce")
     numeric = frame[REQUIRED_COLUMNS[1:]].to_numpy(dtype=float)
     finite = np.isfinite(numeric).all(axis=1)
     prices_positive = (frame[["open", "high", "low", "close"]] > 0).all(axis=1)
     ohlc_valid = (frame.low <= frame[["open", "close"]].min(axis=1)) & (frame.high >= frame[["open", "close"]].max(axis=1)) & (frame.low <= frame.high)
     volume_valid = frame.volume >= 0
-    invalid_rows = int((~finite | ~prices_positive.to_numpy() | ~ohlc_valid.to_numpy() | ~volume_valid.to_numpy()).sum())
+    spread_valid = frame.spread_pips.notna() & np.isfinite(frame.spread_pips) & (frame.spread_pips >= 0) if "spread_pips" in frame.columns else pd.Series(True, index=frame.index)
+    invalid_rows = int((~finite | ~prices_positive.to_numpy() | ~ohlc_valid.to_numpy() | ~volume_valid.to_numpy() | ~spread_valid.to_numpy()).sum())
 
     ordered = frame.sort_values("timestamp").reset_index(drop=True)
     deltas = ordered.timestamp.diff().dropna()
@@ -96,6 +99,7 @@ def load_market_data(
         "start_utc": ordered.timestamp.min().isoformat(), "end_utc": ordered.timestamp.max().isoformat(),
         "timezone_normalized": "UTC", "source_timezone": source_timezone or "embedded_offsets",
         "source_timestamp_semantics": timestamp_semantics, "internal_timestamp_semantics": "bar_close",
+        "spread_available": "spread_pips" in ordered.columns,
         "dataset_version": digest, "warnings": [], "errors": [],
     }
     if duplicates:
