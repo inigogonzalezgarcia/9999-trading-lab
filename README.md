@@ -29,7 +29,7 @@ Open http://localhost:5173. Upload a CSV or Parquet file to inspect data quality
 
 ## Dataset format
 
-Required validation columns: `timestamp,open,high,low,close,volume`. V1 execution also requires a valid provider-supplied `spread_pips` value; trades are blocked when that field is absent. Example CSV:
+Required validation columns: `timestamp,open,high,low,close,volume`. For V1 execution, historical `spread_pips` is preferred; a fixed fallback may be set explicitly in `config/execution.yaml`. Without either source, the candidate is logged and excluded from executable trades. Example CSV:
 
 ```csv
 timestamp,open,high,low,close,volume,spread_pips
