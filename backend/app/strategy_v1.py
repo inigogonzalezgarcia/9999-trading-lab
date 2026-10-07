@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from hashlib import sha256
+import json
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 from zoneinfo import ZoneInfo
@@ -16,12 +18,100 @@ import pandas as pd
 
 from .data import aggregate_bars
 from .execution import resolve_spread
-from .timezones import observation_windows_at
+from .timezones import observation_windows_at, timezone_database_version
 
 
 def _stable_id(key: str) -> str:
     """Stable event identity for reproducible reruns of identical inputs."""
     return str(uuid5(NAMESPACE_URL, key))
+
+
+def canonical_config_hash(config: dict[str, Any], execution_config: dict[str, Any] | None = None) -> str:
+    material = {"strategy": config, "execution": execution_config} if execution_config is not None else config
+    payload = json.dumps(material, sort_keys=True, separators=(",", ":"), default=str)
+    return sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _normalized_rejection(status: str | None) -> str | None:
+    return {
+        "CANDIDATE_SETUP": None, "EXECUTED": None,
+        "NOT_TRADEABLE_OUTSIDE_OBSERVATION_WINDOW": "ENTRY_OUTSIDE_WINDOW",
+        "STOP_DISTANCE_EXCEEDED": "INVALID_STOP_DISTANCE",
+        "WINDOW_TRADE_LIMIT_REJECTED": "RISK_LIMIT_SYMBOL",
+        "RISK_LIMIT_REJECTED": "RISK_LIMIT_GLOBAL",
+        "CONCURRENT_POSITION_REJECTED": "CONCURRENT_POSITION_LIMIT",
+        "SETUP_LIFETIME_EXPIRED": "SETUP_TIMEOUT",
+        "SPREAD_DATA_UNAVAILABLE": "SPREAD_DATA_UNAVAILABLE",
+        "DATA_GAP": "DATA_GAP",
+    }.get(status, status)
+
+
+def _rejected_sweep_candidate(symbol: str, sweep: dict[str, Any], reason: str,
+                             timestamp: pd.Timestamp) -> dict[str, Any]:
+    candidate_id = _stable_id(f"candidate|{symbol}|{sweep['direction']}|{sweep['breach_time'].isoformat()}|{sweep['level']}")
+    state = "EXPIRED" if reason in {"TWO_LEG_TIMEOUT", "BOS_TIMEOUT", "SETUP_TIMEOUT", "ZONE_EXPIRED"} else "INVALIDATED"
+    state_events = []
+    for sequence_index, (name, event_time) in enumerate((("LIQUIDITY_SWEEP_DETECTED", sweep["confirmation_time"]), (state, timestamp))):
+        state_events.append({"event_id": _stable_id(f"{candidate_id}|{name}|{pd.Timestamp(event_time).isoformat()}"),
+                             "candidate_id": candidate_id, "state": name, "sequence_index": sequence_index,
+                             "timestamp": pd.Timestamp(event_time).isoformat(), "detection_timestamp": pd.Timestamp(event_time).isoformat(),
+                             "reason": reason if name == state else None})
+    return {"candidate_id": candidate_id, "symbol": symbol, "direction": sweep["direction"],
+            "state": state, "candidate_status": reason, "rejection_reason": reason,
+            "rejection_timestamp": pd.Timestamp(timestamp).isoformat(),
+            "liquidity_level": sweep["level"], "sweep_timestamp": sweep["breach_time"].isoformat(),
+            "sweep_confirmation_timestamp": sweep["confirmation_time"].isoformat(),
+            "sweep_extreme": sweep["extreme"], "state_events": state_events}
+
+
+def build_daily_contexts(
+    data_by_symbol: dict[str, pd.DataFrame], strategy_config: dict[str, Any],
+    dataset_hash: str | None = None, execution_config: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Create a 01:50 Madrid snapshot using only candles closed by that instant."""
+    madrid = ZoneInfo(strategy_config["timezones"]["reference"])
+    tzdb = timezone_database_version()
+    config_hash = canonical_config_hash(strategy_config, execution_config)
+    contexts: list[dict[str, Any]] = []
+    for symbol, raw in sorted(data_by_symbol.items()):
+        bars = raw.sort_values("timestamp").reset_index(drop=True)
+        if bars.empty:
+            continue
+        local_dates = bars.timestamp.dt.tz_convert(madrid).dt.date
+        for trading_date in sorted(set(local_dates)):
+            prep_local = pd.Timestamp(datetime.combine(trading_date, time.fromisoformat(strategy_config["preparation"]["time"]))).tz_localize(madrid)
+            prep_utc = prep_local.tz_convert("UTC")
+            visible = bars.loc[bars.timestamp <= prep_utc].copy().reset_index(drop=True)
+            m15, h1 = aggregate_bars(visible, "M15"), aggregate_bars(visible, "H1")
+            m15_swings = confirmed_fractal_swings(m15, 2, 2) if len(m15) >= 5 else []
+            h1_swings = confirmed_fractal_swings(h1, 2, 2) if len(h1) >= 5 else []
+            bias, premise = classify_h1_bias(h1_swings, len(h1)-1) if len(h1) else ("UNDEFINED", None)
+            levels = _liquidity_level_history(m15, h1_swings, m15_swings, float(strategy_config["liquidity"]["equal_level_tolerance_atr"]))
+            known_levels = [
+                {"level_id": level["cluster_id"], "symbol": symbol, "timeframes": level["timeframes"], "kind": level["kind"],
+                 "price": level["price"], "state": "ACTIVE", "created_at": level["effective_from"].isoformat(),
+                 "source_constituents": level["constituents"]}
+                for level in levels if level["effective_from"] <= prep_utc
+            ]
+            active_zones = []
+            if len(m15) >= 20 and len(h1) >= 6:
+                prior_setups = generate_v1_candidates(visible, symbol, strategy_config)
+                active_zones = [candidate["zone"] for candidate in prior_setups
+                                if candidate.get("zone", {}).get("current_state") == "CONFIRMED"
+                                and pd.Timestamp(candidate["zone"]["displacement_timestamp"]) <= prep_utc]
+                active_zones = sorted({zone["zone_id"]: zone for zone in active_zones}.values(), key=lambda zone: zone["zone_id"])
+            payload_key = f"{dataset_hash or 'unknown'}|{strategy_config['strategy_version']}|{config_hash}|{tzdb['version']}|{symbol}|{trading_date.isoformat()}"
+            contexts.append({"context_id": _stable_id("daily-context|" + payload_key), "symbol": symbol,
+                             "trading_date": trading_date.isoformat(), "created_at": prep_utc.isoformat(),
+                             "strategy_version": strategy_config["strategy_version"], "dataset_hash": dataset_hash,
+                             "config_hash": config_hash, "timezone_database_version": tzdb,
+                             "available_data_through": None if visible.empty else visible.timestamp.max().isoformat(),
+                             "h1_structure": [{"kind": swing.kind, "price": swing.price, "formed_at": swing.timestamp.isoformat(), "confirmed_at": swing.available_at.isoformat()} for swing in h1_swings],
+                             "m15_structure": [{"kind": swing.kind, "price": swing.price, "formed_at": swing.timestamp.isoformat(), "confirmed_at": swing.available_at.isoformat()} for swing in m15_swings],
+                             "h1_bias": bias, "h1_premise": premise, "liquidity_levels": known_levels,
+                             "active_zones": active_zones,
+                             "initial_state": "PREPARED"})
+    return contexts
 
 
 @dataclass(frozen=True)
@@ -162,6 +252,110 @@ def _liquidity_level_history(m15: pd.DataFrame, h1_swings: list[Swing], m15_swin
     return history
 
 
+def build_liquidity_lifecycle_events(
+    m1: pd.DataFrame, m15: pd.DataFrame, levels: list[dict[str, Any]], symbol: str,
+) -> list[dict[str, Any]]:
+    """Emit level state transitions at the first candle close that proves them."""
+    events: list[dict[str, Any]] = []
+    for level in levels:
+        level_id = level["cluster_id"]
+        price = float(level["price"])
+        kind = level["kind"]
+        state = "ACTIVE"
+        events.append({"event_id": _stable_id(f"{level_id}|ACTIVE|{level['effective_from'].isoformat()}"),
+                       "level_id": level_id, "symbol": symbol, "timeframe": "+".join(level["timeframes"]),
+                       "level_price": price, "level_type": kind, "previous_state": None, "new_state": state,
+                       "detection_timestamp": level["effective_from"].isoformat(),
+                       "source_candle_timestamp": level["effective_from"].isoformat(), "source_timeframe": "+".join(level["timeframes"]),
+                       "metadata": {"constituents": level["constituents"]}})
+        lo = int(m1.timestamp.searchsorted(level["effective_from"], side="right"))
+        hi = len(m1) if level["superseded_at"] is None else int(m1.timestamp.searchsorted(level["superseded_at"], side="left"))
+        for i in range(lo, hi):
+            bar = m1.iloc[i]
+            touched = float(bar.low) <= price if kind == "LOW" else float(bar.high) >= price
+            if not touched:
+                continue
+            touch_time = pd.Timestamp(bar.timestamp)
+            events.append({"event_id": _stable_id(f"{level_id}|TOUCHED|{touch_time.isoformat()}"),
+                           "level_id": level_id, "symbol": symbol, "timeframe": "+".join(level["timeframes"]),
+                           "level_price": price, "level_type": kind, "previous_state": "ACTIVE", "new_state": "TOUCHED",
+                           "detection_timestamp": touch_time.isoformat(), "source_candle_timestamp": touch_time.isoformat(),
+                           "source_timeframe": "M1", "metadata": {"wick_low": float(bar.low), "wick_high": float(bar.high)}})
+            m15_index = int(m15.timestamp.searchsorted(touch_time, side="left"))
+            if m15_index >= len(m15):
+                break
+            confirm_bar = m15.iloc[m15_index]
+            close = float(confirm_bar.close)
+            swept = close > price if kind == "LOW" else close < price
+            invalidated = close < price if kind == "LOW" else close > price
+            if swept or invalidated:
+                new_state = "SWEPT" if swept else "INVALIDATED"
+                confirm_time = pd.Timestamp(confirm_bar.timestamp)
+                events.append({"event_id": _stable_id(f"{level_id}|{new_state}|{confirm_time.isoformat()}"),
+                               "level_id": level_id, "symbol": symbol, "timeframe": "+".join(level["timeframes"]),
+                               "level_price": price, "level_type": kind, "previous_state": "TOUCHED", "new_state": new_state,
+                               "detection_timestamp": confirm_time.isoformat(), "source_candle_timestamp": confirm_time.isoformat(),
+                               "source_timeframe": "M15", "metadata": {"m15_close": close, "m1_breach_timestamp": touch_time.isoformat()}})
+            break
+    events.sort(key=lambda event: (event["detection_timestamp"], event["level_id"], event["new_state"]))
+    return events
+
+
+def build_zone_lifecycle(m15: pd.DataFrame, symbol: str, direction: str, source_index: int,
+                         confirmation_index: int, proximal: float, distal: float,
+                         sweep_id: str, expiry_bars: int) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Describe a zone's observable lifecycle using completed M15 candles only."""
+    source = m15.iloc[source_index]
+    confirmed = m15.iloc[confirmation_index]
+    zone_id = _stable_id(f"zone|{symbol}|{direction}|{pd.Timestamp(source.timestamp).isoformat()}|{proximal}|{distal}|{sweep_id}")
+    state = "CONFIRMED"
+    events = [{"event_id": _stable_id(f"{zone_id}|CREATED|{pd.Timestamp(confirmed.timestamp).isoformat()}"),
+               "zone_id": zone_id, "symbol": symbol, "direction": direction, "previous_state": None,
+               "new_state": "CREATED", "creation_timestamp": pd.Timestamp(source.timestamp).isoformat(),
+               "detection_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(),
+               "displacement_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(), "sweep_id": sweep_id,
+               "proximal": proximal, "distal": distal},
+              {"event_id": _stable_id(f"{zone_id}|CONFIRMED|{pd.Timestamp(confirmed.timestamp).isoformat()}"),
+               "zone_id": zone_id, "symbol": symbol, "direction": direction, "previous_state": "CREATED",
+               "new_state": "CONFIRMED", "creation_timestamp": pd.Timestamp(source.timestamp).isoformat(),
+               "detection_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(),
+               "displacement_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(), "sweep_id": sweep_id,
+               "proximal": proximal, "distal": distal}]
+    mitigation_time = invalidation_time = expiry_time = None
+    final_state = state
+    expiry_index = confirmation_index + expiry_bars
+    for index in range(confirmation_index + 1, min(len(m15), expiry_index + 1)):
+        bar = m15.iloc[index]
+        close = float(bar.close)
+        invalid = close < distal if direction == "LONG" else close > distal
+        mitigated = float(bar.low) <= max(proximal, distal) and float(bar.high) >= min(proximal, distal)
+        timestamp = pd.Timestamp(bar.timestamp)
+        if invalid:
+            invalidation_time, final_state = timestamp, "INVALIDATED"
+            break
+        if mitigated:
+            mitigation_time, final_state = timestamp, "MITIGATED"
+            break
+    if final_state == "CONFIRMED" and len(m15) > expiry_index:
+        expiry_time, final_state = pd.Timestamp(m15.timestamp.iloc[expiry_index]), "EXPIRED"
+    terminal_time = invalidation_time or mitigation_time or expiry_time
+    if terminal_time is not None:
+        events.append({"event_id": _stable_id(f"{zone_id}|{final_state}|{terminal_time.isoformat()}"),
+                       "zone_id": zone_id, "symbol": symbol, "direction": direction, "previous_state": "CONFIRMED",
+                       "new_state": final_state, "creation_timestamp": pd.Timestamp(source.timestamp).isoformat(),
+                       "detection_timestamp": terminal_time.isoformat(), "displacement_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(),
+                       "sweep_id": sweep_id, "proximal": proximal, "distal": distal})
+    zone = {"zone_id": zone_id, "symbol": symbol, "direction": direction,
+            "proximal": proximal, "distal": distal, "creation_timestamp": pd.Timestamp(source.timestamp).isoformat(),
+            "displacement_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(),
+            "confirmation_timestamp": pd.Timestamp(confirmed.timestamp).isoformat(),
+            "mitigation_timestamp": None if mitigation_time is None else mitigation_time.isoformat(),
+            "invalidation_timestamp": None if invalidation_time is None else invalidation_time.isoformat(),
+            "expiry_timestamp": None if expiry_time is None else expiry_time.isoformat(),
+            "current_state": final_state, "sweep_id": sweep_id}
+    return zone, events
+
+
 def _candidate_from_sweep(
     m15: pd.DataFrame, m1: pd.DataFrame, h1: pd.DataFrame, h1_swings: list[Swing],
     sweep: dict[str, Any], m15_swings: list[Swing],
@@ -171,10 +365,15 @@ def _candidate_from_sweep(
     start_after = sweep["confirmation_index"] + 1
     deadline = min(len(m15) - 1, sweep["confirmation_index"] + int(config["setup"]["lifetime_m15_bars_from_sweep_confirmation"]))
     period = int(config["displacement"]["atr_period"])
+    saw_displacement = False
+    saw_retrace = False
+    saw_leg2 = False
     for start in range(start_after, deadline + 1):
         current_bias, _, _ = _bias_at(pd.Timestamp(m15.timestamp.iloc[start]), h1, h1_swings)
         if current_bias != ("BULLISH" if direction == "LONG" else "BEARISH"):
-            continue
+            return _rejected_sweep_candidate(symbol, sweep, "BIAS_INVALIDATED", pd.Timestamp(m15.timestamp.iloc[start]))
+        if (direction == "LONG" and float(m15.close.iloc[start]) < float(sweep["extreme"])) or (direction == "SHORT" and float(m15.close.iloc[start]) > float(sweep["extreme"])):
+            return _rejected_sweep_candidate(symbol, sweep, "SWEEP_EXTREME_INVALIDATED", pd.Timestamp(m15.timestamp.iloc[start]))
         atr = _atr_before(m15, start, period)
         if atr is None or atr <= 0:
             continue
@@ -209,6 +408,7 @@ def _candidate_from_sweep(
                 leg_origin = float(m15.open.iloc[start])
             if not qualifies or not bos:
                 continue
+            saw_displacement = True
 
             leg_size = abs(leg_extreme - leg_origin)
             if leg_size < 0.50 * atr:
@@ -234,8 +434,10 @@ def _candidate_from_sweep(
                             break  # Retracement exceeded the maximum depth.
                         if m15.low.iloc[r] <= retrace_high and m15.high.iloc[r] >= retrace_low:
                             retrace_idx, retrace_price = r, float(min(retrace_high, m15.low.iloc[r]))
+                            saw_retrace = True
                     elif float(m15.high.iloc[r]) - float(retrace_price) >= 0.50 * atr:
                         leg2_idx = r
+                        saw_leg2 = True
                     if leg2_idx is not None and float(m15.close.iloc[r]) > bos_level.price:
                         bos_idx = r
                         break
@@ -247,8 +449,10 @@ def _candidate_from_sweep(
                             break
                         if m15.high.iloc[r] >= retrace_low and m15.low.iloc[r] <= retrace_high:
                             retrace_idx, retrace_price = r, float(max(retrace_low, m15.high.iloc[r]))
+                            saw_retrace = True
                     elif float(retrace_price) - float(m15.low.iloc[r]) >= 0.50 * atr:
                         leg2_idx = r
+                        saw_leg2 = True
                     if leg2_idx is not None and float(m15.close.iloc[r]) < bos_level.price:
                         bos_idx = r
                         break
@@ -257,22 +461,31 @@ def _candidate_from_sweep(
 
             # The source zone must still be fresh, valid, and within its configured life at BOS.
             if bos_idx - end > int(config["zones"]["expiry_m15_bars"]):
-                continue
+                expiry_index = min(len(m15) - 1, end + int(config["zones"]["expiry_m15_bars"]))
+                return _rejected_sweep_candidate(symbol, sweep, "ZONE_EXPIRED", pd.Timestamp(m15.timestamp.iloc[expiry_index]))
             mitigated = False
             invalidated = False
+            zone_terminal_time = None
             for q in range(end + 1, bos_idx + 1):
                 if direction == "LONG":
-                    invalidated |= float(m15.close.iloc[q]) < distal
-                    mitigated |= float(m15.low.iloc[q]) <= proximal and float(m15.high.iloc[q]) >= distal
+                    invalidated = float(m15.close.iloc[q]) < distal
+                    mitigated = float(m15.low.iloc[q]) <= proximal and float(m15.high.iloc[q]) >= distal
                 else:
-                    invalidated |= float(m15.close.iloc[q]) > distal
-                    mitigated |= float(m15.high.iloc[q]) >= proximal and float(m15.low.iloc[q]) <= distal
+                    invalidated = float(m15.close.iloc[q]) > distal
+                    mitigated = float(m15.high.iloc[q]) >= proximal and float(m15.low.iloc[q]) <= distal
+                if invalidated or mitigated:
+                    zone_terminal_time = pd.Timestamp(m15.timestamp.iloc[q])
+                    break
             if mitigated or invalidated:
-                continue
+                reason = "ZONE_INVALIDATED" if invalidated else "ZONE_MITIGATED"
+                return _rejected_sweep_candidate(symbol, sweep, reason, zone_terminal_time)
 
             bos_time = pd.Timestamp(m15.timestamp.iloc[bos_idx])
             entry_rows = m1[m1.timestamp > bos_time]
-            if entry_rows.empty or entry_rows.timestamp.iloc[0] - bos_time > pd.Timedelta(minutes=1):
+            if entry_rows.empty:
+                entry_time, entry_price, entry_spread = None, None, None
+                rejection = "EXECUTION_DATA_UNAVAILABLE"
+            elif entry_rows.timestamp.iloc[0] - bos_time > pd.Timedelta(minutes=1):
                 entry_time, entry_price, entry_spread = None, None, None
                 rejection = "DATA_GAP"
             else:
@@ -290,6 +503,10 @@ def _candidate_from_sweep(
             if stop_distance is not None and (stop_distance <= 0 or stop_distance > 3.0 * stop_atr):
                 rejection = "STOP_DISTANCE_EXCEEDED"
             candidate_id = _stable_id(f"candidate|{symbol}|{direction}|{sweep['breach_time'].isoformat()}|{sweep['level']}")
+            zone_record, zone_events = build_zone_lifecycle(
+                m15, symbol, direction, source_idx, end, proximal, distal,
+                str(sweep.get("level_id", candidate_id)), int(config["zones"]["expiry_m15_bars"]),
+            )
             candidate = {
                 "candidate_id": candidate_id, "symbol": symbol, "direction": direction,
                 "state": "BOS_CONFIRMED", "candidate_status": rejection or "CANDIDATE_SETUP",
@@ -298,22 +515,23 @@ def _candidate_from_sweep(
                 "cluster_tolerance": sweep.get("cluster_tolerance"),
                 "sweep_confirmation_timestamp": sweep["confirmation_time"].isoformat(), "sweep_extreme": sweep["extreme"],
                 "sweep_depth": abs(sweep["extreme"] - sweep["level"]), "sweep_depth_atr": abs(sweep["extreme"]-sweep["level"])/atr,
-                "zone": {"source_timestamp": pd.Timestamp(source.timestamp).isoformat(), "proximal": proximal, "distal": distal},
+                "zone": {**zone_record, "source_timestamp": pd.Timestamp(source.timestamp).isoformat()},
+                "zone_events": zone_events,
                 "displacement": {"start": pd.Timestamp(m15.timestamp.iloc[start]).isoformat(), "end": pd.Timestamp(m15.timestamp.iloc[end]).isoformat(), "size": displacement_size, "atr": atr, "atr_multiple": displacement_size/atr},
                 "leg1": {"start_index": start, "end_index": end, "origin": leg_origin, "extreme": leg_extreme},
                 "retracement_timestamp": pd.Timestamp(m15.timestamp.iloc[retrace_idx]).isoformat(),
                 "leg2_timestamp": pd.Timestamp(m15.timestamp.iloc[leg2_idx]).isoformat(),
                 "bos_timestamp": bos_time.isoformat(), "bos_level": bos_level.price,
-                "scheduled_observation_time": None if window is None else config["observation"]["scheduled_times"][window],
+            "scheduled_observation_time": None if window is None else config["observation"]["scheduled_times"][window],
                 "observation_window_index": window, "actual_signal_time": bos_time.isoformat(),
                 "actual_execution_time": None if entry_time is None else entry_time.isoformat(),
                 "entry_price": entry_price, "entry_spread_pips": entry_spread, "stop_price": stop,
                 "stop_distance": stop_distance, "atr_at_setup": stop_atr, "atr_at_displacement_start": atr,
             }
             transitions = [
-                ("WAITING_FOR_BIAS", sweep["breach_time"]),
-                ("WAITING_FOR_PULLBACK", sweep["breach_time"]),
-                ("WAITING_FOR_LIQUIDITY", sweep["breach_time"]),
+                ("WAITING_FOR_BIAS", pd.Timestamp(h1.timestamp.iloc[0])),
+                ("WAITING_FOR_PULLBACK", max(s.available_at for s in sorted([s for s in h1_swings if s.kind == "HIGH" and s.available_index <= _bias_at(pd.Timestamp(m15.timestamp.iloc[start]), h1, h1_swings)[2]], key=lambda s:s.available_index)[-2:] + sorted([s for s in h1_swings if s.kind == "LOW" and s.available_index <= _bias_at(pd.Timestamp(m15.timestamp.iloc[start]), h1, h1_swings)[2]], key=lambda s:s.available_index)[-2:])),
+                ("WAITING_FOR_LIQUIDITY", sweep.get("pullback_confirmation_time", sweep["confirmation_time"])),
                 ("LIQUIDITY_SWEEP_DETECTED", sweep["confirmation_time"]),
                 ("WAITING_FOR_ZONE", sweep["confirmation_time"]),
                 ("ZONE_CONFIRMED", m15.timestamp.iloc[end]),
@@ -324,11 +542,12 @@ def _candidate_from_sweep(
                 ("BOS_CONFIRMED", bos_time),
                 ("READY_FOR_ENTRY", bos_time),
             ]
-            candidate["state_events"] = [{"event_id": _stable_id(f"{candidate_id}|{state}|{pd.Timestamp(event_time).isoformat()}"), "candidate_id": candidate_id, "state": state,
+            candidate["state_events"] = [{"event_id": _stable_id(f"{candidate_id}|{state}|{pd.Timestamp(event_time).isoformat()}"), "candidate_id": candidate_id, "state": state, "sequence_index": sequence_index,
                                             "timestamp": pd.Timestamp(event_time).isoformat(), "detection_timestamp": pd.Timestamp(event_time).isoformat()}
-                                           for state, event_time in transitions]
+                                           for sequence_index, (state, event_time) in enumerate(transitions)]
             return candidate
-    return None
+    reason = "BOS_TIMEOUT" if saw_leg2 else "TWO_LEG_TIMEOUT" if saw_displacement or saw_retrace else "SETUP_TIMEOUT"
+    return _rejected_sweep_candidate(symbol, sweep, reason, pd.Timestamp(m15.timestamp.iloc[deadline]))
 
 
 def generate_v1_candidates(m1_bars: pd.DataFrame, symbol: str, config: dict[str, Any]) -> list[dict[str, Any]]:
@@ -385,6 +604,7 @@ def generate_v1_candidates(m1_bars: pd.DataFrame, symbol: str, config: dict[str,
                            "cluster_atr": level["atr_at_creation"], "cluster_tolerance": level["tolerance"],
                            "extreme": extreme, "breach_time": breach_time,
                            "confirmation_time": pd.Timestamp(bar.timestamp), "confirmation_index": j,
+                           "pullback_confirmation_time": pd.Timestamp(bar.timestamp),
                            "direction": direction})
             break
 
@@ -420,7 +640,7 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame, execution_c
     start = pd.Timestamp(candidate["actual_execution_time"])
     entry_bar_index = int(m1.timestamp.searchsorted(start, side="right"))
     if entry_bar_index >= len(m1):
-        return {"candidate_status": "DATA_GAP", "trade": None}
+        return {"candidate_status": "EXECUTION_DATA_UNAVAILABLE", "trade": None}
     entry_bar = m1.iloc[entry_bar_index]
     # A candidate records the expected open time of its first executable M1 bar.
     # Never bridge a missing candle or treat a later bar as the scheduled fill.
@@ -528,16 +748,25 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame, execution_c
     return {"candidate_status": "EXECUTED", "spread_source": source_label, "trade": trade}
 
 
-def run_v1_portfolio(data_by_symbol: dict[str, pd.DataFrame], strategy_config: dict[str, Any], execution_config: dict[str, Any]) -> dict[str, Any]:
+def run_v1_portfolio(data_by_symbol: dict[str, pd.DataFrame], strategy_config: dict[str, Any], execution_config: dict[str, Any], dataset_hash: str | None = None) -> dict[str, Any]:
     """Simulate one or both symbols under shared daily and concurrent-position limits."""
     if strategy_config.get("status") != "FULLY_SPECIFIED":
         raise ValueError("Strategy V1 cannot run until its implementation and tests are validated")
     if not data_by_symbol or set(data_by_symbol) - set(strategy_config["instruments"]):
         raise ValueError("Portfolio input must contain EURUSD and/or GBPUSD M1 bars")
     bars_by_symbol = {symbol: data.sort_values("timestamp").reset_index(drop=True).copy() for symbol, data in data_by_symbol.items()}
+    daily_contexts = build_daily_contexts(bars_by_symbol, strategy_config, dataset_hash, execution_config)
+    liquidity_events: list[dict[str, Any]] = []
+    for symbol, bars in bars_by_symbol.items():
+        m15, h1 = aggregate_bars(bars, "M15"), aggregate_bars(bars, "H1")
+        if len(m15) >= 5 and len(h1) >= 5:
+            h1_swings = confirmed_fractal_swings(h1, 2, 2)
+            m15_swings = confirmed_fractal_swings(m15, 2, 2)
+            levels = _liquidity_level_history(m15, h1_swings, m15_swings, float(strategy_config["liquidity"]["equal_level_tolerance_atr"]))
+            liquidity_events.extend(build_liquidity_lifecycle_events(bars, m15, levels, symbol))
     candidates = [candidate for symbol, bars in bars_by_symbol.items() for candidate in generate_v1_candidates(bars, symbol, strategy_config)]
     candidates.sort(key=lambda item: item.get("actual_execution_time", item["sweep_confirmation_timestamp"]))
-    events, trades, state_events = [], [], []
+    events, trades, state_events, zone_events = [], [], [], []
     executed_windows: set[tuple[str, str, int]] = set()
     traded_symbol_dates: set[tuple[str, str]] = set()
     global_trade_dates: dict[str, int] = {}
@@ -545,6 +774,7 @@ def run_v1_portfolio(data_by_symbol: dict[str, pd.DataFrame], strategy_config: d
     last_exit: pd.Timestamp | None = None
     for candidate in candidates:
         state_events.extend(candidate.get("state_events", []))
+        zone_events.extend(candidate.get("zone_events", []))
         status = candidate["candidate_status"]
         if status not in {"CANDIDATE_SETUP", None}:
             events.append({**candidate, "candidate_status": status})
@@ -580,21 +810,47 @@ def run_v1_portfolio(data_by_symbol: dict[str, pd.DataFrame], strategy_config: d
         global_trade_dates[date_key] = global_trade_dates.get(date_key, 0) + 1
         last_exit = pd.Timestamp(trade["exit_timestamp"])
         equity *= max(0.0, 1.0 + float(strategy_config["risk"]["baseline_equity_risk_fraction"]) * trade["r_multiple"])
-    state_events.sort(key=lambda item: (item["timestamp"], item["state"]))
     spread_sources = sorted({source for item in events for source in ([item.get("spread_source")] if item.get("spread_source") else [])})
     spread_sources.extend(source for trade in trades for source in trade.get("spread_sources", []) if source not in spread_sources)
     if not spread_sources:
         fallback = execution_config.get("spread", {}).get("fixed_fallback_pips")
         has_historical = any("spread_pips" in bars.columns and bars.spread_pips.notna().any() for bars in bars_by_symbol.values())
         spread_sources = ["HISTORICAL_SPREAD"] if has_historical else ["FIXED_CONFIGURED_SPREAD"] if fallback is not None else ["NO_SPREAD_DATA"]
+    for candidate_event in events:
+        candidate_event["trading_date"] = pd.Timestamp(candidate_event["sweep_confirmation_timestamp"]).tz_convert(strategy_config["timezones"]["reference"]).date().isoformat()
+        candidate_event["setup_start_timestamp"] = candidate_event.get("sweep_timestamp")
+        candidate_event["setup_confirmation_timestamp"] = candidate_event.get("actual_signal_time", candidate_event.get("sweep_confirmation_timestamp"))
+        candidate_event["rejection_reason"] = _normalized_rejection(candidate_event.get("candidate_status"))
+        candidate_event["rejection_timestamp"] = candidate_event.get("rejection_timestamp") or (candidate_event.get("actual_execution_time") or candidate_event.get("actual_signal_time", candidate_event.get("sweep_confirmation_timestamp")) if candidate_event["rejection_reason"] else None)
+        if candidate_event.get("candidate_status") == "EXECUTED":
+            candidate_event["current_state"] = "EXECUTED"
+        elif candidate_event["rejection_reason"] and candidate_event.get("state") not in {"INVALIDATED", "EXPIRED"}:
+            candidate_event["current_state"] = "REJECTED"
+            reason_timestamp = candidate_event["rejection_timestamp"] or candidate_event["sweep_confirmation_timestamp"]
+            sequence_index = sum(event["candidate_id"] == candidate_event["candidate_id"] for event in state_events)
+            rejection_event = {"event_id": _stable_id(f"{candidate_event['candidate_id']}|REJECTED|{reason_timestamp}|{candidate_event['rejection_reason']}"),
+                               "candidate_id": candidate_event["candidate_id"], "state": "REJECTED",
+                               "sequence_index": sequence_index,
+                               "timestamp": reason_timestamp, "detection_timestamp": reason_timestamp,
+                               "reason": candidate_event["rejection_reason"]}
+            state_events.append(rejection_event)
+        else:
+            candidate_event["current_state"] = candidate_event.get("state", "REJECTED")
+        candidate_event["event_sequence"] = [event for event in state_events if event["candidate_id"] == candidate_event["candidate_id"]]
+    state_events.sort(key=lambda item: (item["timestamp"], item["candidate_id"], item.get("sequence_index", 999)))
+    zone_events.sort(key=lambda event: (event["detection_timestamp"], event["zone_id"], event["new_state"]))
     return {"strategy_version": strategy_config["strategy_version"], "strategy_status": strategy_config["status"],
             "symbols": sorted(bars_by_symbol), "candidate_count": len(events), "signal_count": len(trades), "trades": trades,
             "events": events, "state_events": state_events, "spread_sources": spread_sources,
+            "liquidity_events": liquidity_events, "zone_events": zone_events,
+            "daily_contexts": daily_contexts, "config_hash": canonical_config_hash(strategy_config, execution_config),
+            "strategy_config_hash": canonical_config_hash(strategy_config), "execution_config_hash": canonical_config_hash(execution_config),
+            "dataset_hash": dataset_hash, "timezone_database_version": timezone_database_version(),
             "ending_equity_normalized": equity}
 
 
-def run_v1_backtest(m1_bars: pd.DataFrame, symbol: str, strategy_config: dict[str, Any], execution_config: dict[str, Any]) -> dict[str, Any]:
+def run_v1_backtest(m1_bars: pd.DataFrame, symbol: str, strategy_config: dict[str, Any], execution_config: dict[str, Any], dataset_hash: str | None = None) -> dict[str, Any]:
     """Single-symbol convenience wrapper; portfolio callers should pass both symbols together."""
-    result = run_v1_portfolio({symbol: m1_bars}, strategy_config, execution_config)
+    result = run_v1_portfolio({symbol: m1_bars}, strategy_config, execution_config, dataset_hash)
     result["symbol"] = symbol
     return result
