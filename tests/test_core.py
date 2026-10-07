@@ -69,6 +69,29 @@ def test_schedule_does_not_guess_nonexistent_or_repeated_madrid_times():
     assert len(fall[1]["candidates"]) == 2
 
 
+def test_v1_dst_policy_skips_spring_gap_and_selects_first_fall_occurrence():
+    config = load_config(ROOT / "config" / "strategy_v1.yaml")
+    spring = scheduled_observations("2024-03-31", config)
+    fall = scheduled_observations("2024-10-27", config)
+    assert spring[1]["status"] == "SKIPPED_DST_NONEXISTENT"
+    assert fall[1]["status"] == "scheduled"
+    assert fall[1]["timezone_resolution"] == "first_occurrence_earlier_utc"
+    assert fall[1]["utc"].endswith("+00:00")
+
+
+def test_spread_column_is_validated_and_reported(tmp_path):
+    path = tmp_path / "with_spread.csv"
+    path.write_text("timestamp,open,high,low,close,volume,spread_pips\n2024-01-01T00:00:00Z,1,1.1,0.9,1.05,2,0.8\n")
+    dataset = load_market_data(path, timeframe="M1")
+    assert dataset.quality["spread_available"] is True
+    assert dataset.bars.spread_pips.iloc[0] == 0.8
+
+
+def test_v1_is_not_reported_fully_specified_before_engine_implementation():
+    config = load_config(ROOT / "config" / "strategy_v1.yaml")
+    assert config["status"] == "IMPLEMENTATION_PENDING"
+
+
 def test_partial_strategy_cannot_generate_signals():
     config = load_config(ROOT / "config" / "strategy_v0_1.yaml")
     bars = pd.DataFrame({"timestamp": pd.date_range("2024-01-01", periods=3, tz="UTC"), "open": [1, 1, 1], "high": [1, 1, 1], "low": [1, 1, 1], "close": [1, 1, 1], "volume": [1, 1, 1]})
