@@ -10,10 +10,10 @@ The platform is historical research only. It has no broker connection or live ex
 
 - Store event and candle times in UTC. Render local times using `Europe/Madrid` and `America/New_York` IANA zones.
 - At 01:50 Madrid, build context independently for EURUSD and GBPUSD from only candles closed by that instant: H1/M15 structure, known eligible liquidity, active zones, trading date, and active strategy version. Preparation cannot trade.
-- Scheduled observations are 02:30, 03:30, and 04:00 Madrid. Their respective windows are 02:15–02:45, 03:15–03:45, and 03:45–04:15. Both endpoints are included, as selected for V1; 03:45 belongs to both adjacent windows. An event ID can be executed only once even if it is associated with both windows.
+- Scheduled observations are 02:30, 03:30, and 04:00 Madrid. Their respective windows are 02:15–02:45, 03:15–03:45, and 03:45–04:15, evaluated as half-open intervals `[start, end)`. The start is included and the end excluded, so 03:45 belongs only to the third window. Validate configured windows at load time and raise a configuration error if they overlap. Evaluate membership using timezone-aware timestamps converted to Madrid time.
 - Monitor M1 continuously inside each window. These are observation windows, not guaranteed fills. Select the first fully valid candidate chronologically in each window; once a symbol has an execution in a window, reject further executions for that symbol/window.
 - Record scheduled observation, actual signal, and actual execution timestamps. Entry must occur inside an active window. A setup whose BOS occurs outside a window remains a candidate marked `NOT_TRADEABLE`.
-- A nonexistent local observation is `SKIPPED_DST_NONEXISTENT`, with no fabricated instant. For an ambiguous fall-back time, use its first occurrence (earlier UTC instant), and record the policy, UTC instant, and New York instant. Reports enumerate skipped and resolved observations.
+- A nonexistent local observation is `DST_NONEXISTENT_SKIPPED`, with no fabricated instant. For an ambiguous fall-back time, use its first occurrence (earlier UTC instant) and record `DST_AMBIGUOUS_EARLY`, local timestamp, resolved UTC timestamp, UTC offset, and New York timestamp. Reports enumerate skipped and resolved observations and the IANA timezone database release used.
 
 ## Structure, bias, and pullback
 
@@ -61,13 +61,13 @@ A setup is `TRADEABLE` only when bias, pullback, liquidity, sweep, zone, displac
 - Baseline target is 2.0R, where 1R is entry-to-stop distance. Independent experiments may test 1.5R, 2.5R, 3.0R, and next external liquidity; they never replace the predeclared baseline after seeing results.
 - Primary reporting is in R. Portfolio baseline risk is 0.50% equity per trade; separate, unoptimized sensitivity runs may use 0.25% and 1.00%.
 - Limits: at most one executed trade per symbol per Madrid trading date, two total across both symbols per date, and one open position across the strategy. Keep candidates after rejecting a limit breach.
-- Require provider-supplied `spread_pips` for a trade. If absent, block execution; do not invent a universal spread or silently assume zero. Apply provider commission when specified; baseline commission is zero only where provider quotes are documented all-in. Never double-count costs. Baseline slippage is 0.1 pip; sensitivity values are 0.0, 0.2, and 0.5 pip.
+- Resolve spread in order: provider historical `spread_pips`, then the explicit `fixed_fallback_pips` in `config/execution.yaml`. Never invent or silently assume a spread. If neither is available, retain the candidate as `SPREAD_DATA_UNAVAILABLE`, report `NO_SPREAD_DATA`, and exclude it from executable trades. Report cost source as `HISTORICAL_SPREAD`, `FIXED_CONFIGURED_SPREAD`, or `NO_SPREAD_DATA`. Apply provider commission when specified; baseline commission is zero only where provider quotes are documented all-in. Never double-count costs. Baseline slippage is 0.1 pip; sensitivity values are 0.0, 0.2, and 0.5 pip.
 - If stop and target both touch within one M1 candle, use lower-timeframe data when available; otherwise assume stop first. Exit priority is stop, target, then session expiry; stop wins exact timestamp ties.
 - At 05:00 Madrid, close any remaining position at the first executable price after session end and mark `SESSION_EXPIRY`.
 - No news filter in V1. Any later news-filter implementation is a separately identified experiment.
 
 ## Research integrity and configurable parameters
 
-V1 defaults and parameter metadata (type, default, permitted range, description, rationale) live in `config/strategy_v1.yaml`; execution defaults live in `config/execution.yaml`. Any variation is a separately versioned experiment. Required spread data is an execution precondition, not a fabricated baseline value.
+V1 defaults and parameter metadata (type, default, permitted range, description, rationale) live in `config/strategy_v1.yaml`; execution defaults live in `config/execution.yaml`. Any variation is a separately versioned experiment. Spread fallback is optional and must be explicitly configured; otherwise missing spread blocks the trade. Include dataset hash, strategy version/config, execution config, timezone database version, and software revision in reproducibility records.
 
 Do not tune on the complete history before recording the baseline. Report cost sensitivity, chronological train/validation/out-of-sample results, walk-forward, Monte Carlo, parameter sensitivity, and regime breakdown separately. A result that only works in one period is `OVERFITTING_RISK`; positive historical P&L alone does not establish an edge. No historical-performance guarantee is made.
