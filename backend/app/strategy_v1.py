@@ -47,7 +47,9 @@ def _normalized_rejection(status: str | None) -> str | None:
 
 
 def _rejected_sweep_candidate(symbol: str, sweep: dict[str, Any], reason: str,
-                             timestamp: pd.Timestamp) -> dict[str, Any]:
+                             timestamp: pd.Timestamp,
+                             zone_record: dict[str, Any] | None = None,
+                             zone_events: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     candidate_id = _stable_id(f"candidate|{symbol}|{sweep['direction']}|{sweep['breach_time'].isoformat()}|{sweep['level']}")
     state = "EXPIRED" if reason in {"TWO_LEG_TIMEOUT", "BOS_TIMEOUT", "SETUP_TIMEOUT", "ZONE_EXPIRED"} else "INVALIDATED"
     state_events = []
@@ -56,12 +58,16 @@ def _rejected_sweep_candidate(symbol: str, sweep: dict[str, Any], reason: str,
                              "candidate_id": candidate_id, "state": name, "sequence_index": sequence_index,
                              "timestamp": pd.Timestamp(event_time).isoformat(), "detection_timestamp": pd.Timestamp(event_time).isoformat(),
                              "reason": reason if name == state else None})
-    return {"candidate_id": candidate_id, "symbol": symbol, "direction": sweep["direction"],
+    result = {"candidate_id": candidate_id, "symbol": symbol, "direction": sweep["direction"],
             "state": state, "candidate_status": reason, "rejection_reason": reason,
             "rejection_timestamp": pd.Timestamp(timestamp).isoformat(),
             "liquidity_level": sweep["level"], "sweep_timestamp": sweep["breach_time"].isoformat(),
             "sweep_confirmation_timestamp": sweep["confirmation_time"].isoformat(),
             "sweep_extreme": sweep["extreme"], "state_events": state_events}
+    if zone_record is not None:
+        result["zone"] = zone_record
+        result["zone_events"] = zone_events or []
+    return result
 
 
 def build_daily_contexts(
@@ -368,12 +374,14 @@ def _candidate_from_sweep(
     saw_displacement = False
     saw_retrace = False
     saw_leg2 = False
+    latest_zone: dict[str, Any] | None = None
+    latest_zone_events: list[dict[str, Any]] = []
     for start in range(start_after, deadline + 1):
         current_bias, _, _ = _bias_at(pd.Timestamp(m15.timestamp.iloc[start]), h1, h1_swings)
         if current_bias != ("BULLISH" if direction == "LONG" else "BEARISH"):
-            return _rejected_sweep_candidate(symbol, sweep, "BIAS_INVALIDATED", pd.Timestamp(m15.timestamp.iloc[start]))
+            return _rejected_sweep_candidate(symbol, sweep, "BIAS_INVALIDATED", pd.Timestamp(m15.timestamp.iloc[start]), latest_zone, latest_zone_events)
         if (direction == "LONG" and float(m15.close.iloc[start]) < float(sweep["extreme"])) or (direction == "SHORT" and float(m15.close.iloc[start]) > float(sweep["extreme"])):
-            return _rejected_sweep_candidate(symbol, sweep, "SWEEP_EXTREME_INVALIDATED", pd.Timestamp(m15.timestamp.iloc[start]))
+            return _rejected_sweep_candidate(symbol, sweep, "SWEEP_EXTREME_INVALIDATED", pd.Timestamp(m15.timestamp.iloc[start]), latest_zone, latest_zone_events)
         atr = _atr_before(m15, start, period)
         if atr is None or atr <= 0:
             continue
@@ -409,6 +417,11 @@ def _candidate_from_sweep(
             if not qualifies or not bos:
                 continue
             saw_displacement = True
+            zone_id_key = str(sweep.get("level_id", ""))
+            latest_zone, latest_zone_events = build_zone_lifecycle(
+                m15, symbol, direction, source_idx, end, proximal, distal,
+                zone_id_key, int(config["zones"]["expiry_m15_bars"]),
+            )
 
             leg_size = abs(leg_extreme - leg_origin)
             if leg_size < 0.50 * atr:
@@ -462,7 +475,7 @@ def _candidate_from_sweep(
             # The source zone must still be fresh, valid, and within its configured life at BOS.
             if bos_idx - end > int(config["zones"]["expiry_m15_bars"]):
                 expiry_index = min(len(m15) - 1, end + int(config["zones"]["expiry_m15_bars"]))
-                return _rejected_sweep_candidate(symbol, sweep, "ZONE_EXPIRED", pd.Timestamp(m15.timestamp.iloc[expiry_index]))
+                return _rejected_sweep_candidate(symbol, sweep, "ZONE_EXPIRED", pd.Timestamp(m15.timestamp.iloc[expiry_index]), latest_zone, latest_zone_events)
             mitigated = False
             invalidated = False
             zone_terminal_time = None
@@ -478,7 +491,7 @@ def _candidate_from_sweep(
                     break
             if mitigated or invalidated:
                 reason = "ZONE_INVALIDATED" if invalidated else "ZONE_MITIGATED"
-                return _rejected_sweep_candidate(symbol, sweep, reason, zone_terminal_time)
+                return _rejected_sweep_candidate(symbol, sweep, reason, zone_terminal_time, latest_zone, latest_zone_events)
 
             bos_time = pd.Timestamp(m15.timestamp.iloc[bos_idx])
             entry_rows = m1[m1.timestamp > bos_time]
@@ -547,7 +560,7 @@ def _candidate_from_sweep(
                                            for sequence_index, (state, event_time) in enumerate(transitions)]
             return candidate
     reason = "BOS_TIMEOUT" if saw_leg2 else "TWO_LEG_TIMEOUT" if saw_displacement or saw_retrace else "SETUP_TIMEOUT"
-    return _rejected_sweep_candidate(symbol, sweep, reason, pd.Timestamp(m15.timestamp.iloc[deadline]))
+    return _rejected_sweep_candidate(symbol, sweep, reason, pd.Timestamp(m15.timestamp.iloc[deadline]), latest_zone, latest_zone_events)
 
 
 def generate_v1_candidates(m1_bars: pd.DataFrame, symbol: str, config: dict[str, Any]) -> list[dict[str, Any]]:
