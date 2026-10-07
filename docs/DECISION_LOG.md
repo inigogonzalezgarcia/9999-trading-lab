@@ -49,3 +49,11 @@
 - **Implementation:** Add 01:50 causal daily contexts, level and zone lifecycle events, candidate rejection metadata, deterministic configuration hashes, source fingerprints, synthetic positive/negative cases, and API-path tests.
 - **Reason:** Current synthetic positive coverage starts from a confirmed sweep and the API tests inject controlled candidates. The raw M1-to-complete-signal path and the full active-zone inventory are not yet demonstrated.
 - **Status:** 35 automated tests pass. Backtest remains blocked pending the two remaining gate items; no historical performance output is enabled.
+
+## 2026-10-07 — Activate Strategy V1 after raw-M1 gates pass
+
+- **Decision:** Mark Strategy V1 `FULLY_SPECIFIED` and enable the historical research backtest API after every completion-gate item passed.
+- **Verification:** A raw-M1-only fixture builds the 01:50 `DailyContext`, retains its active confirmed zone while the setup is incomplete, excludes mitigated/invalidated/expired zones, and produces the same context from data truncated at the cutoff. The same fixture independently derives the complete H1-bias-to-BOS sequence and an executable M1 trade; removing the sole M1 sweep-breach candle removes the candidate.
+- **Test result:** 38 tests pass, including both raw-M1 gates. Synthetic results validate implementation only and do not establish market performance.
+- **Scope:** Historical research/backtesting only. No broker connection or live order execution is enabled.
+- **Status:** Adopted; out-of-sample evaluation, walk-forward analysis, and research benchmarks remain future work.
