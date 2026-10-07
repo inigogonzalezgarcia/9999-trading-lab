@@ -28,9 +28,17 @@
 
 - **Decision:** Add `strategy_v1.yaml` as a new version, retaining `strategy_v0_1.yaml` unchanged. Translate the supplied rules into a fully ordered causal sequence, explicit timeouts, state transitions, invalidation reasons, and baseline execution/risk assumptions.
 - **Decision:** Keep the runtime status `IMPLEMENTATION_PENDING` until the complete signal/execution engine is implemented and its automated tests pass. Do not label the implementation fully specified prematurely.
-- **Decision:** Observation windows include both endpoints, per user selection. 03:45 therefore belongs to both adjacent windows; a given event ID may execute only once.
-- **Decision:** Resolve repeated Madrid local observation times to the first occurrence (earlier UTC instant), per user selection. Nonexistent times are recorded as `SKIPPED_DST_NONEXISTENT`.
-- **Decision:** Require provider `spread_pips` data; block execution if it is missing, per user selection. Do not use an invented fixed spread.
+- **Decision:** Observation windows use half-open `[start, end)` intervals, per the latest edge-case rules. Window configuration rejects overlaps; event times at the end boundary are excluded.
+- **Decision:** Resolve repeated Madrid local observation times to the first occurrence (earlier UTC instant), per user selection. Nonexistent times are recorded as `DST_NONEXISTENT_SKIPPED`.
+- **Decision:** Prefer historical provider `spread_pips`; otherwise use only an explicitly configured fixed spread. If neither exists, retain the candidate as `SPREAD_DATA_UNAVAILABLE`, report `NO_SPREAD_DATA`, and block execution. Never invent a spread.
+- **Decision:** Emit `DST_AMBIGUOUS_EARLY` with local, UTC, offset, and New York values for repeated local times; emit `DST_NONEXISTENT_SKIPPED` for nonexistent ones. Record the IANA timezone database version for reproducibility.
 - **Decision:** Enable TWO_LEG_V1 as the baseline confirmation requirement; equal-high/low levels remain experimental and disabled.
 - **Decision:** Do not change prior strategy runs/configuration when introducing V1.
 - **Status:** Baseline rules and machine-readable configuration recorded; implementation and causal backtest validation remain pending.
+
+## 2026-10-07 — Apply final edge-case rules
+
+- **Decision:** Use half-open `[start, end)` windows and reject overlapping intervals at configuration load. Evaluate membership using timezone-aware instants converted to Madrid.
+- **Decision:** Prefer historical spread, then explicitly configured fixed spread, else preserve the candidate with `SPREAD_DATA_UNAVAILABLE` and report `NO_SPREAD_DATA` without execution.
+- **Decision:** Emit `DST_AMBIGUOUS_EARLY` and `DST_NONEXISTENT_SKIPPED`, recording local time, resolved UTC time, offset, and New York time. Include the IANA timezone database release in API output.
+- **Status:** Edge-case rules and helper tests added; full V1 state machine remains implementation-pending.
