@@ -1,5 +1,5 @@
 strategy_version: "1.0"
-status: IMPLEMENTATION_PENDING
+status: FULLY_SPECIFIED
 methodology: deterministic_baseline_research_hypothesis
 instruments: [EURUSD, GBPUSD]
 timezones:
