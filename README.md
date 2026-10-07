@@ -1,6 +1,6 @@
 # FX Research Lab
 
-Local-first research and backtesting for EUR/USD and GBP/USD. This project has **no broker connection or live execution**. The V1 rules are deterministic, but the signal and execution engine remains implementation-pending, so uploads are validated without generating trades or performance claims.
+Local-first research and backtesting for EUR/USD and GBP/USD. This project has **no broker connection or live execution**. Strategy V1 is fully specified in software and can run historical research backtests; historical results are not evidence of a profitable edge.
 
 ## Requirements and install
 
@@ -41,7 +41,7 @@ No missing candles are generated. Data validation reports duplicates, order, and
 
 ## Strategy and reproducibility
 
-The V1 baseline is specified in [docs/STRATEGY_SPEC.md](docs/STRATEGY_SPEC.md), with machine-readable rules in [config/strategy_v1.yaml](config/strategy_v1.yaml) and fills/costs in [config/execution.yaml](config/execution.yaml). The earlier partial hypothesis is preserved as [config/strategy_v0_1.yaml](config/strategy_v0_1.yaml). Decisions are tracked in [docs/DECISION_LOG.md](docs/DECISION_LOG.md), data semantics in [DATA_SPEC.md](DATA_SPEC.md), and research safeguards in [RESEARCH_METHOD.md](RESEARCH_METHOD.md). V1 remains implementation-pending until the causal engine and tests are complete. All timestamps use UTC internally and IANA zones for display and DST handling.
+The V1 baseline is specified in [docs/STRATEGY_SPEC.md](docs/STRATEGY_SPEC.md), with machine-readable rules in [config/strategy_v1.yaml](config/strategy_v1.yaml) and fills/costs in [config/execution.yaml](config/execution.yaml). The earlier partial hypothesis is preserved as [config/strategy_v0_1.yaml](config/strategy_v0_1.yaml). Decisions are tracked in [docs/DECISION_LOG.md](docs/DECISION_LOG.md), data semantics in [DATA_SPEC.md](DATA_SPEC.md), and research safeguards in [RESEARCH_METHOD.md](RESEARCH_METHOD.md). The causal implementation gates have passed; all timestamps use UTC internally and IANA zones for display and DST handling.
 
 ## Tests
 
@@ -52,15 +52,14 @@ python -m pytest
 ## Current implementation status
 
 - Data import, quality checks, UTC normalization, and DST-aware exact schedule display are implemented.
-- Strategy V1 is recorded in YAML, including explicit observation windows, DST resolution, spread requirements, state and execution rules. Signal generation and backtesting remain blocked until the causal V1 engine and tests are implemented.
+- Strategy V1 is recorded in YAML, including explicit observation windows, DST resolution, spread requirements, state and execution rules. The causal signal and execution engine is verified and historical backtesting is enabled.
 - Statistical benchmark, out-of-sample runs, walk-forward, Monte Carlo, sensitivity, trade chart, and classification are not implemented.
 
 ## Recommended next steps
 
-1. Implement the causal V1 state machine for H1/M15 structure, liquidity, zones, confirmation, and observation windows.
-2. Implement spread-aware M1 fills, risk limits, exits, and persisted candidate/rejection events.
-3. Test signal provenance and prove future-candle removal does not alter prior signals.
-4. Implement cost scenarios, OOS/walk-forward, matched baseline, Monte Carlo, and sensitivity.
-5. Add annotated candle review, persistence, and classification criteria.
+1. Run the baseline on validated historical data and review candidate/trade provenance.
+2. Build independent in-sample, validation, and out-of-sample periods with a cost-matched baseline.
+3. Add walk-forward evaluation, Monte Carlo, and parameter sensitivity.
+4. Add annotated candle review, persistence, and classification criteria.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [LICENSE](LICENSE).
