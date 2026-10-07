@@ -18,12 +18,12 @@ observation:
     - {start: "02:15", end: "02:45"}
     - {start: "03:15", end: "03:45"}
     - {start: "03:45", end: "04:15"}
-  boundary_policy: both_endpoints_inclusive
+  boundary_policy: half_open_start_inclusive_end_exclusive
   first_valid_setup_per_window: true
   max_executions_per_symbol_per_window: 1
   entry_must_occur_in_window: true
   dst:
-    nonexistent: SKIPPED_DST_NONEXISTENT
+    nonexistent: DST_NONEXISTENT_SKIPPED
     ambiguous_policy: first_occurrence_earlier_utc
     report_resolution: true
 structure:
@@ -138,9 +138,10 @@ risk:
   max_concurrent_positions_global: 1
   record_rejections: [RISK_LIMIT_REJECTED, CONCURRENT_POSITION_REJECTED]
 execution:
-  spread_source: required_provider_column
-  spread_column: spread_pips
-  missing_spread: block_trade
+  spread_priority: [HISTORICAL_SPREAD, FIXED_CONFIGURED_SPREAD]
+  historical_spread_column: spread_pips
+  fixed_spread_fallback_key: config/execution.yaml:spread.fixed_fallback_pips
+  missing_spread: {candidate_status: SPREAD_DATA_UNAVAILABLE, report_source: NO_SPREAD_DATA, execute: false}
   slippage_pips: 0.1
   slippage_experiments_pips: [0.0, 0.1, 0.2, 0.5]
   commission_baseline: 0.0
@@ -183,8 +184,8 @@ parameter_metadata:
   - {name: max_trades_per_symbol_per_trading_date, type: integer, default: 1, allowed_range: "1..10", description: Per-symbol daily execution cap, rationale: "Baseline portfolio constraint."}
   - {name: max_trades_global_per_trading_date, type: integer, default: 2, allowed_range: "1..20", description: Combined daily execution cap, rationale: "Baseline portfolio constraint across the two symbols."}
   - {name: max_concurrent_positions_global, type: integer, default: 1, allowed_range: "1..10", description: Maximum simultaneous open positions, rationale: "Prevents overlapping portfolio exposure in baseline."}
-  - {name: session_window_policy, type: enum, default: both_endpoints_inclusive, allowed_range: "both_endpoints_inclusive", description: Whether observation windows include their boundary timestamps, rationale: "Selected by the user for V1 reproducibility."}
+  - {name: session_window_policy, type: enum, default: half_open_start_inclusive_end_exclusive, allowed_range: "half_open_start_inclusive_end_exclusive", description: Whether observation windows include their boundary timestamps, rationale: "Prevents duplicate boundary assignment and overlapping windows."}
   - {name: dst_ambiguous_policy, type: enum, default: first_occurrence_earlier_utc, allowed_range: "first_occurrence_earlier_utc", description: Which repeated local time is selected during fall-back, rationale: "Selected by the user; record resolution per observation."}
-  - {name: spread_source, type: enum, default: required_provider_column, allowed_range: "required_provider_column", description: Source for executable bid/ask costs, rationale: "User rejected an invented fixed fallback; missing spread blocks trades."}
+  - {name: spread_source, type: enum, default: historical_then_explicit_fixed, allowed_range: "historical_then_explicit_fixed", description: Source for executable bid/ask costs, rationale: "Never invent a spread; missing both sources blocks the trade."}
   - {name: commission_baseline, type: number, default: 0.0, allowed_range: "0..provider_defined", description: Baseline commission only for documented all-in quotes, rationale: "Use provider model when specified and avoid double-counting."}
   - {name: same_candle_tiebreak, type: enum, default: stop_first_without_lower_timeframe, allowed_range: "lower_timeframe_then_stop_first", description: Resolve SL/TP touches in the same M1 candle, rationale: "Conservative treatment avoids selecting the favorable path."}
