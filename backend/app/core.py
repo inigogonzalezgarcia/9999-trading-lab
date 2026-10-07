@@ -1,24 +1,16 @@
 """Causal, configurable research backtest primitives."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import yaml
+from .data import Dataset, aggregate_bars, load_market_data
+from .timezones import convert_timestamp, scheduled_observations
 
 REQUIRED = ["timestamp", "open", "high", "low", "close", "volume"]
-
-
-@dataclass
-class Dataset:
-    bars: pd.DataFrame
-    quality: dict[str, Any]
-    version: str
 
 
 def load_config(path: str | Path) -> dict[str, Any]:
@@ -26,71 +18,13 @@ def load_config(path: str | Path) -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def load_data(path: str | Path, source_timezone: str | None = None, timeframe: str = "M1") -> Dataset:
-    path = Path(path)
-    digest = sha256(path.read_bytes()).hexdigest()
-    frame = pd.read_parquet(path) if path.suffix.lower() in {".parquet", ".pq"} else pd.read_csv(path)
-    absent = sorted(set(REQUIRED) - set(frame.columns))
-    if absent:
-        raise ValueError(f"Missing required columns: {', '.join(absent)}")
-    raw = pd.to_datetime(frame.timestamp, errors="coerce")
-    if raw.isna().any():
-        raise ValueError("timestamp contains invalid values")
-    if raw.dt.tz is None:
-        if not source_timezone:
-            raise ValueError("Naive timestamps require source_timezone (IANA name)")
-        raw = raw.dt.tz_localize(ZoneInfo(source_timezone), ambiguous="raise", nonexistent="raise")
-    frame["timestamp"] = raw.dt.tz_convert("UTC")
-    frame = frame[REQUIRED].copy()
-    duplicates = int(frame.timestamp.duplicated().sum())
-    chronological = bool(frame.timestamp.is_monotonic_increasing)
-    frame = frame.sort_values("timestamp").drop_duplicates("timestamp", keep="last")
-    for col in REQUIRED[1:]:
-        frame[col] = pd.to_numeric(frame[col], errors="coerce")
-    bad = frame[frame[REQUIRED[1:]].isna().any(axis=1) | (frame.low > frame.high) | (frame.low > frame.open) | (frame.low > frame.close) | (frame.high < frame.open) | (frame.high < frame.close) | (frame["close"] <= 0)]
-    if len(bad):
-        raise ValueError(f"{len(bad)} rows contain invalid OHLCV values")
-    freq = {"M1": "1min", "M5": "5min", "M15": "15min", "H1": "1h"}.get(timeframe)
-    if not freq:
-        raise ValueError(f"Unsupported timeframe: {timeframe}")
-    delta = frame.timestamp.diff().dropna()
-    gaps = int((delta > pd.Timedelta(freq) * 1.5).sum())
-    report = {"rows": len(frame), "duplicate_timestamps": duplicates, "input_chronological": chronological, "gap_count": gaps, "invalid_rows": 0, "start_utc": frame.timestamp.min().isoformat(), "end_utc": frame.timestamp.max().isoformat(), "timezone_normalized": "UTC", "source_timezone": source_timezone or "embedded", "warnings": []}
-    if duplicates: report["warnings"].append("Duplicate timestamps were removed (last row retained).")
-    if gaps: report["warnings"].append("Data gaps detected; candles were not fabricated.")
-    if not chronological: report["warnings"].append("Rows were sorted chronologically.")
-    return Dataset(frame.reset_index(drop=True), report, digest)
-
-
 def convert_time(timestamp: str | pd.Timestamp, timezone: str) -> str:
-    ts = pd.Timestamp(timestamp)
-    if ts.tzinfo is None: raise ValueError("timestamp must be timezone-aware")
-    return ts.tz_convert(ZoneInfo(timezone)).isoformat()
+    return convert_timestamp(timestamp, timezone)
 
 
-def scheduled_observations(local_date: str, config: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return exact Madrid schedule instants with DST-aware UTC and New York values."""
-    madrid = ZoneInfo(config["timezones"]["reference"])
-    ny_name = config["timezones"]["market_analysis"]
-    result = []
-    for label, clock in [("preparation", config["preparation_time"])] + [("observation", t) for t in config["observation_times"]]:
-        naive = pd.Timestamp(f"{local_date}T{clock}").to_pydatetime()
-        candidates = []
-        for fold in (0, 1):
-            local = naive.replace(tzinfo=madrid, fold=fold)
-            utc = pd.Timestamp(local).tz_convert("UTC")
-            roundtrip = utc.tz_convert(madrid)
-            if roundtrip.replace(tzinfo=None) == naive and all(utc != existing[0] for existing in candidates):
-                candidates.append((utc, roundtrip))
-        if not candidates:
-            result.append({"kind": label, "status": "nonexistent_dst_time", "madrid": None, "utc": None, "new_york": None})
-        elif len(candidates) > 1:
-            result.append({"kind": label, "status": "ambiguous_dst_time", "madrid": None, "utc": None, "new_york": None,
-                           "candidates": [{"madrid": local.isoformat(), "utc": utc.isoformat(), "new_york": utc.tz_convert(ZoneInfo(ny_name)).isoformat()} for utc, local in candidates]})
-        else:
-            utc, localized = candidates[0]
-            result.append({"kind": label, "status": "scheduled", "madrid": localized.isoformat(), "utc": utc.isoformat(), "new_york": utc.tz_convert(ZoneInfo(ny_name)).isoformat()})
-    return result
+def load_data(path: str | Path, source_timezone: str | None = None, timeframe: str = "M1") -> Dataset:
+    """Compatibility wrapper; source timestamps follow config/data.yaml semantics."""
+    return load_market_data(path, timeframe=timeframe, source_timezone=source_timezone)
 
 
 class StrategyIncompleteError(ValueError):
@@ -103,9 +37,7 @@ def require_deterministic_strategy(config: dict[str, Any]) -> None:
 
 
 def aggregate(bars: pd.DataFrame, timeframe: str) -> pd.DataFrame:
-    rule = {"M5": "5min", "M15": "15min", "H1": "1h"}[timeframe]
-    x = bars.set_index("timestamp").resample(rule, closed="left", label="right", origin="epoch").agg({"open":"first", "high":"max", "low":"min", "close":"last", "volume":"sum"}).dropna().reset_index()
-    return x
+    return aggregate_bars(bars, timeframe)
 
 
 def generate_signals(bars: pd.DataFrame, config: dict[str, Any], symbol: str) -> list[dict[str, Any]]:
