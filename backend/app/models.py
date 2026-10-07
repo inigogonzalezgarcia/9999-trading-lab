@@ -248,6 +248,7 @@ class ResearchRun(BaseModel):
     symbols: list[str]
     timeframe: Timeframe
     timezone_config: dict[str, str]
+    timezone_database_version: dict[str, str]
     execution_assumptions: dict[str, Any]
     random_seed: int | None = None
     software_version: str
