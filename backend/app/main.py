@@ -31,7 +31,8 @@ async def run_backtest(file: UploadFile=File(...),symbol: str=Form("EURUSD"),tim
         if symbol not in cfg["instruments"]:
             raise HTTPException(422,"Baseline permits only EURUSD and GBPUSD")
         # The spec marks the trading rules TBD. Validate data and show schedule, but do not invent signals.
-        return {"strategy_version":cfg["version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The strategy is PARTIALLY_SPECIFIED. Define its TBD rules before signal generation or trade backtesting.","quality":ds.quality,"dataset_version":ds.version,"scheduled_observations":scheduled_observations(ds.bars.timestamp.min().date().isoformat(),cfg),"signal_count":None,"trades":[],"metrics":None,"report":None}
+        first_local_date=ds.bars.timestamp.min().tz_convert(cfg["timezones"]["reference"]).date().isoformat()
+        return {"strategy_version":cfg["version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The strategy is PARTIALLY_SPECIFIED. Define its TBD rules before signal generation or trade backtesting.","quality":ds.quality,"dataset_version":ds.version,"scheduled_observations":scheduled_observations(first_local_date,cfg),"signal_count":None,"trades":[],"metrics":None,"report":None}
     except DataQualityError as e:
         raise HTTPException(422, {"detail": str(e), "quality": e.report}) from e
     except (ValueError,KeyError) as e: raise HTTPException(422,str(e)) from e
