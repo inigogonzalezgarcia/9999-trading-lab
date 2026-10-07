@@ -5,7 +5,7 @@ from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .core import load_config
 from .data import DataQualityError, load_market_data
-from .timezones import scheduled_observations
+from .timezones import scheduled_observations, timezone_database_version
 
 ROOT=Path(__file__).resolve().parents[2]
 CONFIG=ROOT/"config"/"strategy_v1.yaml"
@@ -31,7 +31,7 @@ async def run_backtest(file: UploadFile=File(...),symbol: str=Form("EURUSD"),tim
         if symbol not in cfg["instruments"]:
             raise HTTPException(422,"Baseline permits only EURUSD and GBPUSD")
         first_local_date=ds.bars.timestamp.min().tz_convert(cfg["timezones"]["reference"]).date().isoformat()
-        return {"strategy_version":cfg["strategy_version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The V1 rules are recorded, but the complete signal and execution engine is still implementation-pending.","quality":ds.quality,"dataset_version":ds.version,"scheduled_observations":scheduled_observations(first_local_date,cfg),"signal_count":None,"trades":[],"metrics":None,"report":None}
+        return {"strategy_version":cfg["strategy_version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The V1 rules are recorded, but the complete signal and execution engine is still implementation-pending.","quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_database_version(),"scheduled_observations":scheduled_observations(first_local_date,cfg),"signal_count":None,"trades":[],"metrics":None,"report":None}
     except DataQualityError as e:
         raise HTTPException(422, {"detail": str(e), "quality": e.report}) from e
     except (ValueError,KeyError) as e: raise HTTPException(422,str(e)) from e
