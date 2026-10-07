@@ -32,7 +32,7 @@ function App() {
       <h2>Data quality</h2><pre>{JSON.stringify(result.quality, null, 2)}</pre>
       <h2>Configured schedule</h2><p>Preparation is reference only. Observation points are exact Europe/Madrid timestamps.</p>
       <div className="table"><table><thead><tr><th>Type</th><th>Europe/Madrid</th><th>UTC</th><th>America/New_York</th></tr></thead><tbody>{result.scheduled_observations.map((item: any) => <tr key={item.madrid}><td>{item.kind}</td><td>{item.madrid}</td><td>{item.utc}</td><td>{item.new_york}</td></tr>)}</tbody></table></div>
-      <h2>Strategy definition needed</h2><p>See <a href="http://localhost:8000/docs">API</a> and the repository’s <code>STRATEGY_SPEC.md</code> for every unresolved rule. Define those rules in a new strategy version before enabling backtests.</p>
+      <h2>V1 backtest status</h2><p>The deterministic strategy rules are recorded in <code>config/strategy_v1.yaml</code>. The backtest stays blocked until the complete signal and execution engine has passed validation. Uploads can still be used for data-quality review; no performance results are generated while V1 is marked implementation-pending.</p>
     </>}
   </main>;
 }
