@@ -42,3 +42,10 @@
 - **Decision:** Prefer historical spread, then explicitly configured fixed spread, else preserve the candidate with `SPREAD_DATA_UNAVAILABLE` and report `NO_SPREAD_DATA` without execution.
 - **Decision:** Emit `DST_AMBIGUOUS_EARLY` and `DST_NONEXISTENT_SKIPPED`, recording local time, resolved UTC time, offset, and New York time. Include the IANA timezone database release in API output.
 - **Status:** Edge-case rules and helper tests added; full V1 state machine remains implementation-pending.
+
+## 2026-10-07 — Enforce the implementation completion gate
+
+- **Decision:** Keep `config/strategy_v1.yaml` at `IMPLEMENTATION_PENDING` until the checklist in `docs/IMPLEMENTATION_COMPLETION_GATE.md` is fully satisfied.
+- **Implementation:** Add 01:50 causal daily contexts, level and zone lifecycle events, candidate rejection metadata, deterministic configuration hashes, source fingerprints, synthetic positive/negative cases, and API-path tests.
+- **Reason:** Current synthetic positive coverage starts from a confirmed sweep and the API tests inject controlled candidates. The raw M1-to-complete-signal path and the full active-zone inventory are not yet demonstrated.
+- **Status:** 35 automated tests pass. Backtest remains blocked pending the two remaining gate items; no historical performance output is enabled.
