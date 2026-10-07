@@ -1,4 +1,5 @@
 from pathlib import Path
+import math
 import pandas as pd
 import pytest
 
@@ -13,6 +14,7 @@ from backend.app.core import (
 from backend.app.data import DataQualityError, aggregate_bars, bars_available_at, load_market_data
 from backend.app.execution import resolve_spread
 from backend.app.timezones import observation_windows_at, timezone_database_version, validate_observation_window_config
+from backend.app.strategy_v1 import _simulate_candidate, confirmed_fractal_swings, generate_v1_candidates, run_v1_backtest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -125,6 +127,114 @@ def test_spread_column_is_validated_and_reported(tmp_path):
 def test_v1_is_not_reported_fully_specified_before_engine_implementation():
     config = load_config(ROOT / "config" / "strategy_v1.yaml")
     assert config["status"] == "IMPLEMENTATION_PENDING"
+
+
+def test_fractal_is_available_only_after_two_right_bars_close():
+    timestamps = pd.date_range("2024-01-01T00:01:00Z", periods=5, freq="min")
+    bars = pd.DataFrame({"timestamp": timestamps, "high": [1, 2, 5, 3, 2], "low": [0, 1, 2, 1, 0]})
+    swings = confirmed_fractal_swings(bars, left=2, right=2)
+    swing = next(item for item in swings if item.kind == "HIGH")
+    assert swing.index == 2
+    assert swing.available_index == 4
+    assert swing.available_at == timestamps[4]
+
+
+def test_future_candle_removal_removes_unconfirmed_fractal():
+    timestamps = pd.date_range("2024-01-01T00:01:00Z", periods=5, freq="min")
+    bars = pd.DataFrame({"timestamp": timestamps, "high": [1, 2, 5, 3, 2], "low": [0, 1, 2, 1, 0]})
+    assert not any(item.kind == "HIGH" for item in confirmed_fractal_swings(bars.iloc[:4], left=2, right=2))
+
+
+def test_v1_engine_runs_deterministically_on_research_fixture():
+    config = load_config(ROOT / "config" / "strategy_v1.yaml")
+    execution = load_config(ROOT / "config" / "execution.yaml")
+    n = 2400
+    timestamps = pd.date_range("2024-01-01T00:01:00Z", periods=n, freq="min")
+    close = 1.10 + 0.0002 * pd.Series([math.sin(x / 30) for x in range(n)])
+    open_price = close.shift(1, fill_value=close.iloc[0])
+    bars = pd.DataFrame({"timestamp": timestamps, "open": open_price, "high": pd.concat([open_price, close], axis=1).max(axis=1)+0.00002,
+                         "low": pd.concat([open_price, close], axis=1).min(axis=1)-0.00002, "close": close, "volume": 1, "spread_pips": 0.8})
+    first = generate_v1_candidates(bars, "EURUSD", config)
+    second = generate_v1_candidates(bars, "EURUSD", config)
+    assert first == second
+    executable_config = {**config, "status": "FULLY_SPECIFIED"}
+    result = run_v1_backtest(bars, "EURUSD", executable_config, execution)
+    assert result["spread_sources"] == ["HISTORICAL_SPREAD"]
+    assert result["trades"] == []
+
+
+def test_m1_execution_uses_spread_and_records_target_exit():
+    strategy = load_config(ROOT / "config" / "strategy_v1.yaml")
+    execution = load_config(ROOT / "config" / "execution.yaml")
+    candidate = {"candidate_id": "candidate-test", "symbol": "EURUSD", "direction": "LONG",
+                 "actual_execution_time": "2024-01-01T00:00:00+00:00", "entry_spread_pips": 0.8,
+                 "stop_price": 1.099, "atr_at_setup": 0.01, "liquidity_level": 1.1,
+                 "sweep_timestamp": "2024-01-01T00:00:00+00:00", "sweep_confirmation_timestamp": "2024-01-01T00:00:00+00:00",
+                 "sweep_extreme": 1.0995, "zone": {"source_timestamp": "2024-01-01T00:00:00+00:00", "proximal": 1.100, "distal": 1.099},
+                 "bos_timestamp": "2024-01-01T00:00:00+00:00", "scheduled_observation_time": "02:30",
+                 "observation_window_index": 0, "actual_signal_time": "2024-01-01T00:00:00+00:00"}
+    bars = pd.DataFrame({"timestamp": pd.to_datetime(["2024-01-01T00:01Z", "2024-01-01T00:02Z"]),
+                         "open": [1.100, 1.1005], "high": [1.101, 1.1023], "low": [1.100, 1.1005],
+                         "close": [1.1005, 1.1020], "volume": [1, 1], "spread_pips": [0.8, 0.8]})
+    result = _simulate_candidate(candidate, bars, execution, strategy, equity=1.0)
+    assert result["candidate_status"] == "EXECUTED"
+    assert result["trade"]["exit_reason"] == "TAKE_PROFIT"
+    assert result["trade"]["spread_source"] == "HISTORICAL_SPREAD"
+    assert result["trade"]["r_multiple"] == pytest.approx(2.0)
+
+
+def test_stop_wins_when_stop_and_target_touch_same_m1_candle():
+    strategy = load_config(ROOT / "config" / "strategy_v1.yaml")
+    execution = load_config(ROOT / "config" / "execution.yaml")
+    candidate = {"candidate_id": "candidate-tie", "symbol": "EURUSD", "direction": "LONG",
+                 "actual_execution_time": "2024-01-01T00:00:00+00:00", "entry_spread_pips": 0.8,
+                 "stop_price": 1.099, "atr_at_setup": 0.01, "liquidity_level": 1.1,
+                 "sweep_timestamp": "2024-01-01T00:00:00+00:00", "sweep_confirmation_timestamp": "2024-01-01T00:00:00+00:00",
+                 "sweep_extreme": 1.0995, "zone": {"source_timestamp": "2024-01-01T00:00:00+00:00", "proximal": 1.100, "distal": 1.099},
+                 "bos_timestamp": "2024-01-01T00:00:00+00:00", "scheduled_observation_time": "02:30",
+                 "observation_window_index": 0, "actual_signal_time": "2024-01-01T00:00:00+00:00"}
+    bars = pd.DataFrame({"timestamp": pd.to_datetime(["2024-01-01T00:01Z", "2024-01-01T00:02Z"]),
+                         "open": [1.100, 1.1005], "high": [1.101, 1.103], "low": [1.100, 1.098],
+                         "close": [1.1005, 1.1000], "volume": [1, 1], "spread_pips": [0.8, 0.8]})
+    result = _simulate_candidate(candidate, bars, execution, strategy, equity=1.0)
+    assert result["trade"]["exit_reason"] == "STOP_LOSS"
+
+
+def test_execution_stops_at_missing_m1_bar_instead_of_inventing_exit():
+    strategy = load_config(ROOT / "config" / "strategy_v1.yaml")
+    execution = load_config(ROOT / "config" / "execution.yaml")
+    candidate = {"candidate_id": "candidate-gap", "symbol": "EURUSD", "direction": "LONG",
+                 "actual_execution_time": "2024-01-01T00:00:00+00:00", "entry_spread_pips": 0.8,
+                 "stop_price": 1.099, "atr_at_setup": 0.01, "liquidity_level": 1.1,
+                 "sweep_timestamp": "2024-01-01T00:00:00+00:00", "sweep_extreme": 1.0995,
+                 "zone": {"source_timestamp": "2024-01-01T00:00:00+00:00", "proximal": 1.100, "distal": 1.099},
+                 "bos_timestamp": "2024-01-01T00:00:00+00:00", "scheduled_observation_time": "02:30",
+                 "observation_window_index": 0, "actual_signal_time": "2024-01-01T00:00:00+00:00"}
+    bars = pd.DataFrame({"timestamp": pd.to_datetime(["2024-01-01T00:01Z", "2024-01-01T00:03Z"]),
+                         "open": [1.100, 1.1005], "high": [1.101, 1.1023], "low": [1.100, 1.1005],
+                         "close": [1.1005, 1.1020], "volume": [1, 1], "spread_pips": [0.8, 0.8]})
+    result = _simulate_candidate(candidate, bars, execution, strategy, equity=1.0)
+    assert result["candidate_status"] == "DATA_GAP"
+    assert result["trade"] is None
+
+
+def test_missing_spread_retains_candidate_without_executable_trade():
+    strategy = load_config(ROOT / "config" / "strategy_v1.yaml")
+    execution = load_config(ROOT / "config" / "execution.yaml")
+    candidate = {"candidate_id": "candidate-spread", "symbol": "EURUSD", "direction": "LONG",
+                 "actual_execution_time": "2024-01-01T00:00:00+00:00", "entry_spread_pips": None,
+                 "stop_price": 1.099, "atr_at_setup": 0.01, "liquidity_level": 1.1,
+                 "sweep_timestamp": "2024-01-01T00:00:00+00:00", "sweep_extreme": 1.0995,
+                 "zone": {"source_timestamp": "2024-01-01T00:00:00+00:00", "proximal": 1.100, "distal": 1.099},
+                 "bos_timestamp": "2024-01-01T00:00:00+00:00", "scheduled_observation_time": "02:30",
+                 "observation_window_index": 0, "actual_signal_time": "2024-01-01T00:00:00+00:00"}
+    bars = pd.DataFrame({"timestamp": pd.to_datetime(["2024-01-01T00:01Z", "2024-01-01T00:02Z"]),
+                         "open": [1.100, 1.1005], "high": [1.101, 1.1023], "low": [1.100, 1.1005],
+                         "close": [1.1005, 1.1020], "volume": [1, 1]})
+    result = _simulate_candidate(candidate, bars, execution, strategy, equity=1.0)
+    assert result["candidate_status"] == "SPREAD_DATA_UNAVAILABLE"
+    assert result["spread_source"] == "NO_SPREAD_DATA"
+    assert result["trade"] is None
 
 
 def test_partial_strategy_cannot_generate_signals():
