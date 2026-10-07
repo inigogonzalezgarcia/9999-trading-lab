@@ -1,4 +1,6 @@
 from __future__ import annotations
+from hashlib import sha256
+import os
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
@@ -7,11 +9,22 @@ import pandas as pd
 from .core import load_config, metrics
 from .data import DataQualityError, load_market_data
 from .timezones import scheduled_observations, timezone_database_version
-from .strategy_v1 import run_v1_backtest, run_v1_portfolio
+from .strategy_v1 import canonical_config_hash, run_v1_backtest, run_v1_portfolio
 
 ROOT=Path(__file__).resolve().parents[2]
 CONFIG=ROOT/"config"/"strategy_v1.yaml"
 DATA_CONFIG=ROOT/"config"/"data.yaml"
+
+def software_revision():
+    """Prefer the deployed commit; otherwise fingerprint the research engine sources."""
+    commit = os.getenv("GIT_COMMIT")
+    if commit:
+        return commit
+    digest = sha256()
+    for relative in ("backend/app/main.py", "backend/app/core.py", "backend/app/data.py", "backend/app/execution.py", "backend/app/strategy_v1.py", "backend/app/timezones.py"):
+        digest.update(relative.encode("utf-8"))
+        digest.update((ROOT / relative).read_bytes())
+    return "source-sha256:" + digest.hexdigest()
 app=FastAPI(title="FX Research Lab",version="0.1.0",description="Historical research and backtesting only; no broker execution.")
 app.add_middleware(CORSMiddleware,allow_origins=["http://localhost:5173"],allow_methods=["*"],allow_headers=["*"])
 
@@ -40,22 +53,22 @@ async def run_backtest(file: UploadFile=File(...),symbol: str=Form("EURUSD"),tim
                 raise HTTPException(422,"Portfolio data contains unsupported or missing symbols")
         else:
             data_by_symbol={symbol: ds.bars}
-        execution=load_config(ROOT/"config"/"execution.yaml")
         local_dates=ds.bars.timestamp.dt.tz_convert(cfg["timezones"]["reference"]).dt.date
         schedule=[]
         for day in pd.date_range(min(local_dates), max(local_dates), freq="D"):
             schedule.extend(scheduled_observations(day.date().isoformat(),cfg))
         timezone_version=timezone_database_version()
         execution=load_config(ROOT/"config"/"execution.yaml")
-        reproducibility={"dataset_version":ds.version,"dataset_date_range_utc":{"start":ds.bars.timestamp.min().isoformat(),"end":ds.bars.timestamp.max().isoformat()},"strategy_version":cfg["strategy_version"],"strategy_config":cfg,"execution_config":execution,"timezone_config":cfg["timezones"],"timezone_database":timezone_version,"software_version":"0.1.0"}
+        reproducibility={"dataset_hash":ds.version,"dataset_date_range_utc":{"start":ds.bars.timestamp.min().isoformat(),"end":ds.bars.timestamp.max().isoformat()},"strategy_version":cfg["strategy_version"],"config_hash":canonical_config_hash(cfg,execution),"strategy_config_hash":canonical_config_hash(cfg),"execution_config_hash":canonical_config_hash(execution),"strategy_config":cfg,"execution_config":execution,"execution_model":execution["entry_model"],"spread_source":execution["spread"]["report_source_labels"],"slippage_model":execution["slippage"],"commission_model":execution["commission"],"timezone_config":cfg["timezones"],"timezone_database_version":timezone_version,"software_version":"0.1.0","software_revision":software_revision()}
         if timeframe != "M1":
             raise HTTPException(422,"Strategy V1 requires M1 data for causal fills and execution costs")
         if cfg["status"] != "FULLY_SPECIFIED":
             return {"strategy_version":cfg["strategy_version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The V1 engine is not yet validated; no trades or performance results were generated.","quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"signal_count":None,"trades":[],"metrics":None,"report":None}
-        result=run_v1_portfolio(data_by_symbol,cfg,execution)
+        result=run_v1_portfolio(data_by_symbol,cfg,execution,dataset_hash=ds.version)
+        reproducibility["spread_source"] = result["spread_sources"]
         if symbol != "PORTFOLIO":
             result["symbol"]=symbol
-        result.update({"backtest_blocked":False,"quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"metrics":metrics(result["trades"]),"report":{"spread_sources":result["spread_sources"],"candidate_count":result["candidate_count"],"executable_trade_count":result["signal_count"],"timezone_database":timezone_version,"strategy_version":cfg["strategy_version"],"execution_version":execution["version"]}})
+        result.update({"backtest_blocked":False,"quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"metrics":metrics(result["trades"]),"report":{"spread_sources":result["spread_sources"],"candidate_count":result["candidate_count"],"executable_trade_count":result["signal_count"],"timezone_database":timezone_version,"strategy_version":cfg["strategy_version"],"execution_version":execution["version"],"execution_model":execution["entry_model"],"slippage_model":execution["slippage"],"commission_model":execution["commission"]}})
         return result
     except DataQualityError as e:
         raise HTTPException(422, {"detail": str(e), "quality": e.report}) from e
