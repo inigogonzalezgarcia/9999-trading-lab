@@ -11,6 +11,8 @@ from backend.app.core import (
     scheduled_observations,
 )
 from backend.app.data import DataQualityError, aggregate_bars, bars_available_at, load_market_data
+from backend.app.execution import resolve_spread
+from backend.app.timezones import observation_windows_at, timezone_database_version, validate_observation_window_config
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -73,10 +75,43 @@ def test_v1_dst_policy_skips_spring_gap_and_selects_first_fall_occurrence():
     config = load_config(ROOT / "config" / "strategy_v1.yaml")
     spring = scheduled_observations("2024-03-31", config)
     fall = scheduled_observations("2024-10-27", config)
-    assert spring[1]["status"] == "SKIPPED_DST_NONEXISTENT"
-    assert fall[1]["status"] == "scheduled"
+    assert spring[1]["status"] == "DST_NONEXISTENT_SKIPPED"
+    assert fall[1]["status"] == "DST_AMBIGUOUS_EARLY"
     assert fall[1]["timezone_resolution"] == "first_occurrence_earlier_utc"
+    assert fall[1]["local_timestamp"] == "2024-10-27T02:30:00"
+    assert fall[1]["utc_offset"] == "+02:00"
     assert fall[1]["utc"].endswith("+00:00")
+
+
+def test_observation_windows_are_half_open_and_require_aware_instants():
+    config = load_config(ROOT / "config" / "strategy_v1.yaml")
+    assert observation_windows_at("2024-10-27T00:15:00Z", config) == [0]
+    assert observation_windows_at("2024-10-27T00:45:00Z", config) == []
+    with pytest.raises(ValueError, match="timezone-aware"):
+        observation_windows_at("2024-10-27T02:15:00", config)
+
+
+def test_overlapping_configured_windows_raise():
+    config = load_config(ROOT / "config" / "strategy_v1.yaml")
+    config["observation"]["windows"].append({"start": "02:30", "end": "03:00"})
+    with pytest.raises(ValueError, match="overlap"):
+        validate_observation_window_config(config)
+
+
+def test_timezone_database_release_is_recorded_for_reproducibility():
+    info = timezone_database_version()
+    assert info["source"] and info["version"]
+
+
+def test_spread_resolution_prefers_provider_then_explicit_fixed_value():
+    config = load_config(ROOT / "config" / "execution.yaml")
+    assert resolve_spread(0.7, config)["spread_source"] == "HISTORICAL_SPREAD"
+    config["spread"]["fixed_fallback_pips"] = 0.9
+    assert resolve_spread(None, config)["spread_source"] == "FIXED_CONFIGURED_SPREAD"
+    config["spread"]["fixed_fallback_pips"] = None
+    unavailable = resolve_spread(None, config)
+    assert unavailable["spread_source"] == "NO_SPREAD_DATA"
+    assert unavailable["candidate_status"] == "SPREAD_DATA_UNAVAILABLE"
 
 
 def test_spread_column_is_validated_and_reported(tmp_path):
