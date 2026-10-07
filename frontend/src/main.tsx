@@ -28,11 +28,12 @@ function App() {
     </form>
     {err && <p className="error">{err}</p>}
     {result && <>
-      <div className="notice"><strong>Strategy status: {result.strategy_status}</strong><p>{result.blocked_reason}</p><p>The deterministic V1 rules are documented, but no signals, trades, or performance claims are generated until the causal engine is implemented and validated.</p></div>
+      <div className="notice"><strong>Strategy status: {result.strategy_status}</strong><p>{result.blocked_reason || (result.backtest_blocked ? 'No strategy results were generated.' : 'Research backtest completed. Historical results are not evidence of a profitable edge.')}</p></div>
       <h2>Data quality</h2><pre>{JSON.stringify(result.quality, null, 2)}</pre>
       <h2>Configured schedule</h2><p>Preparation is reference only. Observation points are exact Europe/Madrid timestamps.</p>
       <div className="table"><table><thead><tr><th>Type</th><th>Europe/Madrid</th><th>UTC</th><th>America/New_York</th></tr></thead><tbody>{result.scheduled_observations.map((item: any) => <tr key={item.madrid}><td>{item.kind}</td><td>{item.madrid}</td><td>{item.utc}</td><td>{item.new_york}</td></tr>)}</tbody></table></div>
-      <h2>V1 backtest status</h2><p>The deterministic strategy rules are recorded in <code>config/strategy_v1.yaml</code>. The backtest stays blocked until the complete signal and execution engine has passed validation. Uploads can still be used for data-quality review; no performance results are generated while V1 is marked implementation-pending.</p>
+      <h2>V1 backtest status</h2><p>{result.backtest_blocked ? <>The deterministic strategy rules are recorded in <code>config/strategy_v1.yaml</code>. The backtest stays blocked until the implementation gate passes. Uploads remain available for data-quality review.</> : 'The configured strategy ran in historical research mode. Historical performance does not establish a profitable edge.'}</p>
+      {!result.backtest_blocked && <><h2>Backtest metrics</h2><pre>{JSON.stringify(result.metrics, null, 2)}</pre><h2>Candidate and trade events</h2><pre>{JSON.stringify({ events: result.events, trades: result.trades, reproducibility: result.reproducibility }, null, 2)}</pre></>}
     </>}
   </main>;
 }
