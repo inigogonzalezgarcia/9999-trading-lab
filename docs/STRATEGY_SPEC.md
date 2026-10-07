@@ -2,9 +2,9 @@
 
 ## Status and research scope
 
-V1 is a deterministic baseline research hypothesis, not proprietary ICAP methodology and not a claim of profitability. Its rules are defined in `config/strategy_v1.yaml`; the code must remain `IMPLEMENTATION_PENDING` until the full causal state machine and execution model pass their automated tests. Only then may the runtime report `FULLY_SPECIFIED`. No parameter may be optimized against the complete historical sample before the baseline is established. Every run records the exact strategy and execution configurations, data hash, date range, timezone choices, and software revision.
+V1 is a deterministic baseline research hypothesis, not proprietary ICAP methodology and not a claim of profitability. Its rules are defined in `config/strategy_v1.yaml`; after all causal implementation gates passed on 2026-10-07, the runtime status is `FULLY_SPECIFIED` and historical research backtests are enabled. No parameter may be optimized against the complete historical sample before the baseline is established. Every run records the exact strategy and execution configurations, data hash, date range, timezone choices, and software revision.
 
-The platform is historical research only. It has no broker connection or live execution. The software activation checklist and current implementation status are maintained in [docs/IMPLEMENTATION_COMPLETION_GATE.md](IMPLEMENTATION_COMPLETION_GATE.md). V1 remains blocked until every gate item passes; synthetic validation is not market-performance evidence.
+The platform is historical research only. It has no broker connection or live execution. The completed software activation checklist is maintained in [docs/IMPLEMENTATION_COMPLETION_GATE.md](IMPLEMENTATION_COMPLETION_GATE.md). Synthetic validation is not market-performance evidence.
 
 ## Clock, daily context, and observation windows
 
