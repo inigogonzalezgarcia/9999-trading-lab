@@ -1,76 +1,232 @@
+"""HTTP boundary: uploads, synchronous and background research runs, run history, static UI.
+
+Research-only. No broker connection or live execution exists anywhere in this service.
+"""
 from __future__ import annotations
-from hashlib import sha256
+
+import csv
+import io
+import json
+import logging
 import os
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from typing import Any
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
-from .core import load_config, metrics
-from .data import DataQualityError, load_market_data
-from .timezones import scheduled_observations, timezone_database_version
-from .strategy_v1 import canonical_config_hash, run_v1_backtest, run_v1_portfolio
+from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
-ROOT=Path(__file__).resolve().parents[2]
-CONFIG=ROOT/"config"/"strategy_v1.yaml"
-DATA_CONFIG=ROOT/"config"/"data.yaml"
+from . import service
+from .data import DataQualityError
+from .jobs import JobManager
+from .store import RunStore, dumps
 
-def software_revision():
-    """Prefer the deployed commit; otherwise fingerprint the research engine sources."""
-    commit = os.getenv("GIT_COMMIT")
-    if commit:
-        return commit
-    digest = sha256()
-    for relative in ("backend/app/main.py", "backend/app/core.py", "backend/app/data.py", "backend/app/execution.py", "backend/app/strategy_v1.py", "backend/app/timezones.py"):
-        digest.update(relative.encode("utf-8"))
-        digest.update((ROOT / relative).read_bytes())
-    return "source-sha256:" + digest.hexdigest()
-app=FastAPI(title="FX Research Lab",version="0.1.0",description="Historical research and backtesting only; no broker execution.")
-app.add_middleware(CORSMiddleware,allow_origins=["http://localhost:5173"],allow_methods=["*"],allow_headers=["*"])
+logging.basicConfig(level=os.getenv("FXLAB_LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+log = logging.getLogger("fxlab.api")
+
+ROOT = service.ROOT
+MAX_UPLOAD_MB = float(os.getenv("FXLAB_MAX_UPLOAD_MB", "250"))
+CORS_ORIGINS = [origin.strip() for origin in os.getenv("FXLAB_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if origin.strip()]
+STATIC_DIR = Path(os.getenv("FXLAB_STATIC_DIR", ROOT / "frontend" / "dist"))
+
+app = FastAPI(title="FX Research Lab", version=service.SOFTWARE_VERSION,
+              description="Educational historical research and backtesting only; no broker execution.")
+app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
+jobs = JobManager(workers=int(os.getenv("FXLAB_JOB_WORKERS", "2")))
+_store: RunStore | None = None
+
+
+def store() -> RunStore:
+    global _store
+    if _store is None:
+        _store = RunStore()
+    return _store
+
+
+class _JSON(JSONResponse):
+    """JSON that tolerates NaN/inf and numpy scalars from pandas."""
+
+    def render(self, content: Any) -> bytes:
+        return dumps(content).encode("utf-8")
+
+
+# Backwards-compatible alias: older tests patched ``main.load_config``.
+load_config = service.load_config
+
 
 @app.get("/api/health")
-def health(): return {"status":"ok","mode":"research_only"}
+def health() -> dict[str, Any]:
+    return {"status": "ok", "mode": "research_only", "version": service.SOFTWARE_VERSION, "max_upload_mb": MAX_UPLOAD_MB}
+
 
 @app.get("/api/config")
-def config(): return load_config(CONFIG)
+def config() -> Any:
+    strategy, execution, data_config = service.load_configs()
+    return _JSON({"strategy": strategy, "execution": execution, "data": data_config, "notice": service.EDUCATIONAL_NOTICE,
+                  "limits": {"max_upload_mb": MAX_UPLOAD_MB}, "software_revision": service.software_revision()})
+
+
+@app.get("/api/notice")
+def notice() -> dict[str, Any]:
+    return service.EDUCATIONAL_NOTICE
+
+
+async def _save_upload(file: UploadFile) -> Path:
+    suffix = Path(file.filename or "data.csv").suffix.lower()
+    if suffix not in {".csv", ".parquet", ".pq"}:
+        raise HTTPException(400, "Upload CSV or Parquet")
+    limit = int(MAX_UPLOAD_MB * 1024 * 1024)
+    written = 0
+    with NamedTemporaryFile(suffix=suffix, delete=False) as uploaded:
+        path = Path(uploaded.name)
+        while chunk := await file.read(1024 * 1024):
+            written += len(chunk)
+            if written > limit:
+                uploaded.close()
+                path.unlink(missing_ok=True)
+                raise HTTPException(413, f"Upload exceeds {MAX_UPLOAD_MB:g} MB; run large datasets through the CLI or raise FXLAB_MAX_UPLOAD_MB")
+            uploaded.write(chunk)
+    return path
+
+
+def _parse_options(raw: str | None) -> dict[str, Any]:
+    if not raw:
+        return {}
+    try:
+        options = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(422, f"options must be JSON: {exc}") from exc
+    if not isinstance(options, dict):
+        raise HTTPException(422, "options must be a JSON object")
+    return options
+
+
+def _load(path: Path, timeframe: str, source_timezone: str | None):
+    try:
+        return service.load_dataset(path, timeframe=timeframe, source_timezone=source_timezone)
+    except DataQualityError as exc:
+        raise HTTPException(422, {"detail": str(exc), "quality": exc.report}) from exc
+    except (ValueError, KeyError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+
 
 @app.post("/api/backtest")
-async def run_backtest(file: UploadFile=File(...),symbol: str=Form("EURUSD"),timeframe: str=Form("M1"),source_timezone: str|None=Form(None)):
-    suffix=Path(file.filename or "data.csv").suffix.lower()
-    if suffix not in {".csv",".parquet",".pq"}: raise HTTPException(400,"Upload CSV or Parquet")
-    with NamedTemporaryFile(suffix=suffix, delete=False) as uploaded:
-        path=Path(uploaded.name)
-        uploaded.write(await file.read())
+async def run_backtest(file: UploadFile = File(...), symbol: str = Form("EURUSD"), timeframe: str = Form("M1"),
+                       source_timezone: str | None = Form(None), daily_contexts: str = Form("lookback:30"),
+                       fixed_spread_pips: float | None = Form(None), save: bool = Form(True), label: str | None = Form(None)) -> Any:
+    """Synchronous research backtest; use ``/api/jobs/backtest`` for multi-year files."""
+    path = await _save_upload(file)
     try:
-        ds=load_market_data(path,source_timezone=source_timezone,timeframe=timeframe,timestamp_semantics=load_config(DATA_CONFIG)["source_timestamp_semantics"]); cfg=load_config(CONFIG)
-        if symbol != "PORTFOLIO" and symbol not in cfg["instruments"]:
-            raise HTTPException(422,"Baseline permits EURUSD, GBPUSD, or PORTFOLIO")
-        if symbol == "PORTFOLIO":
-            if "symbol" not in ds.bars.columns:
-                raise HTTPException(422,"Portfolio uploads require a symbol column containing EURUSD and/or GBPUSD")
-            data_by_symbol={name: group.drop(columns=["symbol"]).reset_index(drop=True) for name, group in ds.bars.groupby("symbol") if name in cfg["instruments"]}
-            if not data_by_symbol or len(data_by_symbol) != ds.bars.symbol.nunique():
-                raise HTTPException(422,"Portfolio data contains unsupported or missing symbols")
-        else:
-            data_by_symbol={symbol: ds.bars}
-        local_dates=ds.bars.timestamp.dt.tz_convert(cfg["timezones"]["reference"]).dt.date
-        schedule=[]
-        for day in pd.date_range(min(local_dates), max(local_dates), freq="D"):
-            schedule.extend(scheduled_observations(day.date().isoformat(),cfg))
-        timezone_version=timezone_database_version()
-        execution=load_config(ROOT/"config"/"execution.yaml")
-        reproducibility={"dataset_hash":ds.version,"dataset_date_range_utc":{"start":ds.bars.timestamp.min().isoformat(),"end":ds.bars.timestamp.max().isoformat()},"strategy_version":cfg["strategy_version"],"config_hash":canonical_config_hash(cfg,execution),"strategy_config_hash":canonical_config_hash(cfg),"execution_config_hash":canonical_config_hash(execution),"strategy_config":cfg,"execution_config":execution,"execution_model":execution["entry_model"],"spread_source":execution["spread"]["report_source_labels"],"slippage_model":execution["slippage"],"commission_model":execution["commission"],"timezone_config":cfg["timezones"],"timezone_database_version":timezone_version,"software_version":"0.1.0","software_revision":software_revision()}
         if timeframe != "M1":
-            raise HTTPException(422,"Strategy V1 requires M1 data for causal fills and execution costs")
-        if cfg["status"] != "FULLY_SPECIFIED":
-            return {"strategy_version":cfg["strategy_version"],"strategy_status":cfg["status"],"backtest_blocked":True,"blocked_reason":"The V1 engine is not yet validated; no trades or performance results were generated.","quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"signal_count":None,"trades":[],"metrics":None,"report":None}
-        result=run_v1_portfolio(data_by_symbol,cfg,execution,dataset_hash=ds.version)
-        reproducibility["spread_source"] = result["spread_sources"]
-        if symbol != "PORTFOLIO":
-            result["symbol"]=symbol
-        result.update({"backtest_blocked":False,"quality":ds.quality,"dataset_version":ds.version,"timezone_database":timezone_version,"scheduled_observations":schedule,"reproducibility":reproducibility,"metrics":metrics(result["trades"]),"report":{"spread_sources":result["spread_sources"],"candidate_count":result["candidate_count"],"executable_trade_count":result["signal_count"],"timezone_database":timezone_version,"strategy_version":cfg["strategy_version"],"execution_version":execution["version"],"execution_model":execution["entry_model"],"slippage_model":execution["slippage"],"commission_model":execution["commission"]}})
-        return result
-    except DataQualityError as e:
-        raise HTTPException(422, {"detail": str(e), "quality": e.report}) from e
-    except (ValueError,KeyError) as e: raise HTTPException(422,str(e)) from e
-    finally: path.unlink(missing_ok=True)
+            raise HTTPException(422, "Strategy V1 requires M1 data for causal fills and execution costs")
+        dataset = _load(path, timeframe, source_timezone)
+        result = service.run_backtest(dataset, symbol, {"daily_contexts": daily_contexts, "fixed_spread_pips": fixed_spread_pips})
+        if save and not result.get("backtest_blocked"):
+            result["run_id"] = store().save("backtest", result, service.summarize(result, "backtest"), symbol, file.filename, label)
+        return _JSON(result)
+    except (ValueError, KeyError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def _job(kind: str, path: Path, filename: str | None, symbol: str, timeframe: str, source_timezone: str | None, options: dict[str, Any], label: str | None) -> dict[str, Any]:
+    def work(progress):
+        try:
+            progress("loading", 0.01)
+            dataset = service.load_dataset(path, timeframe=timeframe, source_timezone=source_timezone)
+            if kind == "backtest":
+                result = service.run_backtest(dataset, symbol, options, progress)
+            else:
+                result = service.run_research(dataset, symbol, options, progress)
+            run_id = store().save(kind, result, service.summarize(result, kind), symbol, filename, label)
+            return {"run_id": run_id, "summary": service.summarize(result, kind), "notice": service.EDUCATIONAL_NOTICE}
+        finally:
+            path.unlink(missing_ok=True)
+
+    return jobs.submit(kind, work, {"symbol": symbol, "dataset_name": filename, "label": label})
+
+
+@app.post("/api/jobs/{kind}")
+async def submit_job(kind: str, file: UploadFile = File(...), symbol: str = Form("EURUSD"), timeframe: str = Form("M1"),
+                     source_timezone: str | None = Form(None), options: str | None = Form(None), label: str | None = Form(None)) -> Any:
+    """Queue a ``backtest`` or ``research`` run; poll ``/api/jobs/{job_id}`` for progress."""
+    if kind not in {"backtest", "research"}:
+        raise HTTPException(404, "Unknown job kind")
+    if timeframe != "M1":
+        raise HTTPException(422, "Strategy V1 requires M1 data")
+    path = await _save_upload(file)
+    return _JSON(_job(kind, path, file.filename, symbol, timeframe, source_timezone, _parse_options(options), label))
+
+
+@app.get("/api/jobs")
+def list_jobs() -> Any:
+    return _JSON(jobs.list())
+
+
+@app.get("/api/jobs/{job_id}")
+def get_job(job_id: str) -> Any:
+    job = jobs.public(job_id)
+    if job is None:
+        raise HTTPException(404, "Unknown job")
+    return _JSON(job)
+
+
+@app.get("/api/runs")
+def list_runs(limit: int = 100, kind: str | None = None) -> Any:
+    return _JSON(store().list(limit=limit, kind=kind))
+
+
+@app.get("/api/runs/{run_id}")
+def get_run(run_id: str) -> Any:
+    result = store().get(run_id)
+    if result is None:
+        raise HTTPException(404, "Unknown run")
+    meta = store().meta(run_id) or {}
+    return _JSON({"meta": meta, "result": result})
+
+
+@app.delete("/api/runs/{run_id}")
+def delete_run(run_id: str) -> dict[str, bool]:
+    if not store().delete(run_id):
+        raise HTTPException(404, "Unknown run")
+    return {"deleted": True}
+
+
+@app.patch("/api/runs/{run_id}")
+def relabel_run(run_id: str, label: str = Form(...)) -> dict[str, bool]:
+    if not store().relabel(run_id, label):
+        raise HTTPException(404, "Unknown run")
+    return {"updated": True}
+
+
+@app.get("/api/runs/{run_id}/trades.csv")
+def run_trades_csv(run_id: str) -> Response:
+    result = store().get(run_id)
+    if result is None:
+        raise HTTPException(404, "Unknown run")
+    trades = result.get("trades", [])
+    columns = ["trade_id", "symbol", "date", "direction", "observation_window", "entry_timestamp", "entry_price", "stop_price", "target_price",
+               "exit_timestamp", "exit_price", "exit_reason", "spread_pips", "spread_source", "slippage_pips", "commission", "r_multiple", "pnl", "mfe", "mae"]
+    buffer = io.StringIO()
+    # Plain comment line (not through csv.writer, which would quote the commas in the sentence).
+    buffer.write("# " + service.EDUCATIONAL_NOTICE["lines"][0] + "\n")
+    writer = csv.writer(buffer)
+    writer.writerow(columns)
+    for trade in trades:
+        writer.writerow([trade.get(column) for column in columns])
+    return Response(buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="trades-{run_id[:8]}.csv"'})
+
+
+@app.get("/api/runs/{run_id}/result.json")
+def run_result_json(run_id: str) -> Response:
+    result = store().get(run_id)
+    if result is None:
+        raise HTTPException(404, "Unknown run")
+    return Response(dumps(result), media_type="application/json", headers={"Content-Disposition": f'attachment; filename="run-{run_id[:8]}.json"'})
+
+
+if STATIC_DIR.is_dir():  # production image: serve the built UI from the same origin
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="ui")

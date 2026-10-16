@@ -57,3 +57,55 @@
 - **Test result:** 38 tests pass, including both raw-M1 gates. Synthetic results validate implementation only and do not establish market performance.
 - **Scope:** Historical research/backtesting only. No broker connection or live order execution is enabled.
 - **Status:** Adopted; out-of-sample evaluation, walk-forward analysis, and research benchmarks remain future work.
+
+## 2026-10-15 — Educational positioning, performance, research protocol
+
+- **Decision:** Position the platform explicitly as an educational research tool. The notice lives in
+  `service.EDUCATIONAL_NOTICE`, is returned by `/api/notice`, embedded in every result payload, shown in the
+  UI banner and written into CSV exports; `DISCLAIMER.md` carries the bilingual legal text. No signals,
+  alerts or live execution will ever be added.
+- **Decision:** Split `strategy_v1.py` (869 lines) into `backend/app/strategy/` by causal layer and rewrite
+  hot paths on numpy arrays. Verified bit-identical output against the previous engine on a labelled synthetic
+  one-month dataset (candidates and full portfolio result). One year of M1 now runs in seconds instead of
+  hours.
+- **Bug fixed:** candidates without an executable entry (`DATA_GAP`, no next M1) carry `None` as execution
+  time; the portfolio sort compared `None` with strings and crashed on long datasets. Sorting now falls back
+  to signal/confirmation time. Found by the synthetic stress run; previously masked by short fixtures.
+- **Bug fixed:** Sharpe/Sortino annualised per-trade R with √252. Replaced by `metrics.py`: per-trade
+  statistics unannualised; annualised figures from the daily R series.
+- **Decision:** Daily 01:50 contexts accept `preparation.context_lookback_days` (`full` | `lookback:N` |
+  `none` at run level). Contexts are audit artefacts and never feed execution; the default `lookback:30`
+  keeps year-long runs under a few minutes. `full` remains available and exact.
+- **Decision:** Add `research.py` (splits, walk-forward, Monte Carlo, sensitivity, cost-matched random
+  benchmark) wired to CLI and `/api/jobs/research`. Period slices use warm-up history; results can differ from
+  the same dates inside a full run because V1 liquidity levels have no expiry — recorded as a known property
+  of the hypothesis, not a defect of the harness.
+- **Open question (strategy, not software):** liquidity levels never expire, so swings from months earlier
+  remain eligible sweep targets. Whether V1 should cap level age is a strategy-version decision for V1.1.
+- **Decision:** Persist runs in SQLite (`store.py`), run long jobs in process with progress (`jobs.py`), cap
+  uploads (`FXLAB_MAX_UPLOAD_MB`), read CORS from the environment, serve the built UI from the API in the
+  Docker image. No authentication: intended use is local/educational; public deployments must sit behind the
+  platform's access controls.
+- **Decision:** Data acquisition via `ingest.py` (HistData generic ASCII in EST without DST; Dukascopy CSV
+  exports; Dukascopy `.bi5` tick feed aggregated to bid M1 with per-minute median spread). Synthetic candles
+  are never created.
+- **Status:** 60 tests pass (engine gates, DST, execution, metrics, research, ingest, API, service). Real
+  provider data has not been run yet; the first real run and its research report are the next step and must
+  precede any public claim.
+
+## 2026-10-16 — First real-data run and what it changes
+
+- **Record:** Dukascopy EUR/USD 2024 ticks aggregated to M1 with historical spreads (dataset
+  `65a7a807…cde62d`). Baseline: 3 138 candidates, 300 complete setups, 5 trades, −2.61R. Details in
+  `docs/FIRST_REAL_RUN.md`.
+- **Decision:** Treat the result as a property of the hypothesis, not of the harness. The software stays
+  unchanged in its rules; V1.1 questions are logged as open strategy decisions: window placement (the pattern
+  completes mostly at the London and New York opens), stop reference (135 of 136 window-valid setups rejected
+  for stop > 3 ATR when anchored at the sweep extreme), and liquidity level expiry.
+- **Decision:** Add hour-of-day timing histograms to every backtest report and labelled session experiments
+  to the sensitivity study, so the tool itself shows whether a window fits the market. Experiments are never
+  reported as the baseline.
+- **Decision:** Support browser-saved `.bi5` bundles (`convert bundle`) for machines without shell network;
+  Dukascopy throttles with HTTP 503 above ~2 concurrent requests, so the downloader paces itself.
+- **Status:** 51 offline tests pass; API tests still require fastapi locally. Educational positioning
+  unchanged.

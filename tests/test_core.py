@@ -6,7 +6,6 @@ import pytest
 
 from backend.app.core import (
     StrategyIncompleteError,
-    aggregate,
     convert_time,
     generate_signals,
     load_config,

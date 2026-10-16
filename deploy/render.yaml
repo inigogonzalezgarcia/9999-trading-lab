@@ -1,0 +1,19 @@
+# Render.com blueprint (https://render.com/docs/blueprint-spec). Educational research tool; keep it private or behind auth.
+services:
+  - type: web
+    name: fx-research-lab
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    disk:
+      name: fxlab-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: FXLAB_DB
+        value: /data/fxlab.sqlite3
+      - key: FXLAB_MAX_UPLOAD_MB
+        value: "100"
+      - key: FXLAB_JOB_WORKERS
+        value: "1"

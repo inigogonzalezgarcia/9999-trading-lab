@@ -1,11 +1,30 @@
+# Local development: hot-reloading API + Vite dev server.
+# Production-style single container: `docker compose --profile prod up lab`.
 services:
   api:
-    build: .
+    image: python:3.12-slim
+    working_dir: /app
+    volumes: ["./:/app", "fxlab-data:/data"]
+    environment:
+      FXLAB_DB: /data/fxlab.sqlite3
+      FXLAB_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    command: sh -c "pip install -q -r backend/requirements.txt && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports: ["8000:8000"]
-    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
   frontend:
     image: node:20-alpine
     working_dir: /web
     volumes: ["./frontend:/web"]
+    environment:
+      VITE_API_BASE: http://localhost:8000
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
     ports: ["5173:5173"]
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on: [api]
+  lab:
+    profiles: ["prod"]
+    build:
+      context: .
+      args: {GIT_COMMIT: "${GIT_COMMIT:-unknown}"}
+    volumes: ["fxlab-data:/data"]
+    ports: ["8000:8000"]
+volumes:
+  fxlab-data: {}

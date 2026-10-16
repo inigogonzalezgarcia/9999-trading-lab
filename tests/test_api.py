@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from fastapi.testclient import TestClient
 
-from backend.app import main, strategy_v1
+from backend.app import main, service, strategy_v1
 from backend.app.core import load_config as read_config
 
 
@@ -19,7 +19,7 @@ def _enable_engine_config(monkeypatch):
             result["status"] = "FULLY_SPECIFIED"
         return result
 
-    monkeypatch.setattr(main, "load_config", configured_loader)
+    monkeypatch.setattr(service, "load_config", configured_loader)
 
 
 def _candidate(spread):
@@ -55,7 +55,7 @@ def test_api_pending_configuration_still_blocks_backtest_and_returns_metadata(mo
             result["status"] = "IMPLEMENTATION_PENDING"
         return result
 
-    monkeypatch.setattr(main, "load_config", pending_loader)
+    monkeypatch.setattr(service, "load_config", pending_loader)
     client = TestClient(main.app)
     response = client.post("/api/backtest", data={"symbol": "EURUSD", "timeframe": "M1"},
                            files={"file": ("SYNTHETIC_TEST_DATA.csv", _csv(False), "text/csv")})
@@ -80,6 +80,52 @@ def test_api_uses_fully_specified_configuration_for_research_backtest():
     assert result["backtest_blocked"] is False
     assert result["metrics"] is not None
     assert result["reproducibility"]["strategy_version"] == "1.0"
+    assert result["notice"]["title"] == "Educational research tool"
+    assert result["metrics"]["methodology"]["daily"].startswith("sum of R per weekday")
+    assert "equity_curve" in result and "chart" in result
+
+
+def test_api_persists_runs_and_exports_trades(monkeypatch):
+    _enable_engine_config(monkeypatch)
+    monkeypatch.setattr(strategy_v1, "generate_v1_candidates", lambda *_args: [_candidate(0.8)])
+    client = TestClient(main.app)
+    response = client.post("/api/backtest", data={"symbol": "EURUSD", "timeframe": "M1", "label": "api-test"},
+                           files={"file": ("SYNTHETIC_TEST_DATA.csv", _csv(True), "text/csv")})
+    run_id = response.json()["run_id"]
+    listing = client.get("/api/runs").json()
+    assert any(row["id"] == run_id and row["label"] == "api-test" and row["summary"]["trades"] == 1 for row in listing)
+    stored = client.get(f"/api/runs/{run_id}").json()
+    assert stored["result"]["trades"][0]["exit_reason"] == "TAKE_PROFIT"
+    csv_export = client.get(f"/api/runs/{run_id}/trades.csv")
+    assert csv_export.status_code == 200 and "TAKE_PROFIT" in csv_export.text and csv_export.text.startswith("# ")
+    assert client.delete(f"/api/runs/{run_id}").json() == {"deleted": True}
+    assert client.get(f"/api/runs/{run_id}").status_code == 404
+
+
+def test_api_rejects_oversized_uploads(monkeypatch):
+    monkeypatch.setattr(main, "MAX_UPLOAD_MB", 0.00001)
+    client = TestClient(main.app)
+    response = client.post("/api/backtest", data={"symbol": "EURUSD"}, files={"file": ("big.csv", _csv(True) * 50, "text/csv")})
+    assert response.status_code == 413
+
+
+def test_api_background_job_reports_progress_and_persists(monkeypatch):
+    _enable_engine_config(monkeypatch)
+    monkeypatch.setattr(strategy_v1, "generate_v1_candidates", lambda *_args: [_candidate(0.8)])
+    client = TestClient(main.app)
+    submitted = client.post("/api/jobs/backtest", data={"symbol": "EURUSD", "options": "{\"daily_contexts\": \"none\"}"},
+                            files={"file": ("SYNTHETIC_TEST_DATA.csv", _csv(True), "text/csv")}).json()
+    assert submitted["status"] in {"queued", "running", "done"}
+    import time
+    for _ in range(200):
+        job = client.get(f"/api/jobs/{submitted['job_id']}").json()
+        if job["status"] in {"done", "failed"}:
+            break
+        time.sleep(0.05)
+    assert job["status"] == "done", job
+    assert job["result"]["summary"]["trades"] == 1
+    assert client.get(f"/api/runs/{job['result']['run_id']}").status_code == 200
+    assert client.post("/api/jobs/unknown", data={}, files={"file": ("x.csv", b"a", "text/csv")}).status_code == 404
 
 
 def test_api_preserves_missing_spread_candidate_without_trade(monkeypatch):

@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 160
+target-version = "py311"
+extend-exclude = ["frontend", "data", "scripts/__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
