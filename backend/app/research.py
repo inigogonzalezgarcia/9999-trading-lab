@@ -200,17 +200,20 @@ def default_sensitivity_grid(strategy_config: dict[str, Any], execution_config: 
         {"scope": "strategy", "path": "zones.expiry_m15_bars", "values": [4, 8, 12]},
         {"scope": "strategy", "path": "setup.lifetime_m15_bars_from_sweep_confirmation", "values": [6, 8, 12]},
         {"scope": "strategy", "path": "displacement.minimum_atr", "values": [0.75, 1.0, 1.25]},
+        {"scope": "strategy", "path": "stop.reference", "values": ["sweep_extreme", "zone_distal", "leg1_origin"]},
+        {"scope": "strategy", "path": "stop.max_distance_atr", "values": [3.0, 4.0, 5.0]},
+        {"scope": "strategy", "path": "liquidity.level_max_age_m15_bars", "values": [None, 960, 1920, 3840]},
         # Session experiments: the same rules observed at other session opens. Several keys must move
         # together (windows, scheduled times, session expiry), hence the multi-change form.
         {"scope": "multi", "path": "session", "values": [
             {"label": "london_open_09:00-10:30", "changes": [
                 {"scope": "strategy", "path": "observation.windows", "value": [{"start": "09:00", "end": "09:45"}, {"start": "09:45", "end": "10:30"}]},
                 {"scope": "strategy", "path": "observation.scheduled_times", "value": ["09:30", "10:00"]},
-                {"scope": "execution", "path": "session_end", "value": "13:00"}]},
+                {"scope": "strategy", "path": "execution.session_end", "value": "13:00"}]},
             {"label": "new_york_open_15:00-16:30", "changes": [
                 {"scope": "strategy", "path": "observation.windows", "value": [{"start": "15:00", "end": "15:45"}, {"start": "15:45", "end": "16:30"}]},
                 {"scope": "strategy", "path": "observation.scheduled_times", "value": ["15:30", "16:00"]},
-                {"scope": "execution", "path": "session_end", "value": "19:00"}]},
+                {"scope": "strategy", "path": "execution.session_end", "value": "19:00"}]},
         ]},
     ]
     return [item for item in grid if item["values"]]

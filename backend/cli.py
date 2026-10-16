@@ -73,6 +73,28 @@ def cmd_convert(args) -> int:
     return 0
 
 
+def cmd_merge(args) -> int:
+    """Stack canonical single-symbol CSVs into one PORTFOLIO file with a symbol column."""
+    import pandas as pd
+
+    frames = []
+    for item in args.inputs:
+        symbol, _, path = item.partition("=")
+        if not path:
+            print("use SYMBOL=path.csv for each input", file=sys.stderr)
+            return 2
+        frame = pd.read_csv(path)
+        frame.insert(0, "symbol", symbol.upper())
+        frames.append(frame)
+    merged = pd.concat(frames, ignore_index=True)
+    columns = ["symbol", "timestamp", "open", "high", "low", "close", "volume"] + (["spread_pips"] if "spread_pips" in merged.columns else [])
+    merged = merged[columns].sort_values(["timestamp", "symbol"]).reset_index(drop=True)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    merged.to_csv(args.out, index=False)
+    print(json.dumps({"output": str(args.out), "rows": int(len(merged)), "symbols": sorted(merged.symbol.unique().tolist())}, indent=2))
+    return 0
+
+
 def cmd_validate(args) -> int:
     dataset = service.load_dataset(args.input, source_timezone=args.source_timezone)
     print(json.dumps(dataset.quality, indent=2, default=str))
@@ -93,12 +115,12 @@ def cmd_backtest(args) -> int:
     started = time.time()
     dataset = service.load_dataset(args.input, source_timezone=args.source_timezone)
     print(f"loaded {dataset.quality['rows']:,} rows, {dataset.quality['gap_count']} gaps, spread column: {dataset.quality['spread_available']}", file=sys.stderr)
-    result = service.run_backtest(dataset, args.symbol, {"daily_contexts": args.daily_contexts, "fixed_spread_pips": args.fixed_spread_pips,
+    result = service.run_backtest(dataset, args.symbol, {"daily_contexts": args.daily_contexts, "fixed_spread_pips": args.fixed_spread_pips, "strategy": args.strategy,
                                                          "include_chart": not args.no_chart,
                                                          "context_detail": "full" if args.full_contexts else "summary"}, progress=_progress)
     print(file=sys.stderr)
     m = result["metrics"]
-    print(f"candidates={result['candidate_count']} trades={m['total_trades']} expectancy={m['expectancy_r']:+.3f}R total={m['total_r']:+.2f}R "
+    print(f"strategy={result['strategy_version']} candidates={result['candidate_count']} trades={m['total_trades']} expectancy={m['expectancy_r']:+.3f}R total={m['total_r']:+.2f}R "
           f"win_rate={m['win_rate']:.0%} max_dd={m['max_drawdown_r']:.2f}R annualised_sharpe={m['daily']['annualized_sharpe']} ({time.time() - started:.0f}s)", file=sys.stderr)
     print("rejections:", json.dumps(result["report"]["rejections"]), file=sys.stderr)
     _maybe_save("backtest", result, args, args.symbol)
@@ -110,7 +132,7 @@ def cmd_research(args) -> int:
     _print_notice()
     started = time.time()
     dataset = service.load_dataset(args.input, source_timezone=args.source_timezone)
-    options = {"fixed_spread_pips": args.fixed_spread_pips, "train_days": args.train_days, "test_days": args.test_days,
+    options = {"fixed_spread_pips": args.fixed_spread_pips, "strategy": args.strategy, "train_days": args.train_days, "test_days": args.test_days,
                "anchored": args.anchored, "mc_simulations": args.mc_simulations, "benchmark_simulations": args.benchmark_simulations,
                "warmup_days": args.warmup_days, "seed": args.seed,
                "splits": not args.skip_splits, "walk_forward": not args.skip_walk_forward, "monte_carlo": not args.skip_monte_carlo,
@@ -174,6 +196,11 @@ def build_parser() -> argparse.ArgumentParser:
     convert.add_argument("--ask", type=Path, help="Dukascopy ask export to derive spread_pips")
     convert.set_defaults(func=cmd_convert)
 
+    merge = sub.add_parser("merge", help="combine single-symbol CSVs into a PORTFOLIO file (SYMBOL=path ...)")
+    merge.add_argument("inputs", nargs="+", help="e.g. EURUSD=data/raw/EURUSD_2024.csv GBPUSD=data/raw/GBPUSD_2024.csv")
+    merge.add_argument("--out", type=Path, required=True)
+    merge.set_defaults(func=cmd_merge)
+
     validate = sub.add_parser("validate", help="data-quality report for a canonical CSV/Parquet file")
     validate.add_argument("input", type=Path)
     validate.add_argument("--source-timezone")
@@ -185,6 +212,7 @@ def build_parser() -> argparse.ArgumentParser:
         run.add_argument("--symbol", default="EURUSD", choices=["EURUSD", "GBPUSD", "PORTFOLIO"])
         run.add_argument("--source-timezone")
         run.add_argument("--fixed-spread-pips", type=float, help="explicit fixed spread when the data has no spread_pips column")
+        run.add_argument("--strategy", default=service.DEFAULT_STRATEGY, help="config/strategy_*.yaml to run (default strategy_v1.yaml; strategy_v1_1.yaml is the logged experiment)")
         run.add_argument("--out", type=Path, help="write the JSON result here (default: stdout)")
         run.add_argument("--label")
         run.add_argument("--no-save", action="store_true", help="do not persist the run in the SQLite history")

@@ -64,6 +64,58 @@ establish is *where the candidates die*:
 Every line above is dominated by sample size; the London experiment is the only configuration that produces
 a count worth studying further, and it is still breakeven before any additional cost.
 
+## V1.1 experiment (`config/strategy_v1_1.yaml`) on the same data
+
+The three logged decisions were implemented as engine parameters whose defaults reproduce V1 exactly
+(verified bit-identical) and activated in a separate configuration: London-open windows 09:00–10:30 Madrid
+with session expiry 13:00, stop anchored at the zone distal edge, liquidity levels expiring after 1 920 M15
+bars. V1 stays frozen.
+
+| | V1 baseline | V1.1 experiment |
+|---|---|---|
+| Candidates / complete setups | 3 138 / 300 | 2 037 / 204 |
+| Trades | 5 | **12** (5 winners: 3 targets, 2 expiries in profit) |
+| Total / expectancy | −2.61R / −0.52R | **+2.35R / +0.20R** |
+| Max drawdown | 3.45R | 3.01R |
+| Random cost-matched benchmark | percentile 8.5 % | **percentile 75.5 %** (needs > 95 % to mean anything) |
+| Walk-forward OOS (9 folds) | 3 trades, −0.66R | 6 trades, +3.0R, 2 of 4 folds positive |
+| Splits train / validation / OOS | 4 / 1 / 0 trades | 8 (+1.07R) / 3 (+1.31R) / **1 (−0.03R)** |
+| Monte Carlo p(losing path) | 94 % | 28 %; drawdown p95 5.3R |
+
+Sensitivity on V1.1 (one change at a time, `results/EURUSD_2024_v1_1_research.json`):
+
+| Change | Trades | Total R |
+|---|---|---|
+| stop max distance 3 → 4 ATR | 17 | **−1.55R** |
+| stop max distance 3 → 5 ATR | 19 | −1.82R |
+| stop reference → leg-1 origin | 18 | −3.74R |
+| stop reference → sweep extreme (V1 rule) | 13 | +0.35R |
+| level expiry 1 920 → 960 bars | 10 | +0.04R |
+| level expiry removed | 15 | +3.29R |
+| New York open instead of London | 8 | −6.66R |
+| slippage 0 → 0.5 pips | 12 → 11 | +2.46R → +2.06R |
+
+**Reading.** The headline +2.35R is not evidence. Twelve trades cannot separate skill from noise (the random
+benchmark says exactly that), the out-of-sample slice holds one trade, and neighbouring parameter values flip
+the sign. Still, 110 of 204 complete setups are rejected for stop distance even with the zone-distal stop
+(median 3.7 ATR), so the next honest question for a V1.2 is structural — where the stop belongs relative to
+the entry — not a parameter sweep. Multi-year data (2022–2025) is required before any further claim.
+
+## Portfolio run (EUR/USD + GBP/USD 2024, 745 242 M1 bars, shared risk limits)
+
+| | V1 baseline | V1.1 experiment |
+|---|---|---|
+| Candidates | 6 529 | 4 259 |
+| Trades | 8 | 20 |
+| Total / expectancy | −4.07R / −0.51R | **−1.18R / −0.06R** |
+| Win rate | 25 % | 35 % |
+| Max drawdown | 4.35R | 4.01R |
+
+Adding GBP/USD removes the positive sign V1.1 showed on EUR/USD alone (the GBP/USD leg contributes roughly
+−3.5R). Two symbols, one year, 20 trades: the honest summary of the hypothesis so far is *no edge detected*,
+with a documented list of structural reasons and a tool that makes the next iteration a few seconds of
+compute. GBP/USD data: 21 982 402 Dukascopy ticks → 372 468 M1 bars (`data/raw/GBPUSD_2024.csv`).
+
 ## What this means for the project
 
 - The software did its job: it ran a year of real ticks in seconds, kept every candidate with its reason,

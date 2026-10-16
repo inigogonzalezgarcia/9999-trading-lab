@@ -138,6 +138,11 @@ export function Rejections({ rejections, total }: { rejections: Record<string, n
   );
 }
 
+function inWindows(windows?: { start: string; end: string }[]): (hour: number) => boolean {
+  const ranges = (windows ?? [{ start: '02:15', end: '04:15' }]).map((w) => [Number(w.start.slice(0, 2)), Number(w.end.slice(0, 2)) + (w.end.slice(3) === '00' ? -1 : 0)]);
+  return (hour) => ranges.some(([a, b]) => hour >= a && hour <= b);
+}
+
 export function HourHistogram({ title, counts, highlight }: { title: string; counts: Record<string, number>; highlight: (hour: number) => boolean }) {
   const max = Math.max(1, ...Object.values(counts));
   return (
@@ -232,8 +237,8 @@ export function BacktestView({ result }: { result: BacktestResult }) {
         <section>
           <h2>When the pattern completes (hour, {result.report.timing.timezone})</h2>
           <p className="muted small">{result.report.timing.complete_setups} complete setups (BOS confirmed); {result.report.timing.complete_setups_outside_windows} fell outside the observation windows. Shaded hours are the configured windows.</p>
-          <HourHistogram title="Complete setups by hour" counts={result.report.timing.complete_setups_by_hour} highlight={(h) => h >= 2 && h <= 4} />
-          <HourHistogram title="Sweep confirmations by hour" counts={result.report.timing.sweep_confirmations_by_hour} highlight={(h) => h >= 2 && h <= 4} />
+          <HourHistogram title="Complete setups by hour" counts={result.report.timing.complete_setups_by_hour} highlight={inWindows(result.report.timing.windows)} />
+          <HourHistogram title="Sweep confirmations by hour" counts={result.report.timing.sweep_confirmations_by_hour} highlight={inWindows(result.report.timing.windows)} />
         </section>
       )}
       <section>

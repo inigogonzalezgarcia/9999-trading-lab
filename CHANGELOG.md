@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-10-16
+
+- Strategy V1.1 experiment (`config/strategy_v1_1.yaml`): London-open windows, zone-distal stop, liquidity
+  level expiry. Engine parameters default to V1 behaviour (bit-identical); `--strategy` / form field /
+  UI selector choose the configuration.
+- Sensitivity grid covers stop reference, stop max distance and level expiry.
+- PORTFOLIO mode: symbol-aware loader checks, `merge` CLI command, GBPUSD 2024 run.
+- `docs/FIRST_REAL_RUN.md` extended with the V1.1 comparison and its fragility table.
+
 ## 0.2.1 — 2026-10-16
 
 - First real-data run: Dukascopy EUR/USD 2024 ticks (20.7M) → 372 774 M1 bars; report in `docs/FIRST_REAL_RUN.md`.

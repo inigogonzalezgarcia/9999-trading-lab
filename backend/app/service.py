@@ -26,7 +26,7 @@ log = logging.getLogger("fxlab")
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = ROOT / "config"
-SOFTWARE_VERSION = "0.2.0"
+SOFTWARE_VERSION = "0.3.0"
 
 EDUCATIONAL_NOTICE = {
     "title": "Educational research tool",
@@ -55,8 +55,33 @@ def software_revision() -> str:
     return "source-sha256:" + digest.hexdigest()
 
 
-def load_configs(fixed_spread_pips: float | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    strategy = load_config(CONFIG_DIR / "strategy_v1.yaml")
+DEFAULT_STRATEGY = "strategy_v1.yaml"
+
+
+def available_strategies() -> list[str]:
+    """Strategy configuration files that can run (status FULLY_SPECIFIED), e.g. strategy_v1.yaml, strategy_v1_1.yaml."""
+    names = []
+    for path in sorted(CONFIG_DIR.glob("strategy_*.yaml")):
+        try:
+            if load_config(path).get("status") == "FULLY_SPECIFIED":
+                names.append(path.name)
+        except Exception:  # noqa: BLE001 - an unreadable experiment must not hide the others
+            continue
+    return names
+
+
+def resolve_strategy_file(name: str | None) -> Path:
+    candidate = Path(name or DEFAULT_STRATEGY).name  # no directories: configs live in config/ only
+    if not candidate.startswith("strategy_") or not candidate.endswith(".yaml"):
+        raise ValueError("strategy must be a config/strategy_*.yaml file")
+    path = CONFIG_DIR / candidate
+    if not path.is_file():
+        raise ValueError(f"Unknown strategy configuration: {candidate}")
+    return path
+
+
+def load_configs(fixed_spread_pips: float | None = None, strategy_file: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    strategy = load_config(resolve_strategy_file(strategy_file))
     execution = load_config(CONFIG_DIR / "execution.yaml")
     data_config = load_config(CONFIG_DIR / "data.yaml")
     if fixed_spread_pips is not None:
@@ -96,7 +121,8 @@ def apply_context_mode(strategy: dict[str, Any], mode: str) -> tuple[dict[str, A
 def reproducibility(dataset: Dataset, strategy: dict[str, Any], execution: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
     return {"dataset_hash": dataset.version,
             "dataset_date_range_utc": {"start": dataset.bars.timestamp.min().isoformat(), "end": dataset.bars.timestamp.max().isoformat()},
-            "strategy_version": strategy["strategy_version"], "config_hash": canonical_config_hash(strategy, execution),
+            "strategy_version": strategy["strategy_version"], "strategy_file": options.get("strategy", DEFAULT_STRATEGY),
+            "config_hash": canonical_config_hash(strategy, execution),
             "strategy_config_hash": canonical_config_hash(strategy), "execution_config_hash": canonical_config_hash(execution),
             "strategy_config": strategy, "execution_config": execution, "execution_model": execution["entry_model"],
             "spread_source": execution["spread"]["report_source_labels"], "slippage_model": execution["slippage"],
@@ -131,8 +157,8 @@ def run_backtest(dataset: Dataset, symbol: str, options: dict[str, Any] | None =
                  progress: Callable[[str, float], None] | None = None) -> dict[str, Any]:
     """Validate -> schedule -> V1 engine -> metrics -> chart material -> reproducibility."""
     options = {"daily_contexts": "lookback:30", "fixed_spread_pips": None, "chart_timeframe": "M15", "include_chart": True,
-               "context_detail": "summary", **(options or {})}
-    strategy, execution, _ = load_configs(options["fixed_spread_pips"])
+               "context_detail": "summary", "strategy": DEFAULT_STRATEGY, **(options or {})}
+    strategy, execution, _ = load_configs(options["fixed_spread_pips"], options["strategy"])
     data_by_symbol = split_by_symbol(dataset, symbol, strategy)
     strategy, include_contexts = apply_context_mode(strategy, options["daily_contexts"])
     base = {"strategy_version": strategy["strategy_version"], "strategy_status": strategy["status"], "quality": dataset.quality,
@@ -162,7 +188,7 @@ def run_backtest(dataset: Dataset, symbol: str, options: dict[str, Any] | None =
                               "execution_model": execution["entry_model"], "slippage_model": execution["slippage"],
                               "commission_model": execution["commission"], "daily_contexts": options["daily_contexts"],
                               "rejections": _rejection_histogram(result["events"]),
-                              "timing": _timing_histograms(result["events"], strategy["timezones"]["reference"])}})
+                              "timing": _timing_histograms(result["events"], strategy["timezones"]["reference"], strategy["observation"]["windows"])}})
     return result
 
 
@@ -183,7 +209,7 @@ def _rejection_histogram(events: list[dict[str, Any]]) -> dict[str, int]:
     return dict(sorted(counts.items(), key=lambda item: -item[1]))
 
 
-def _timing_histograms(events: list[dict[str, Any]], zone: str) -> dict[str, Any]:
+def _timing_histograms(events: list[dict[str, Any]], zone: str, windows: list[dict[str, str]] | None = None) -> dict[str, Any]:
     """When the pattern actually completes, by local hour: tells whether the observation windows fit the market."""
     def by_hour(stamps: list[str]) -> dict[str, int]:
         counts = {f"{hour:02d}": 0 for hour in range(24)}
@@ -192,7 +218,7 @@ def _timing_histograms(events: list[dict[str, Any]], zone: str) -> dict[str, Any
                 counts[pd.Timestamp(stamp).tz_convert(zone).strftime("%H")] += 1
         return counts
     complete = [event for event in events if event.get("state") == "BOS_CONFIRMED"]
-    return {"timezone": zone,
+    return {"timezone": zone, "windows": windows,
             "sweep_confirmations_by_hour": by_hour([event.get("sweep_confirmation_timestamp") for event in events]),
             "complete_setups_by_hour": by_hour([event.get("actual_signal_time") for event in complete]),
             "complete_setups": len(complete),
@@ -201,8 +227,8 @@ def _timing_histograms(events: list[dict[str, Any]], zone: str) -> dict[str, Any
 
 def run_research(dataset: Dataset, symbol: str, options: dict[str, Any] | None = None,
                  progress: Callable[[str, float], None] | None = None) -> dict[str, Any]:
-    options = {"fixed_spread_pips": None, **(options or {})}
-    strategy, execution, _ = load_configs(options.pop("fixed_spread_pips"))
+    options = {"fixed_spread_pips": None, "strategy": DEFAULT_STRATEGY, **(options or {})}
+    strategy, execution, _ = load_configs(options.pop("fixed_spread_pips"), options.get("strategy"))
     data_by_symbol = split_by_symbol(dataset, symbol, strategy)
     report = research_report(data_by_symbol, strategy, execution, dataset.version, options, progress)
     report.update({"symbol": symbol, "quality": dataset.quality, "dataset_version": dataset.version,

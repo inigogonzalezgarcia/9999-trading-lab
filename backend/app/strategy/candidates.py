@@ -20,6 +20,21 @@ from .structure import (Swing, SwingIndex, _as_bars, _bias_at, _countertrend_pul
 from .zones import build_zone_lifecycle
 
 
+def stop_rules_from(config: dict[str, Any]) -> dict[str, Any]:
+    """Stop placement rules; defaults reproduce V1 exactly (sweep extreme, 0.10 ATR buffer, max 3 ATR)."""
+    stop = config.get("stop", {}) or {}
+    reference = stop.get("reference", "sweep_extreme")
+    if reference not in {"sweep_extreme", "zone_distal", "leg1_origin"}:
+        raise ValueError(f"Unsupported stop.reference: {reference}")
+    return {"reference": reference, "buffer_atr": float(stop.get("buffer_atr", 0.10)), "max_distance_atr": float(stop.get("max_distance_atr", 3.0))}
+
+
+def level_max_age_ns(config: dict[str, Any]) -> int | None:
+    """Optional liquidity-level expiry in M15 bars since confirmation (V1: never expires)."""
+    value = (config.get("liquidity", {}) or {}).get("level_max_age_m15_bars")
+    return None if value in (None, "", "null") else int(value) * 15 * NS_PER_MINUTE
+
+
 def _window_id(timestamp: pd.Timestamp, config: dict[str, Any]) -> int | None:
     matches = observation_windows_at(timestamp, config)
     return matches[0] if matches else None
@@ -192,9 +207,11 @@ def _candidate_from_sweep(
             if window is None or entry_window is None:
                 rejection = "NOT_TRADEABLE_OUTSIDE_OBSERVATION_WINDOW"
             stop_atr = m15v.atr_before(bos_idx, period) or atr
-            stop = (extreme - 0.10 * stop_atr) if direction == "LONG" else (extreme + 0.10 * stop_atr)
+            stop_rules = stop_rules_from(config)
+            anchor = {"sweep_extreme": extreme, "zone_distal": distal, "leg1_origin": leg_origin}[stop_rules["reference"]]
+            stop = (anchor - stop_rules["buffer_atr"] * stop_atr) if direction == "LONG" else (anchor + stop_rules["buffer_atr"] * stop_atr)
             stop_distance = (entry_price - stop) if direction == "LONG" and entry_price is not None else (stop - entry_price) if entry_price is not None else None
-            if stop_distance is not None and (stop_distance <= 0 or stop_distance > 3.0 * stop_atr):
+            if stop_distance is not None and (stop_distance <= 0 or stop_distance > stop_rules["max_distance_atr"] * stop_atr):
                 rejection = "STOP_DISTANCE_EXCEEDED"
             candidate_id = _stable_id(f"candidate|{symbol}|{direction}|{sweep['breach_time'].isoformat()}|{sweep['level']}")
             zone_record, zone_events = build_zone_lifecycle(m15v, symbol, direction, source_idx, end, proximal, distal,
@@ -219,6 +236,7 @@ def _candidate_from_sweep(
                 "actual_execution_time": None if entry_time is None else entry_time.isoformat(),
                 "entry_price": entry_price, "entry_spread_pips": entry_spread, "stop_price": stop,
                 "stop_distance": stop_distance, "atr_at_setup": stop_atr, "atr_at_displacement_start": atr,
+                "stop_reference": stop_rules["reference"], "stop_max_distance_atr": stop_rules["max_distance_atr"],
             }
             bias_h1_index = _bias_at(m15v.ts[start], h1v, h1_index)[2]
             swings_list = h1_index.swings
@@ -269,12 +287,14 @@ class _LevelTable:
             for member in level["constituents"]:
                 self.by_constituent.setdefault(_constituent_key(member), []).append(i)
 
-    def first_eligible(self, breach_available_ns: int, lower_bound: float, upper_bound: float) -> int | None:
+    def first_eligible(self, breach_available_ns: int, lower_bound: float, upper_bound: float, max_age_ns: int | None = None) -> int | None:
         """Highest-priority active level whose price lies in [lower_bound, upper_bound)."""
         if not len(self.levels):
             return None
         mask = ((self.effective <= breach_available_ns) & (breach_available_ns < self.superseded) & ~self.swept
                 & (self.price >= lower_bound) & (self.price < upper_bound))
+        if max_age_ns is not None:
+            mask &= (breach_available_ns - self.effective) <= max_age_ns
         if not mask.any():
             return None
         ranks = np.where(mask, self.rank, np.iinfo("int64").max)
@@ -298,6 +318,7 @@ def detect_sweeps(m1v: Bars, m15v: Bars, h1v: Bars, h1_swings: list[Swing], m15_
     """
     h1_index, m15_index = SwingIndex(h1_swings), SwingIndex(m15_swings)
     tables = {kind: _LevelTable([level for level in levels if level["kind"] == kind]) for kind in ("LOW", "HIGH")}
+    max_age = level_max_age_ns(config)
     sweeps: list[dict[str, Any]] = []
     previous_close = int(m15v.ts[0]) - 15 * NS_PER_MINUTE
     for j in range(len(m15v)):
@@ -319,13 +340,13 @@ def detect_sweeps(m1v: Bars, m15v: Bars, h1v: Bars, h1_swings: list[Swing], m15_
             lows = m1v.low[lo:hi]
             extreme = float(lows.min())
             table = tables["LOW"]
-            chosen = table.first_eligible(breach_available_ns, extreme, bar_close)
+            chosen = table.first_eligible(breach_available_ns, extreme, bar_close, max_age)
         else:
             highs = m1v.high[lo:hi]
             extreme = float(highs.max())
             table = tables["HIGH"]
             # price > close and price <= extreme  <=>  price in (close, extreme]
-            chosen = table.first_eligible(breach_available_ns, np.nextafter(bar_close, np.inf), np.nextafter(extreme, np.inf))
+            chosen = table.first_eligible(breach_available_ns, np.nextafter(bar_close, np.inf), np.nextafter(extreme, np.inf), max_age)
         if chosen is None:
             continue
         level = table.levels[chosen]

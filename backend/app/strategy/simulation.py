@@ -39,7 +39,8 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, exec
     entry = mid_entry + spread / 2 + slippage if direction == "LONG" else mid_entry - spread / 2 - slippage
     raw_stop = float(candidate["stop_price"])
     stop_distance = entry - raw_stop if direction == "LONG" else raw_stop - entry
-    if stop_distance <= 0 or stop_distance > 3 * float(candidate["atr_at_setup"]):
+    max_distance_atr = float((strategy_config.get("stop", {}) or {}).get("max_distance_atr", 3.0))
+    if stop_distance <= 0 or stop_distance > max_distance_atr * float(candidate["atr_at_setup"]):
         return {"candidate_status": "STOP_DISTANCE_EXCEEDED", "spread_source": spread_data["spread_source"], "trade": None}
     risk_fraction = float(strategy_config["risk"]["baseline_equity_risk_fraction"])
     risk_amount = equity * risk_fraction
@@ -49,7 +50,8 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, exec
     target_r = float(strategy_config["target"]["baseline"].removesuffix("R"))
     target = entry + target_r * stop_distance if direction == "LONG" else entry - target_r * stop_distance
     madrid = ZoneInfo(strategy_config["timezones"]["reference"])
-    session_end = time.fromisoformat(execution_config["session_end"])
+    # The strategy version may carry its own session expiry (V1.1 session experiments); else the execution model's.
+    session_end = time.fromisoformat((strategy_config.get("execution", {}) or {}).get("session_end") or execution_config["session_end"])
     exit_info = None
     used_sources = {spread_data["spread_source"]}
     excursion: list[tuple[float, float]] = []

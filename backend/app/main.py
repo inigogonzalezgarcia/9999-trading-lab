@@ -65,6 +65,7 @@ def health() -> dict[str, Any]:
 def config() -> Any:
     strategy, execution, data_config = service.load_configs()
     return _JSON({"strategy": strategy, "execution": execution, "data": data_config, "notice": service.EDUCATIONAL_NOTICE,
+                  "strategies": service.available_strategies(), "default_strategy": service.DEFAULT_STRATEGY,
                   "limits": {"max_upload_mb": MAX_UPLOAD_MB}, "software_revision": service.software_revision()})
 
 
@@ -115,14 +116,15 @@ def _load(path: Path, timeframe: str, source_timezone: str | None):
 @app.post("/api/backtest")
 async def run_backtest(file: UploadFile = File(...), symbol: str = Form("EURUSD"), timeframe: str = Form("M1"),
                        source_timezone: str | None = Form(None), daily_contexts: str = Form("lookback:30"),
-                       fixed_spread_pips: float | None = Form(None), save: bool = Form(True), label: str | None = Form(None)) -> Any:
+                       fixed_spread_pips: float | None = Form(None), save: bool = Form(True), label: str | None = Form(None),
+                       strategy: str = Form(service.DEFAULT_STRATEGY)) -> Any:
     """Synchronous research backtest; use ``/api/jobs/backtest`` for multi-year files."""
     path = await _save_upload(file)
     try:
         if timeframe != "M1":
             raise HTTPException(422, "Strategy V1 requires M1 data for causal fills and execution costs")
         dataset = _load(path, timeframe, source_timezone)
-        result = service.run_backtest(dataset, symbol, {"daily_contexts": daily_contexts, "fixed_spread_pips": fixed_spread_pips})
+        result = service.run_backtest(dataset, symbol, {"daily_contexts": daily_contexts, "fixed_spread_pips": fixed_spread_pips, "strategy": strategy})
         if save and not result.get("backtest_blocked"):
             result["run_id"] = store().save("backtest", result, service.summarize(result, "backtest"), symbol, file.filename, label)
         return _JSON(result)

@@ -1,0 +1,497 @@
+# Strategy V1.1 — EXPERIMENT derived from V1 after the first real-data run (docs/FIRST_REAL_RUN.md).
+# Three logged decisions change; every other rule is identical to strategy_v1.yaml, which stays frozen.
+#   1. Observation windows follow the London open (09:00-10:30 Europe/Madrid) instead of 02:15-04:15.
+#   2. Stop anchored at the zone distal edge (V1: sweep extreme).
+#   3. Liquidity levels expire after 1920 M15 bars (~20 trading days); V1 levels never expired.
+# Educational research only. Results are not evidence of a profitable edge.
+strategy_version: '1.1'
+status: FULLY_SPECIFIED
+methodology: experiment_derived_from_v1_first_real_run_2024
+instruments:
+- EURUSD
+- GBPUSD
+timezones:
+  reference: Europe/Madrid
+  market: America/New_York
+  storage: UTC
+preparation:
+  time: '08:50'
+  creates_context: true
+  trade_allowed: false
+observation:
+  scheduled_times:
+  - '09:30'
+  - '10:00'
+  tolerance_minutes: 15
+  monitoring: continuous_m1
+  windows:
+  - start: '09:00'
+    end: '09:45'
+  - start: '09:45'
+    end: '10:30'
+  boundary_policy: half_open_start_inclusive_end_exclusive
+  first_valid_setup_per_window: true
+  max_executions_per_symbol_per_window: 1
+  entry_must_occur_in_window: true
+  dst:
+    nonexistent: DST_NONEXISTENT_SKIPPED
+    ambiguous_policy: first_occurrence_earlier_utc
+    report_resolution: true
+  rationale: 'First real run (EURUSD 2024): complete setups peak at the London open (09-11 Madrid); the 02-04 windows caught 49 of 300.'
+structure:
+  h1:
+    swing: strict_fractal
+    left_bars: 2
+    right_bars: 2
+    price_basis: wick
+  m15:
+    swing: strict_fractal
+    left_bars: 2
+    right_bars: 2
+    price_basis: wick
+  swing_available_after: right_side_confirmation_candle_close
+  h1_bias:
+    bullish: higher_low_then_higher_high_latest_confirmed_sequence
+    bearish: lower_high_then_lower_low_latest_confirmed_sequence
+    invalidated_by_confirmed_opposite_structural_break: true
+    otherwise:
+    - RANGE
+    - UNDEFINED
+    trade_when:
+    - BULLISH
+    - BEARISH
+pullback:
+  long_countertrend: bearish
+  short_countertrend: bullish
+  valid_if_confirmed_countertrend_swings_gte: 2
+  alternative_displacement_atr: 0.5
+  atr_period: 14
+  atr_timeframe: M15
+  invalid_if_m15_breaks_h1_premise: true
+  cancel_active_setups_when_bias_invalidated: true
+liquidity:
+  baseline_types:
+  - H1_CONFIRMED_SWING
+  - M15_CONFIRMED_SWING
+  priority:
+  - H1_CONFIRMED_SWING
+  - M15_CONFIRMED_SWING
+  - EQUAL_H1_EXPERIMENTAL
+  - EQUAL_M15_EXPERIMENTAL
+  equal_levels_enabled: false
+  equal_level_tolerance_atr: 0.1
+  equal_level_atr:
+    period: 14
+    timeframe: M15
+    anchor: atr_at_cluster_creation
+  cluster_price: arithmetic_mean
+  no_retrospective_regrouping: true
+  overlap:
+    prefer_h1: true
+    same_timeframe_tiebreak: oldest_confirmed
+    swept_level_eligible: false
+  lifecycle:
+  - ACTIVE
+  - TOUCHED
+  - SWEPT
+  - INVALIDATED
+  touch_is_sweep: false
+  level_max_age_m15_bars: 1920
+  rationale_level_max_age: ~20 trading days; V1 levels never expired, so months-old swings stayed eligible sweep targets.
+sweep:
+  sell_side:
+    breach: M1_trade_at_or_below_level
+    confirmation: M15_close_above_level
+  buy_side:
+    breach: M1_trade_at_or_above_level
+    confirmation: M15_close_below_level
+  timestamp: first_m1_breach
+  confirmation_timestamp: m15_close
+  depth_filter: none
+  record_depth:
+  - price
+  - atr_multiple
+zones:
+  source: last_opposite_direction_m15_candle_immediately_before_displacement
+  demand_boundaries:
+    proximal: close
+    distal: low
+  supply_boundaries:
+    proximal: close
+    distal: high
+  max_distance_from_sweep_extreme_atr: 1.0
+  distance_reference: nearest_zone_edge
+  expiry_m15_bars: 8
+  mitigation: first_subsequent_price_entry
+  reuse_mitigated: false
+  invalidation:
+    demand: m15_close_below_distal
+    supply: m15_close_above_distal
+  overlap: newest_valid_zone_for_current_displacement
+  opposite_direction_eligible_by: current_h1_bias
+  merge_overlapping_zones: false
+displacement:
+  atr_period: 14
+  timeframe: M15
+  minimum_atr: 1.0
+  atr_anchor: last_closed_m15_bar_before_displacement_start
+  atr_frozen_for_event: true
+  requirements:
+  - directional
+  - after_relevant_sweep
+  - break_relevant_m15_structure_or_bos
+  record:
+  - start
+  - end
+  - size
+  - atr_multiple
+  - direction
+  - broken_structure
+two_leg:
+  enabled: true
+  timeout_m15_bars_from_sweep_confirmation: 8
+  long:
+    leg1: bullish_move_at_least_0.50_atr_after_sell_sweep
+    retracement_range:
+    - 0.382
+    - 0.786
+    leg2: bullish_move_at_least_0.50_atr
+    completion: exceed_leg1_extreme_or_bullish_bos
+    invalidation: m15_close_below_sweep_extreme_before_leg2_complete
+  short:
+    leg1: bearish_move_at_least_0.50_atr_after_buy_sweep
+    retracement_range:
+    - 0.382
+    - 0.786
+    leg2: bearish_move_at_least_0.50_atr
+    completion: break_leg1_extreme_or_bearish_bos
+    invalidation: m15_close_above_sweep_extreme_before_leg2_complete
+  atr:
+    period: 14
+    timeframe: M15
+    anchor: frozen_at_event_start
+bos:
+  long: m15_close_above_last_confirmed_m15_swing_high_existing_before_displacement
+  short: m15_close_below_last_confirmed_m15_swing_low_existing_before_displacement
+  wick_only_counts: false
+  timeout_m15_bars_from_sweep_confirmation: 8
+  two_leg_must_complete_before_timeout: true
+setup:
+  lifetime_m15_bars_from_sweep_confirmation: 8
+  long_sequence:
+  - H1_BULLISH
+  - M15_PULLBACK
+  - ACTIVE_SELL_SIDE_LIQUIDITY
+  - SELL_SIDE_SWEEP
+  - VALID_DEMAND_ZONE
+  - BULLISH_DISPLACEMENT
+  - RETRACEMENT
+  - SECOND_BULLISH_LEG
+  - BULLISH_BOS
+  - ENTRY
+  short_sequence:
+  - H1_BEARISH
+  - M15_PULLBACK
+  - ACTIVE_BUY_SIDE_LIQUIDITY
+  - BUY_SIDE_SWEEP
+  - VALID_SUPPLY_ZONE
+  - BEARISH_DISPLACEMENT
+  - RETRACEMENT
+  - SECOND_BEARISH_LEG
+  - BEARISH_BOS
+  - ENTRY
+  states:
+  - WAITING_FOR_BIAS
+  - WAITING_FOR_PULLBACK
+  - WAITING_FOR_LIQUIDITY
+  - LIQUIDITY_SWEEP_DETECTED
+  - WAITING_FOR_ZONE
+  - ZONE_CONFIRMED
+  - DISPLACEMENT_DETECTED
+  - WAITING_FOR_RETRACEMENT
+  - LEG_2_DETECTED
+  - WAITING_FOR_BOS
+  - BOS_CONFIRMED
+  - READY_FOR_ENTRY
+  - EXECUTED
+  - INVALIDATED
+  - EXPIRED
+  state_log_persisted: true
+  candidate_recorded_when_not_tradeable: true
+  no_retroactive_modification: true
+entry:
+  model: first_executable_m1_price_after_bos_confirmation
+  use_bos_close_as_fill: false
+  must_be_inside_observation_window: true
+  bos_outside_window: candidate_not_tradeable
+  missing_next_m1: DATA_GAP_no_fill
+stop:
+  long: zone_distal_minus_0.10_atr
+  short: zone_distal_plus_0.10_atr
+  atr_frozen_at_setup_confirmation: true
+  reject_nonpositive_distance: true
+  max_distance_atr: 3.0
+  reference: zone_distal
+  buffer_atr: 0.1
+  rationale: V1 anchored the stop at the sweep extreme; 135 of 136 window-valid setups were rejected for stop > 3 ATR after two legs and a BOS.
+target:
+  baseline: 2.0R
+  experiments:
+  - 1.5R
+  - 2.0R
+  - 2.5R
+  - 3.0R
+  - NEXT_EXTERNAL_LIQUIDITY
+risk:
+  sizing_basis: R
+  baseline_equity_risk_fraction: 0.005
+  experiments_equity_risk_fraction:
+  - 0.0025
+  - 0.005
+  - 0.01
+  max_trades_per_symbol_per_trading_date: 1
+  max_trades_global_per_trading_date: 2
+  max_concurrent_positions_global: 1
+  record_rejections:
+  - RISK_LIMIT_REJECTED
+  - CONCURRENT_POSITION_REJECTED
+execution:
+  spread_priority:
+  - HISTORICAL_SPREAD
+  - FIXED_CONFIGURED_SPREAD
+  historical_spread_column: spread_pips
+  fixed_spread_fallback_key: config/execution.yaml:spread.fixed_fallback_pips
+  missing_spread:
+    candidate_status: SPREAD_DATA_UNAVAILABLE
+    report_source: NO_SPREAD_DATA
+    execute: false
+  slippage_pips: 0.1
+  slippage_experiments_pips:
+  - 0.0
+  - 0.1
+  - 0.2
+  - 0.5
+  commission_baseline: 0.0
+  commission_unit: account_currency_per_lot
+  no_double_counting: true
+  same_m1_candle_sl_and_tp: next_lower_timeframe_else_stop_first
+  exit_priority:
+  - STOP_LOSS
+  - TAKE_PROFIT
+  - SESSION_EXPIRY
+  session_end: '13:00'
+  expiry_fill: first_executable_price_after_session_end
+  expiry_reason: SESSION_EXPIRY
+  gap_fill: actual_first_executable_price
+  gap_without_data: DATA_GAP_no_fill
+  news_filter_enabled: false
+eligibility:
+  tradeable_requires:
+  - valid_h1_bias
+  - valid_m15_pullback
+  - valid_liquidity
+  - valid_sweep
+  - valid_zone
+  - valid_displacement
+  - valid_two_leg
+  - valid_bos
+  - entry_inside_window
+  - valid_stop_distance
+  - risk_limits_clear
+  - no_concurrent_position
+  - required_data_present
+  - executable_price_known
+invalidation_reasons:
+- H1_BIAS_INVALIDATED
+- SWEEP_EXTREME_BREACHED
+- ZONE_INVALIDATED
+- ZONE_EXPIRED
+- BOS_TIMEOUT
+- TWO_LEG_TIMEOUT
+- SETUP_LIFETIME_EXPIRED
+- STOP_DISTANCE_EXCEEDED
+- REQUIRED_DATA_UNAVAILABLE
+- OBSERVATION_OR_SESSION_EXPIRED
+parameter_metadata:
+- name: swing_left_bars
+  type: integer
+  default: 2
+  allowed_range: 1..10
+  description: Bars to the left of a fractal pivot
+  rationale: V1 fixed by baseline rules; variations are separate experiments.
+- name: swing_right_bars
+  type: integer
+  default: 2
+  allowed_range: 1..10
+  description: Bars required after a pivot before confirmation
+  rationale: Enforces causal confirmation.
+- name: observation_tolerance_minutes
+  type: integer
+  default: 15
+  allowed_range: 0..60
+  description: Half-width of observation windows
+  rationale: V1 allows continuous M1 monitoring around schedule points.
+- name: pullback_minimum_swings
+  type: integer
+  default: 2
+  allowed_range: 1..10
+  description: Minimum countertrend structural swings
+  rationale: Avoids treating one opposite candle as a pullback.
+- name: pullback_displacement_atr
+  type: number
+  default: 0.5
+  allowed_range: '>0..5'
+  description: Alternative M15 countertrend displacement threshold
+  rationale: Explicit V1 rule.
+- name: liquidity_cluster_tolerance_atr
+  type: number
+  default: 0.1
+  allowed_range: 0..1
+  description: Equal-level clustering tolerance
+  rationale: Experimental only; equal levels are disabled in baseline.
+- name: displacement_minimum_atr
+  type: number
+  default: 1.0
+  allowed_range: '>0..5'
+  description: Minimum directional displacement
+  rationale: Explicit V1 rule.
+- name: zone_max_distance_atr
+  type: number
+  default: 1.0
+  allowed_range: 0..5
+  description: Maximum distance from sweep extreme to nearest zone edge
+  rationale: Keeps the zone related to the liquidity event.
+- name: zone_expiry_m15_bars
+  type: integer
+  default: 8
+  allowed_range: 1..96
+  description: Maximum zone age
+  rationale: Explicit V1 rule.
+- name: two_leg_minimum_atr
+  type: number
+  default: 0.5
+  allowed_range: '>0..5'
+  description: Minimum size of each directional leg
+  rationale: Explicit V1 rule.
+- name: two_leg_retracement_min
+  type: number
+  default: 0.382
+  allowed_range: 0..1
+  description: Minimum fractional retracement
+  rationale: Explicit V1 rule.
+- name: two_leg_retracement_max
+  type: number
+  default: 0.786
+  allowed_range: 0..1
+  description: Maximum fractional retracement
+  rationale: Explicit V1 rule.
+- name: setup_timeout_m15_bars
+  type: integer
+  default: 8
+  allowed_range: 1..96
+  description: Setup/BOS/two-leg lifetime from sweep confirmation
+  rationale: Explicit V1 rule.
+- name: stop_buffer_atr
+  type: number
+  default: 0.1
+  allowed_range: 0..1
+  description: Buffer beyond sweep extreme
+  rationale: Explicit V1 rule.
+- name: stop_maximum_atr
+  type: number
+  default: 3.0
+  allowed_range: '>0..10'
+  description: Maximum permitted stop distance
+  rationale: Rejects pathological risk profiles.
+- name: target_r_multiple
+  type: number
+  default: 2.0
+  allowed_range: '>0..10'
+  description: Baseline take-profit distance in R
+  rationale: Official V1 benchmark; alternatives remain separate experiments.
+- name: risk_per_trade_fraction
+  type: number
+  default: 0.005
+  allowed_range: 0.0025..0.01
+  description: Equity fraction risked per trade
+  rationale: Baseline portfolio assumption, not optimized.
+- name: slippage_pips
+  type: number
+  default: 0.1
+  allowed_range: 0..1
+  description: Per-fill slippage assumption
+  rationale: Baseline assumption with independent sensitivity values.
+- name: session_end
+  type: local_time
+  default: '05:00'
+  allowed_range: 00:00..23:59
+  description: Local session expiry
+  rationale: Closes positions after the last allowed setup window.
+- name: atr_period
+  type: integer
+  default: 14
+  allowed_range: 2..100
+  description: Number of closed M15 bars used for ATR
+  rationale: Fixed V1 baseline; variations require separate experiments.
+- name: two_leg_enabled
+  type: boolean
+  default: true
+  allowed_range: true|false
+  description: Require TWO_LEG_V1 before BOS entry
+  rationale: V1 baseline requires the supplied two-leg sequence.
+- name: equal_levels_enabled
+  type: boolean
+  default: false
+  allowed_range: true|false
+  description: Allow equal-high/low liquidity clusters
+  rationale: Kept experimental and disabled in baseline.
+- name: max_trades_per_symbol_per_trading_date
+  type: integer
+  default: 1
+  allowed_range: 1..10
+  description: Per-symbol daily execution cap
+  rationale: Baseline portfolio constraint.
+- name: max_trades_global_per_trading_date
+  type: integer
+  default: 2
+  allowed_range: 1..20
+  description: Combined daily execution cap
+  rationale: Baseline portfolio constraint across the two symbols.
+- name: max_concurrent_positions_global
+  type: integer
+  default: 1
+  allowed_range: 1..10
+  description: Maximum simultaneous open positions
+  rationale: Prevents overlapping portfolio exposure in baseline.
+- name: session_window_policy
+  type: enum
+  default: half_open_start_inclusive_end_exclusive
+  allowed_range: half_open_start_inclusive_end_exclusive
+  description: Whether observation windows include their boundary timestamps
+  rationale: Prevents duplicate boundary assignment and overlapping windows.
+- name: dst_ambiguous_policy
+  type: enum
+  default: first_occurrence_earlier_utc
+  allowed_range: first_occurrence_earlier_utc
+  description: Which repeated local time is selected during fall-back
+  rationale: Selected by the user; record resolution per observation.
+- name: spread_source
+  type: enum
+  default: historical_then_explicit_fixed
+  allowed_range: historical_then_explicit_fixed
+  description: Source for executable bid/ask costs
+  rationale: Never invent a spread; missing both sources blocks the trade.
+- name: commission_baseline
+  type: number
+  default: 0.0
+  allowed_range: 0..provider_defined
+  description: Baseline commission only for documented all-in quotes
+  rationale: Use provider model when specified and avoid double-counting.
+- name: same_candle_tiebreak
+  type: enum
+  default: stop_first_without_lower_timeframe
+  allowed_range: lower_timeframe_then_stop_first
+  description: Resolve SL/TP touches in the same M1 candle
+  rationale: Conservative treatment avoids selecting the favorable path.
+derived_from: strategy_v1.yaml
+decision_log: docs/DECISION_LOG.md 2026-10-16 (V1.1 experiment); results are not comparable with V1 and must be reported as an experiment.

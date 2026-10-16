@@ -111,7 +111,7 @@ export interface BacktestResult {
     rejections: Record<string, number>;
     spread_sources: string[];
     daily_contexts: string;
-    timing?: { timezone: string; sweep_confirmations_by_hour: Record<string, number>; complete_setups_by_hour: Record<string, number>; complete_setups: number; complete_setups_outside_windows: number };
+    timing?: { timezone: string; windows?: { start: string; end: string }[]; sweep_confirmations_by_hour: Record<string, number>; complete_setups_by_hour: Record<string, number>; complete_setups: number; complete_setups_outside_windows: number };
   } & Record<string, unknown>;
   notice: Notice;
 }

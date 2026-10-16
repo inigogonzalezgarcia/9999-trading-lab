@@ -71,11 +71,14 @@ def load_market_data(
 
     frame = frame.copy()
     source_timestamps = _normalize_timestamps(frame["timestamp"], source_timezone)
-    chronological = bool(source_timestamps.is_monotonic_increasing)
+    multi_symbol = "symbol" in frame.columns
+    chronological = bool(source_timestamps.is_monotonic_increasing) if not multi_symbol else bool(
+        all(group.is_monotonic_increasing for _, group in pd.Series(source_timestamps).groupby(frame["symbol"].to_numpy())))
     if timestamp_semantics == "bar_open":
         source_timestamps = source_timestamps + TIMEFRAME_DURATION[timeframe]
     frame["timestamp"] = source_timestamps
-    duplicates = int(frame.timestamp.duplicated(keep=False).sum())
+    # Portfolio files carry several symbols: a timestamp may legitimately repeat once per symbol.
+    duplicates = int(frame.duplicated(subset=["symbol", "timestamp"] if multi_symbol else ["timestamp"], keep=False).sum())
     for column in REQUIRED_COLUMNS[1:]:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
     if "spread_pips" in frame.columns:
@@ -88,9 +91,12 @@ def load_market_data(
     spread_valid = frame.spread_pips.notna() & np.isfinite(frame.spread_pips) & (frame.spread_pips >= 0) if "spread_pips" in frame.columns else pd.Series(True, index=frame.index)
     invalid_rows = int((~finite | ~prices_positive.to_numpy() | ~ohlc_valid.to_numpy() | ~volume_valid.to_numpy() | ~spread_valid.to_numpy()).sum())
 
-    ordered = frame.sort_values("timestamp").reset_index(drop=True)
-    deltas = ordered.timestamp.diff().dropna()
+    ordered = frame.sort_values(["symbol", "timestamp"] if multi_symbol else ["timestamp"]).reset_index(drop=True)
     expected = TIMEFRAME_DURATION[timeframe]
+    if multi_symbol:
+        deltas = ordered.groupby("symbol", sort=False).timestamp.diff().dropna()
+    else:
+        deltas = ordered.timestamp.diff().dropna()
     gaps = int((deltas > expected * 1.5).sum())
     weekend_rows = int((ordered.timestamp.dt.dayofweek >= 5).sum())
     report = {
@@ -100,6 +106,7 @@ def load_market_data(
         "timezone_normalized": "UTC", "source_timezone": source_timezone or "embedded_offsets",
         "source_timestamp_semantics": timestamp_semantics, "internal_timestamp_semantics": "bar_close",
         "spread_available": "spread_pips" in ordered.columns,
+        "symbols": sorted(ordered["symbol"].astype(str).unique()) if multi_symbol else None,
         "dataset_version": digest, "warnings": [], "errors": [],
     }
     if duplicates:

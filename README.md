@@ -65,8 +65,14 @@ spread source is recorded in every result.
 ```bash
 python -m backend.cli backtest data/raw/EURUSD_2024.csv --symbol EURUSD --out results/EURUSD_2024.json
 python -m backend.cli research data/raw/EURUSD_2024.csv --symbol EURUSD --out results/EURUSD_2024_research.json
+python -m backend.cli backtest data/raw/EURUSD_2024.csv --symbol EURUSD --strategy strategy_v1_1.yaml   # logged experiment
+python -m backend.cli merge EURUSD=data/raw/EURUSD_2024.csv GBPUSD=data/raw/GBPUSD_2024.csv --out data/raw/PORTFOLIO_2024.csv
+python -m backend.cli backtest data/raw/PORTFOLIO_2024.csv --symbol PORTFOLIO
 python -m backend.cli runs list
 ```
+
+Strategy versions live in `config/strategy_*.yaml`. `strategy_v1.yaml` is the frozen baseline; `strategy_v1_1.yaml`
+is the experiment derived from the first real run. New versions are new files, never edits.
 
 Both commands persist to the SQLite history (`FXLAB_DB`, default `data/fxlab.sqlite3`) unless `--no-save`.
 The UI runs the same pipeline: small files synchronously, larger ones as background jobs with progress.

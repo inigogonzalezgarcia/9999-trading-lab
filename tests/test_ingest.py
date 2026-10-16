@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pandas as pd
+import pytest
 
 from backend.app import ingest
 from backend.app.data import load_market_data
@@ -77,3 +78,21 @@ def test_bi5_bundle_round_trip(tmp_path):
     assert len(ticks) == 2 and ticks.timestamp.iloc[1] == pd.Timestamp("2024-01-02T07:01:01Z")
     report = ingest.convert_bi5_bundles([bundle], tmp_path / "out.csv", "EURUSD")
     assert report["rows"] == 2 and report["ticks"] == 2 and report["spread_pips_present"]
+
+
+def test_portfolio_csv_with_symbol_column_is_not_flagged_as_duplicates(tmp_path):
+    rows = ["symbol,timestamp,open,high,low,close,volume,spread_pips"]
+    for clock in ("07:00", "07:01", "07:03"):
+        rows.append(f"EURUSD,2024-01-02T{clock}:00Z,1.1000,1.1002,1.0999,1.1001,10,0.3")
+        rows.append(f"GBPUSD,2024-01-02T{clock}:00Z,1.2700,1.2702,1.2699,1.2701,10,0.5")
+    path = tmp_path / "portfolio.csv"
+    path.write_text("\n".join(rows) + "\n")
+    dataset = load_market_data(path, timestamp_semantics="bar_open")
+    assert dataset.quality["duplicate_timestamps"] == 0
+    assert dataset.quality["gap_count"] == 2  # one gap per symbol between 07:01 and 07:03
+    assert dataset.quality["symbols"] == ["EURUSD", "GBPUSD"]
+    assert dataset.quality["input_chronological"] is True
+    single = tmp_path / "single.csv"
+    single.write_text("\n".join(r.split(",", 1)[1] for r in rows[:3]) + "\n")
+    with pytest.raises(Exception):
+        load_market_data(single, timestamp_semantics="bar_open")  # same timestamp twice without symbol -> duplicate

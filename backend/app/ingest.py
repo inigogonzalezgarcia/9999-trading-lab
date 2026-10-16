@@ -224,10 +224,19 @@ def read_bi5_bundle(path: str | Path, symbol: str | None = None) -> pd.DataFrame
 
 def convert_bi5_bundles(paths: list[str | Path], out: str | Path | None = None, symbol: str = "EURUSD") -> dict[str, Any]:
     """One or more bundles -> canonical M1 CSV with per-minute median spread."""
-    ticks = pd.concat([read_bi5_bundle(path, symbol) for path in paths], ignore_index=True)
-    bars = ticks_to_m1(ticks, symbol)
+    # Aggregate bundle by bundle: a year of ticks does not fit in memory on small machines, and bundles
+    # split on hour boundaries so per-bundle M1 aggregation is identical to aggregating all ticks at once.
+    frames = []
+    tick_count = 0
+    for path in paths:
+        ticks = read_bi5_bundle(path, symbol)
+        tick_count += int(len(ticks))
+        if len(ticks):
+            frames.append(ticks_to_m1(ticks, symbol))
+        del ticks
+    bars = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
     report = _finish(bars, Path(out) if out else None, "dukascopy_bi5_bundle", symbol)
-    report["ticks"] = int(len(ticks))
+    report["ticks"] = tick_count
     return report
 
 

@@ -18,7 +18,8 @@ export default function App() {
   const [offline, setOffline] = useState(false);
   const [mode, setMode] = useState<Mode>('backtest');
   const [file, setFile] = useState<File | null>(null);
-  const [options, setOptions] = useState<RunOptions>({ symbol: 'EURUSD', dailyContexts: 'lookback:30', sourceTimezone: '', fixedSpreadPips: null, label: '' });
+  const [options, setOptions] = useState<RunOptions>({ symbol: 'EURUSD', strategy: 'strategy_v1.yaml', dailyContexts: 'lookback:30', sourceTimezone: '', fixedSpreadPips: null, label: '' });
+  const [strategies, setStrategies] = useState<string[]>(['strategy_v1.yaml']);
   const [research, setResearch] = useState({ train_days: 120, test_days: 30, anchored: false, mc_simulations: 1000, benchmark_simulations: 200, sensitivity: true, walk_forward: true });
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,6 +34,7 @@ export default function App() {
   useEffect(() => {
     api.health().then((h) => { setHealth(h); setOffline(false); }).catch(() => setOffline(true));
     api.notice().then(setNotice).catch(() => undefined);
+    api.config().then((c) => { setStrategies(c.strategies); setOptions((o) => ({ ...o, strategy: c.default_strategy })); }).catch(() => undefined);
     refreshRuns();
     return () => { if (poll.current) window.clearInterval(poll.current); };
   }, [refreshRuns]);
@@ -132,6 +134,12 @@ export default function App() {
             Historical M1 CSV / Parquet
             <input type="file" accept=".csv,.parquet,.pq" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             {health && <small className="muted">up to {health.max_upload_mb} MB · larger files run in the background or via the CLI</small>}
+          </label>
+          <label>
+            Strategy version
+            <select value={options.strategy} onChange={(e) => setOptions({ ...options, strategy: e.target.value })}>
+              {strategies.map((name) => <option key={name} value={name}>{name.replace('strategy_', '').replace('.yaml', '').replace('_', '.')}{name === 'strategy_v1.yaml' ? ' (baseline)' : ' (experiment)'}</option>)}
+            </select>
           </label>
           <label>
             Symbol

@@ -22,6 +22,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export interface RunOptions {
   symbol: string;
+  strategy: string;
   sourceTimezone?: string;
   dailyContexts: string;
   fixedSpreadPips?: number | null;
@@ -33,6 +34,7 @@ function form(file: File, options: RunOptions, extra: Record<string, string> = {
   data.append('file', file);
   data.append('symbol', options.symbol);
   data.append('timeframe', 'M1');
+  data.append('strategy', options.strategy);
   if (options.sourceTimezone) data.append('source_timezone', options.sourceTimezone);
   if (options.label) data.append('label', options.label);
   Object.entries(extra).forEach(([key, value]) => data.append(key, value));
@@ -41,6 +43,7 @@ function form(file: File, options: RunOptions, extra: Record<string, string> = {
 
 export const api = {
   health: () => request<{ status: string; version: string; max_upload_mb: number }>('/api/health'),
+  config: () => request<{ strategies: string[]; default_strategy: string }>('/api/config'),
   notice: () => request<Notice>('/api/notice'),
   backtest: (file: File, options: RunOptions) => {
     const data = form(file, options, { daily_contexts: options.dailyContexts });
@@ -48,7 +51,7 @@ export const api = {
     return request<BacktestResult>('/api/backtest', { method: 'POST', body: data });
   },
   submitJob: (kind: 'backtest' | 'research', file: File, options: RunOptions, jobOptions: Record<string, unknown>) =>
-    request<Job>(`/api/jobs/${kind}`, { method: 'POST', body: form(file, options, { options: JSON.stringify(jobOptions) }) }),
+    request<Job>(`/api/jobs/${kind}`, { method: 'POST', body: form(file, options, { options: JSON.stringify({ ...jobOptions, strategy: options.strategy }) }) }),
   job: (id: string) => request<Job>(`/api/jobs/${id}`),
   jobs: () => request<Job[]>('/api/jobs'),
   runs: (kind?: string) => request<RunRow[]>(`/api/runs${kind ? `?kind=${kind}` : ''}`),

@@ -18,9 +18,6 @@ data/**
 *.sqlite3
 *.db
 
-# Large per-run outputs (keep the small research reports)
-results/*_backtest.json
-
 # Any virtualenv name and macOS metadata
 venv/
 .DS_Store

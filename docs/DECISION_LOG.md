@@ -109,3 +109,21 @@
   Dukascopy throttles with HTTP 503 above ~2 concurrent requests, so the downloader paces itself.
 - **Status:** 51 offline tests pass; API tests still require fastapi locally. Educational positioning
   unchanged.
+
+## 2026-10-16 — V1.1 experiment implemented; V1 frozen
+
+- **Decision:** Implement the three open decisions as engine parameters with V1-preserving defaults
+  (`stop.reference` sweep_extreme | zone_distal | leg1_origin, `stop.buffer_atr`, `stop.max_distance_atr`,
+  `liquidity.level_max_age_m15_bars`, strategy-level `execution.session_end`), verified bit-identical on the
+  stress dataset, and activate them only in `config/strategy_v1_1.yaml` (London 09:00–10:30 windows, zone
+  distal stop, 1 920-bar level expiry). The CLI/API/UI select the strategy file; `strategy_v1.yaml` remains
+  the default and is never edited.
+- **Result (EURUSD 2024):** 12 trades, +2.35R, random-benchmark percentile 75.5 %, OOS slice 1 trade,
+  sign flips under neighbouring parameters. Recorded as *not evidence*; see `docs/FIRST_REAL_RUN.md`.
+- **Decision:** Sensitivity grid now includes stop reference, stop max distance and level expiry so every
+  future version reports its own fragility.
+- **Decision:** PORTFOLIO mode made usable: the loader treats `symbol` columns per symbol (duplicates, order,
+  gaps), and `python -m backend.cli merge` stacks single-symbol CSVs. GBPUSD 2024 downloaded for the first
+  two-symbol run.
+- **Open for V1.2 (strategy):** stop placement relative to entry is the binding constraint (110/204 complete
+  setups rejected at 3 ATR); and multi-year data before any claim.
