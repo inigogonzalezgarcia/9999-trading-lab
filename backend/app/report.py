@@ -104,12 +104,19 @@ def _bar_chart(labels: list[str], values: list[float], width: float = 170 * mm, 
     chart.categoryAxis.labels.fontSize = 6.5
     chart.categoryAxis.labels.angle = 0 if len(labels) <= 14 else 90
     chart.categoryAxis.labels.dy = -2 if len(labels) <= 14 else -12
+    # Keep category labels under the plot even when the value axis crosses zero inside it.
+    chart.categoryAxis.joinAxisMode = "bottom"
+    chart.categoryAxis.labels.boxAnchor = "n" if len(labels) <= 14 else "e"
     chart.valueAxis.labels.fontSize = 7
     chart.valueAxis.visibleGrid = True
     chart.valueAxis.gridStrokeColor = LINE
     chart.valueAxis.labelTextFormat = lambda value: fmt.format(value)
     chart.bars[0].fillColor = color
     chart.bars[0].strokeColor = None
+    if any(value < 0 for value in values):
+        # Signed charts: losses in red, gains in the given colour.
+        for index, value in enumerate(values):
+            chart.bars[(0, index)].fillColor = BAD if value < 0 else color
     chart.barSpacing = 1
     drawing.add(chart)
     if title:
