@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from backend.app import ingest, service
+from backend.app.instruments import known_instruments
 from backend.app.store import RunStore, dumps
 from backend.app.stress import LABEL as STRESS_LABEL, make_stress_bars
 
@@ -150,6 +151,30 @@ def cmd_research(args) -> int:
     return 0
 
 
+def cmd_report(args) -> int:
+    """Render a saved run or a result JSON file to PDF."""
+    from backend.app.report import build_pdf
+
+    if args.json:
+        result = json.loads(Path(args.json).read_text(encoding="utf-8"))
+        kind = "research" if "baseline" in result and "splits" in result or "walk_forward" in result else "backtest"
+        meta = {"dataset_name": Path(args.json).name}
+    else:
+        store = RunStore(args.db)
+        result = store.get(args.run_id)
+        meta = store.meta(args.run_id) or {}
+        store.close()
+        if result is None:
+            print("unknown run", file=sys.stderr)
+            return 1
+        kind = meta.get("kind", "backtest")
+    payload = build_pdf(result, kind, meta)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_bytes(payload)
+    print(f"wrote {args.out} ({len(payload) / 1024:.0f} KB)")
+    return 0
+
+
 def cmd_runs(args) -> int:
     store = RunStore(args.db)
     if args.action == "list":
@@ -181,7 +206,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     fetch = sub.add_parser("fetch", help="download historical data (needs network)")
     fetch.add_argument("provider", choices=["dukascopy"])
-    fetch.add_argument("--symbol", default="EURUSD", choices=["EURUSD", "GBPUSD"])
+    fetch.add_argument("--symbol", default="EURUSD", choices=known_instruments())
     fetch.add_argument("--start", required=True, help="UTC start, e.g. 2024-01-01")
     fetch.add_argument("--end", required=True, help="UTC end (exclusive), e.g. 2024-04-01")
     fetch.add_argument("--out", type=Path, required=True)
@@ -192,7 +217,7 @@ def build_parser() -> argparse.ArgumentParser:
     convert.add_argument("input", type=Path)
     convert.add_argument("out", type=Path)
     convert.add_argument("--more", type=Path, nargs="*", default=[], help="additional bundle files (bundle source only)")
-    convert.add_argument("--symbol", default="EURUSD", choices=["EURUSD", "GBPUSD"])
+    convert.add_argument("--symbol", default="EURUSD", choices=known_instruments())
     convert.add_argument("--ask", type=Path, help="Dukascopy ask export to derive spread_pips")
     convert.set_defaults(func=cmd_convert)
 
@@ -209,7 +234,7 @@ def build_parser() -> argparse.ArgumentParser:
     for name, func in (("backtest", cmd_backtest), ("research", cmd_research)):
         run = sub.add_parser(name, help=f"run the V1 {name} on a canonical dataset")
         run.add_argument("input", type=Path)
-        run.add_argument("--symbol", default="EURUSD", choices=["EURUSD", "GBPUSD", "PORTFOLIO"])
+        run.add_argument("--symbol", default="EURUSD", choices=[*known_instruments(), "PORTFOLIO"], help="an instrument listed by the strategy, or PORTFOLIO for a multi-symbol file")
         run.add_argument("--source-timezone")
         run.add_argument("--fixed-spread-pips", type=float, help="explicit fixed spread when the data has no spread_pips column")
         run.add_argument("--strategy", default=service.DEFAULT_STRATEGY, help="config/strategy_*.yaml to run (default strategy_v1.yaml; strategy_v1_1.yaml is the logged experiment)")
@@ -240,6 +265,13 @@ def build_parser() -> argparse.ArgumentParser:
     runs.add_argument("--out", type=Path)
     runs.add_argument("--db")
     runs.set_defaults(func=cmd_runs)
+
+    report = sub.add_parser("report", help="render a saved run (or a result JSON) to a PDF report")
+    report.add_argument("run_id", nargs="?")
+    report.add_argument("--json", type=Path, help="result/report JSON file instead of a run id")
+    report.add_argument("--out", type=Path, required=True)
+    report.add_argument("--db")
+    report.set_defaults(func=cmd_report)
 
     stress = sub.add_parser("stress", help="generate labelled synthetic data for performance testing")
     stress.add_argument("--months", type=int, default=3)

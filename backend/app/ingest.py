@@ -33,9 +33,7 @@ from typing import Any, Callable
 
 import pandas as pd
 
-PIP_SIZE = {"EURUSD": 0.0001, "GBPUSD": 0.0001}
-# Dukascopy stores prices as integers scaled by this factor for these instruments.
-DUKASCOPY_POINT = {"EURUSD": 100_000, "GBPUSD": 100_000}
+from .instruments import dukascopy_point, pip_size
 HISTDATA_OFFSET = timezone(timedelta(hours=-5))  # EST, no DST, all year
 CANONICAL_COLUMNS = ["timestamp", "open", "high", "low", "close", "volume"]
 
@@ -95,7 +93,7 @@ def convert_dukascopy_csv(bid_path: str | Path, out: str | Path | None = None, a
     if ask_path:
         ask = _read_dukascopy_csv(ask_path)[["timestamp", "open"]].rename(columns={"open": "ask_open"})
         bid = bid.merge(ask, on="timestamp", how="left")
-        pip = PIP_SIZE.get(symbol.upper(), 0.0001)
+        pip = pip_size(symbol)
         bid["spread_pips"] = ((bid["ask_open"] - bid["open"]) / pip).round(2)
         bid = bid.drop(columns=["ask_open"])
         # Minutes without an ask bar keep NaN: the engine reports them as SPREAD_DATA_UNAVAILABLE.
@@ -127,7 +125,7 @@ def ticks_to_m1(ticks: pd.DataFrame, symbol: str) -> pd.DataFrame:
     """Aggregate bid ticks into M1 bars labelled by bar **open**; spread is the per-minute median."""
     if ticks.empty:
         return pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
-    pip = PIP_SIZE.get(symbol.upper(), 0.0001)
+    pip = pip_size(symbol)
     frame = ticks.set_index("timestamp").sort_index()
     frame["spread"] = (frame["ask"] - frame["bid"]) / pip
     bars = frame.resample("1min", label="left", closed="left").agg(
@@ -145,49 +143,92 @@ def dukascopy_hour_url(symbol: str, moment: datetime) -> str:
 
 
 def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str | Path | None = None,
-                          fetch: Callable[[str], bytes] | None = None, progress: Callable[[str], None] | None = None) -> dict[str, Any]:
+                          fetch: Callable[[str], bytes] | None = None, progress: Callable[[str], None] | None = None,
+                          pause_seconds: float = 0.15, max_retries: int = 6) -> dict[str, Any]:
     """Download hourly tick files for ``[start, end)`` (UTC) and aggregate them into canonical M1 bars.
 
     ``fetch`` receives a URL and returns the raw bytes (empty bytes for a 404/no-data hour); the
-    default uses ``urllib``. Weekend hours are skipped. Requires network access.
+    default uses ``urllib`` with exponential back-off on HTTP 503/429, which Dukascopy returns when a
+    client is too aggressive (keep ``pause_seconds`` >= 0.1 and never run several downloads in
+    parallel). Weekend hours are skipped. Ticks are aggregated month by month to bound memory.
     """
     if fetch is None:
-        from urllib.error import HTTPError
-        from urllib.request import urlopen
+        import ssl
+        import time as _time
+        from urllib.error import HTTPError, URLError
+        from urllib.request import Request, urlopen
+
+        # python.org builds on macOS ship without a CA bundle; fall back to certifi's when available.
+        context = ssl.create_default_context()
+        try:
+            import certifi
+
+            context = ssl.create_default_context(cafile=certifi.where())
+        except ImportError:  # pragma: no cover
+            pass
 
         def fetch(url: str) -> bytes:  # pragma: no cover - network
-            try:
-                with urlopen(url, timeout=30) as response:
-                    return response.read()
-            except HTTPError as exc:
-                if exc.code == 404:
-                    return b""
-                raise
+            delay = 4.0
+            for attempt in range(max_retries):
+                try:
+                    with urlopen(Request(url, headers={"User-Agent": "fx-research-lab/0.4 (educational research)"}), timeout=30, context=context) as response:
+                        return response.read()
+                except HTTPError as exc:
+                    if exc.code == 404:
+                        return b""
+                    if exc.code not in (429, 503) or attempt == max_retries - 1:
+                        raise
+                except URLError as exc:
+                    if "CERTIFICATE_VERIFY_FAILED" in str(exc):
+                        raise RuntimeError("TLS certificates not available to Python. Run 'Install Certificates.command' from the Python folder "
+                                           "in /Applications, or 'pip install certifi', then relaunch.") from exc
+                    if attempt == max_retries - 1:
+                        raise
+                _time.sleep(delay)
+                delay *= 2
+            return b""
 
-    point = DUKASCOPY_POINT.get(symbol.upper(), 100_000)
+    point = dukascopy_point(symbol)
     start = start.replace(minute=0, second=0, microsecond=0, tzinfo=start.tzinfo or timezone.utc)
     end = end.replace(tzinfo=end.tzinfo or timezone.utc)
     hours = []
     moment = start
     while moment < end:
-        if not (moment.weekday() == 5 or (moment.weekday() == 6 and moment.hour < 21) or (moment.weekday() == 4 and moment.hour >= 22)):
+        if not (moment.weekday() == 5 or (moment.weekday() == 6 and moment.hour < 20) or (moment.weekday() == 4 and moment.hour >= 22)):
             hours.append(moment)
         moment += timedelta(hours=1)
-    frames = []
+    monthly_frames: list[pd.DataFrame] = []
+    current_month: tuple[int, int] | None = None
+    month_ticks: list[pd.DataFrame] = []
     empty_hours = 0
+    tick_count = 0
+
+    def flush() -> None:
+        if month_ticks:
+            ticks = pd.concat(month_ticks, ignore_index=True)
+            monthly_frames.append(ticks_to_m1(ticks, symbol))
+            month_ticks.clear()
+
     for index, hour in enumerate(hours):
         if progress and index % 24 == 0:
             progress(f"{hour:%Y-%m-%d %H:00} ({index + 1}/{len(hours)})")
+        if current_month != (hour.year, hour.month):
+            flush()
+            current_month = (hour.year, hour.month)
         payload = fetch(dukascopy_hour_url(symbol, hour))
+        if pause_seconds:
+            import time as _time
+            _time.sleep(pause_seconds)
         ticks = decode_bi5(payload, hour, point)
         if ticks.empty:
             empty_hours += 1
             continue
-        frames.append(ticks)
-    ticks = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=["timestamp", "ask", "bid", "ask_volume", "bid_volume"])
-    bars = ticks_to_m1(ticks, symbol)
+        tick_count += int(len(ticks))
+        month_ticks.append(ticks)
+    flush()
+    bars = pd.concat(monthly_frames, ignore_index=True) if monthly_frames else pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
     report = _finish(bars, Path(out) if out else None, "dukascopy_bi5_ticks", symbol)
-    report.update({"hours_requested": len(hours), "hours_without_data": empty_hours, "ticks": int(len(ticks))})
+    report.update({"hours_requested": len(hours), "hours_without_data": empty_hours, "ticks": tick_count})
     return report
 
 
@@ -215,7 +256,7 @@ def read_bi5_bundle(path: str | Path, symbol: str | None = None) -> pd.DataFrame
             continue
         if not length:
             continue
-        point = DUKASCOPY_POINT.get(file_symbol.upper(), 100_000)
+        point = dukascopy_point(file_symbol)
         frames.append(decode_bi5(payload, datetime(year, month0 + 1, day, hour, tzinfo=timezone.utc), point))
     if not frames:
         return pd.DataFrame(columns=["timestamp", "ask", "bid", "ask_volume", "bid_volume"])
@@ -223,9 +264,11 @@ def read_bi5_bundle(path: str | Path, symbol: str | None = None) -> pd.DataFrame
 
 
 def convert_bi5_bundles(paths: list[str | Path], out: str | Path | None = None, symbol: str = "EURUSD") -> dict[str, Any]:
-    """One or more bundles -> canonical M1 CSV with per-minute median spread."""
-    # Aggregate bundle by bundle: a year of ticks does not fit in memory on small machines, and bundles
-    # split on hour boundaries so per-bundle M1 aggregation is identical to aggregating all ticks at once.
+    """One or more bundles -> canonical M1 CSV with per-minute median spread.
+
+    Aggregates bundle by bundle: a year of ticks does not fit in memory on small machines, and bundles
+    split on hour boundaries so per-bundle M1 aggregation is identical to aggregating all ticks at once.
+    """
     frames = []
     tick_count = 0
     for path in paths:
@@ -254,4 +297,4 @@ def stress_dataset(months: int, symbol: str = "EURUSD", seed: int = 7, start: st
 
 
 __all__ = ["convert_histdata", "convert_dukascopy_csv", "decode_bi5", "encode_bi5", "ticks_to_m1", "fetch_dukascopy_ticks",
-           "dukascopy_hour_url", "read_bi5_bundle", "convert_bi5_bundles", "stress_dataset", "PIP_SIZE"]
+           "dukascopy_hour_url", "read_bi5_bundle", "convert_bi5_bundles", "stress_dataset"]

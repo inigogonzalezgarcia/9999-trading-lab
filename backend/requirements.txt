@@ -7,6 +7,8 @@ PyYAML==6.0.2
 pydantic==2.11.4
 pyarrow==19.0.1
 python-multipart==0.0.20
+reportlab==4.4.0
 httpx==0.28.1
 pytest==8.3.5
 ruff==0.11.8
+certifi==2026.7.22

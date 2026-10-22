@@ -39,6 +39,9 @@ def test_metrics_do_not_annualise_per_trade_statistics():
     assert result["sharpe"] == result["daily"]["annualized_sharpe"]
     assert result["by_symbol"]["EURUSD"]["trades"] == 4
     assert result["exit_reasons"] == {"STOP_LOSS": 2, "TAKE_PROFIT": 2}
+    assert result["by_month"] == {"2024-01": {"trades": 4, "total_r": 2.0, "expectancy_r": 0.5, "win_rate": 0.5}}
+    assert list(result["by_weekday"]) == ["Mon", "Tue", "Wed", "Thu"] and result["by_weekday"]["Mon"]["trades"] == 1
+    assert list(result["by_hour"]) == ["02"]  # 02:31 UTC entries; fixture trades carry no timezone -> UTC
 
 
 def test_metrics_handle_empty_trade_lists():

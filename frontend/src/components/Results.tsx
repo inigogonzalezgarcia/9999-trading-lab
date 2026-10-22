@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { api, formatNumber, formatPercent, formatR, shortTime } from '../api';
 import type { BacktestResult, Metrics, Trade } from '../types';
 import { CandleChart, EquityChart } from './Charts';
+import { PerformanceBreakdowns } from './Breakdowns';
+import { TradeExplainerPanel } from './TradeExplainer';
 
 export function Tile({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: 'good' | 'bad' | 'neutral' }) {
   return (
@@ -29,7 +31,7 @@ export function KpiTiles({ metrics }: { metrics: Metrics }) {
   );
 }
 
-export function TradesTable({ trades, runId }: { trades: Trade[]; runId?: string }) {
+export function TradesTable({ trades, runId, onSelect, selected }: { trades: Trade[]; runId?: string; onSelect?: (trade: Trade) => void; selected?: string }) {
   const [sortKey, setSortKey] = useState<keyof Trade>('entry_timestamp');
   const [descending, setDescending] = useState(false);
   const sorted = useMemo(() => {
@@ -71,7 +73,7 @@ export function TradesTable({ trades, runId }: { trades: Trade[]; runId?: string
       <div className="row-actions">
         <button type="button" className="ghost" onClick={download}>Export CSV</button>
         {runId && <a className="ghost button" href={api.tradesCsvUrl(runId)}>Server CSV</a>}
-        <span className="muted">{trades.length} trades · click a header to sort</span>
+        <span className="muted">{trades.length} trades · click a header to sort{onSelect ? ' · click a row to see how the trade happened' : ''}</span>
       </div>
       <div className="table-wrap">
         <table>
@@ -95,7 +97,7 @@ export function TradesTable({ trades, runId }: { trades: Trade[]; runId?: string
           </thead>
           <tbody>
             {sorted.map((t) => (
-              <tr key={t.trade_id} className={t.r_multiple >= 0 ? 'win' : 'loss'}>
+              <tr key={t.trade_id} className={`${t.r_multiple >= 0 ? 'win' : 'loss'}${onSelect ? ' clickable' : ''}${selected === t.trade_id ? ' selected' : ''}`} onClick={onSelect ? () => onSelect(t) : undefined}>
                 <td>{t.date}</td>
                 <td>{t.symbol}</td>
                 <td>{t.direction}</td>
@@ -197,7 +199,9 @@ export function Reproducibility({ result }: { result: BacktestResult }) {
 export function BacktestView({ result }: { result: BacktestResult }) {
   const symbols = result.chart ? Object.keys(result.chart.series) : [];
   const [symbol, setSymbol] = useState(symbols[0] ?? '');
+  const [selected, setSelected] = useState<Trade | null>(null);
   const metrics = result.metrics;
+  const explainers = result.trade_explainers ?? {};
   if (result.backtest_blocked) {
     return <div className="notice-box"><strong>Strategy status: {result.strategy_status}</strong><p>{result.blocked_reason}</p><QualityPanel result={result} /></div>;
   }
@@ -241,10 +245,17 @@ export function BacktestView({ result }: { result: BacktestResult }) {
           <HourHistogram title="Sweep confirmations by hour" counts={result.report.timing.sweep_confirmations_by_hour} highlight={inWindows(result.report.timing.windows)} />
         </section>
       )}
+      {metrics && metrics.total_trades > 0 && (
+        <section>
+          <h2>Performance by hour, weekday and month</h2>
+          <PerformanceBreakdowns metrics={metrics} timezone={result.report?.timing?.timezone} />
+        </section>
+      )}
       <section>
         <h2>Trades</h2>
-        <TradesTable trades={result.trades} runId={result.run_id} />
+        <TradesTable trades={result.trades} runId={result.run_id} selected={selected?.trade_id} onSelect={(t) => setSelected(selected?.trade_id === t.trade_id ? null : t)} />
       </section>
+      {selected && <TradeExplainerPanel trade={selected} explainer={explainers[selected.trade_id]} onClose={() => setSelected(null)} />}
       <section className="two-col">
         <div><h2>Data quality</h2><QualityPanel result={result} /></div>
         <div><h2>Reproducibility</h2><Reproducibility result={result} /></div>

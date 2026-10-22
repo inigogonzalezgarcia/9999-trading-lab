@@ -43,7 +43,7 @@ function form(file: File, options: RunOptions, extra: Record<string, string> = {
 
 export const api = {
   health: () => request<{ status: string; version: string; max_upload_mb: number }>('/api/health'),
-  config: () => request<{ strategies: string[]; default_strategy: string }>('/api/config'),
+  config: () => request<{ strategies: string[]; default_strategy: string; instruments: Record<string, string[]>; instrument_specs: Record<string, { pip: number; description?: string }> }>('/api/config'),
   notice: () => request<Notice>('/api/notice'),
   backtest: (file: File, options: RunOptions) => {
     const data = form(file, options, { daily_contexts: options.dailyContexts });
@@ -59,6 +59,7 @@ export const api = {
   deleteRun: (id: string) => request<{ deleted: boolean }>(`/api/runs/${id}`, { method: 'DELETE' }),
   tradesCsvUrl: (id: string) => `${API_BASE}/api/runs/${id}/trades.csv`,
   resultJsonUrl: (id: string) => `${API_BASE}/api/runs/${id}/result.json`,
+  reportPdfUrl: (id: string) => `${API_BASE}/api/runs/${id}/report.pdf`,
 };
 
 export function formatR(value: number | null | undefined, digits = 2): string {

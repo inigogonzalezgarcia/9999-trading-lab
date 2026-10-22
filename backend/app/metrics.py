@@ -27,6 +27,7 @@ def _empty() -> dict[str, Any]:
             "profit_factor": None, "payoff_ratio": None, "gross_profit": 0.0, "gross_loss": 0.0, "net_pnl": 0.0,
             "total_r": 0.0, "max_drawdown_r": 0.0, "max_consecutive_losses": 0, "sharpe_per_trade": 0.0,
             "average_mfe_r": 0.0, "average_mae_r": 0.0, "exit_reasons": {}, "by_symbol": {}, "by_window": {},
+            "by_hour": {}, "by_weekday": {}, "by_month": {}, "by_exit_reason": {}, "by_direction": {},
             "daily": {"trading_days": 0, "days_with_trades": 0, "mean_daily_r": 0.0, "std_daily_r": 0.0,
                       "annualized_sharpe": None, "annualized_sortino": None, "annualized_r": None},
             # Kept for backwards compatibility with earlier result payloads; same values as "daily".
@@ -92,6 +93,9 @@ def metrics(trades: list[dict[str, Any]], period_start: str | None = None, perio
         "average_mae_r": float(np.mean([trade.get("mae", 0.0) for trade in ordered])),
         "exit_reasons": {reason: int(sum(1 for trade in ordered if trade.get("exit_reason") == reason)) for reason in sorted({trade.get("exit_reason") for trade in ordered})},
         "by_symbol": _grouped(ordered, "symbol"), "by_window": _grouped(ordered, "observation_window"),
+        "by_hour": _grouped_by_time(ordered, "hour"), "by_weekday": _grouped_by_time(ordered, "weekday"),
+        "by_month": _grouped_by_time(ordered, "month"), "by_exit_reason": _grouped(ordered, "exit_reason"),
+        "by_direction": _grouped(ordered, "direction"),
     })
     daily = daily_r_series(ordered, period_start, period_end)
     if len(daily):
@@ -115,6 +119,25 @@ def _grouped(trades: list[dict[str, Any]], key: str) -> dict[str, dict[str, Any]
         groups.setdefault(str(trade.get(key)), []).append(float(trade["r_multiple"]))
     return {name: {"trades": len(values), "total_r": float(np.sum(values)), "expectancy_r": float(np.mean(values)),
                    "win_rate": float(np.mean(np.asarray(values) > 0))} for name, values in sorted(groups.items())}
+
+
+WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+def _grouped_by_time(trades: list[dict[str, Any]], unit: str) -> dict[str, dict[str, Any]]:
+    """R by local entry hour, weekday or calendar month (strategy reference timezone recorded on each trade)."""
+    groups: dict[str, list[float]] = {}
+    for trade in trades:
+        zone = trade.get("timezone") or "UTC"
+        stamp = pd.Timestamp(trade["entry_timestamp"]).tz_convert(zone)
+        key = f"{stamp.hour:02d}" if unit == "hour" else WEEKDAYS[stamp.dayofweek] if unit == "weekday" else stamp.strftime("%Y-%m")
+        groups.setdefault(key, []).append(float(trade["r_multiple"]))
+    if unit == "weekday":
+        ordered_keys = [day for day in WEEKDAYS if day in groups]
+    else:
+        ordered_keys = sorted(groups)
+    return {key: {"trades": len(groups[key]), "total_r": float(np.sum(groups[key])), "expectancy_r": float(np.mean(groups[key])),
+                  "win_rate": float(np.mean(np.asarray(groups[key]) > 0))} for key in ordered_keys}
 
 
 def equity_curve(trades: list[dict[str, Any]]) -> list[dict[str, Any]]:

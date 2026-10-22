@@ -1,0 +1,18 @@
+# Instrument specifications shared by every strategy version.
+# pip: price increment of one pip. dukascopy_point: integer price scale in Dukascopy .bi5 files.
+# contract_size: units per standard lot (used only to express commission per lot).
+# A strategy may trade an instrument only if it also lists it under its own `instruments`.
+version: instruments_v1
+default: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000}
+instruments:
+  EURUSD: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: Euro / US dollar}
+  GBPUSD: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: Pound sterling / US dollar}
+  AUDUSD: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: Australian dollar / US dollar}
+  NZDUSD: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: New Zealand dollar / US dollar}
+  USDCAD: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: US dollar / Canadian dollar}
+  USDCHF: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: US dollar / Swiss franc}
+  EURGBP: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: Euro / pound sterling}
+  EURCHF: {pip: 0.0001, dukascopy_point: 100000, contract_size: 100000, description: Euro / Swiss franc}
+  USDJPY: {pip: 0.01, dukascopy_point: 1000, contract_size: 100000, description: US dollar / Japanese yen}
+  EURJPY: {pip: 0.01, dukascopy_point: 1000, contract_size: 100000, description: Euro / Japanese yen}
+  GBPJPY: {pip: 0.01, dukascopy_point: 1000, contract_size: 100000, description: Pound sterling / Japanese yen}

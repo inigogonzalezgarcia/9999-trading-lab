@@ -8,18 +8,20 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from ..execution import resolve_spread
+from ..instruments import contract_size, pip_size
 from .frames import NS_PER_MINUTE, Bars, ns_of
 from .ids import _stable_id
 from .structure import _as_bars
 
-PIP = 0.0001
+PIP = 0.0001  # legacy constant; the engine uses instruments.pip_size(symbol)
 
 
 def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, execution_config: dict[str, Any], strategy_config: dict[str, Any], equity: float) -> dict[str, Any]:
     m1v = _as_bars(m1)
     direction = candidate["direction"]
+    pip = pip_size(candidate.get("symbol", "EURUSD"))
     slippage_pips = float(execution_config.get("slippage", {}).get("baseline_pips", 0.1))
-    slippage = slippage_pips * PIP
+    slippage = slippage_pips * pip
     commission_default = float(execution_config.get("commission", {}).get("baseline_per_lot", 0.0))
     start = pd.Timestamp(candidate["actual_execution_time"])
     start_ns = ns_of(start)
@@ -34,7 +36,7 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, exec
     if spread_data["candidate_status"]:
         return {"candidate_status": spread_data["candidate_status"], "spread_source": spread_data["spread_source"], "trade": None}
     entry_spread_pips = float(spread_data["spread_pips"])
-    spread = entry_spread_pips * PIP
+    spread = entry_spread_pips * pip
     mid_entry = float(m1v.open[entry_bar_index])
     entry = mid_entry + spread / 2 + slippage if direction == "LONG" else mid_entry - spread / 2 - slippage
     raw_stop = float(candidate["stop_price"])
@@ -45,7 +47,7 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, exec
     risk_fraction = float(strategy_config["risk"]["baseline_equity_risk_fraction"])
     risk_amount = equity * risk_fraction
     position_size = risk_amount / stop_distance
-    lots = position_size / 100_000.0
+    lots = position_size / contract_size(candidate.get("symbol", "EURUSD"))
     entry_commission_per_lot = m1v.commission_at(entry_bar_index, commission_default)
     target_r = float(strategy_config["target"]["baseline"].removesuffix("R"))
     target = entry + target_r * stop_distance if direction == "LONG" else entry - target_r * stop_distance
@@ -69,7 +71,7 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, exec
                 return {"candidate_status": resolved["candidate_status"], "spread_source": resolved["spread_source"], "trade": None}
             used_sources.add(resolved["spread_source"])
             exit_price = float(m1v.open[i])
-            exit_price += (float(resolved["spread_pips"]) * PIP / 2) if direction == "SHORT" else -(float(resolved["spread_pips"]) * PIP / 2)
+            exit_price += (float(resolved["spread_pips"]) * pip / 2) if direction == "SHORT" else -(float(resolved["spread_pips"]) * pip / 2)
             exit_price += slippage if direction == "SHORT" else -slippage
             exit_info = (pd.Timestamp(bar_open_ns, unit="ns", tz="UTC"), exit_price, "SESSION_EXPIRY", m1v.commission_at(i, commission_default))
             break
@@ -77,7 +79,7 @@ def _simulate_candidate(candidate: dict[str, Any], m1: pd.DataFrame | Bars, exec
         if resolved["candidate_status"]:
             return {"candidate_status": resolved["candidate_status"], "spread_source": resolved["spread_source"], "trade": None}
         used_sources.add(resolved["spread_source"])
-        half_cost = float(resolved["spread_pips"]) * PIP / 2 + slippage
+        half_cost = float(resolved["spread_pips"]) * pip / 2 + slippage
         high, low, open_ = float(m1v.high[i]), float(m1v.low[i]), float(m1v.open[i])
         if direction == "LONG":
             favorable = high - half_cost - entry

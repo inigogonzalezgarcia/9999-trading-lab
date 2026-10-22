@@ -1,7 +1,7 @@
 """Converters from free data sources to the canonical M1 CSV, verified on tiny synthetic fixtures."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 import pytest
@@ -60,7 +60,7 @@ def test_dukascopy_fetch_uses_zero_based_months_and_skips_weekends():
         requested.append(url)
         return b""
 
-    report = ingest.fetch_dukascopy_ticks("EURUSD", datetime(2024, 3, 1, 22, tzinfo=timezone.utc), datetime(2024, 3, 4, 1, tzinfo=timezone.utc), fetch=fake_fetch)
+    report = ingest.fetch_dukascopy_ticks("EURUSD", datetime(2024, 3, 1, 22, tzinfo=timezone.utc), datetime(2024, 3, 4, 1, tzinfo=timezone.utc), fetch=fake_fetch, pause_seconds=0)
     # Friday 22:00 onwards, Saturday, and Sunday before 21:00 are skipped.
     assert all("/2024/02/" in url for url in requested)  # March is month index 02
     assert any(url.endswith("/2024/02/03/21h_ticks.bi5") for url in requested)
@@ -96,3 +96,12 @@ def test_portfolio_csv_with_symbol_column_is_not_flagged_as_duplicates(tmp_path)
     single.write_text("\n".join(r.split(",", 1)[1] for r in rows[:3]) + "\n")
     with pytest.raises(Exception):
         load_market_data(single, timestamp_semantics="bar_open")  # same timestamp twice without symbol -> duplicate
+
+
+def test_dukascopy_fetch_aggregates_real_payloads_month_by_month():
+    hour = datetime(2024, 1, 31, 23, tzinfo=timezone.utc)
+    payloads = {ingest.dukascopy_hour_url("EURUSD", hour): ingest.encode_bi5([(0, 1.10010, 1.10000, 1.0, 2.0)], 100_000),
+                ingest.dukascopy_hour_url("EURUSD", hour + timedelta(hours=1)): ingest.encode_bi5([(5_000, 1.10110, 1.10100, 1.0, 1.0)], 100_000)}
+    report = ingest.fetch_dukascopy_ticks("EURUSD", hour, hour + timedelta(hours=2), fetch=lambda url: payloads.get(url, b""), pause_seconds=0)
+    frame = report["frame"]
+    assert report["ticks"] == 2 and frame.timestamp.tolist() == ["2024-01-31T23:00:00Z", "2024-02-01T00:00:00Z"]

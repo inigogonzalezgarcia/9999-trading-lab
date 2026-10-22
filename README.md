@@ -18,7 +18,9 @@ deserves any trust.
 | Engine | Causal V1 state machine (H1 bias → M15 pullback → liquidity sweep → zone → displacement → two legs → BOS → M1 entry) with spread, slippage, commission, session expiry and portfolio risk limits. ~15 s per year of M1 data. |
 | Research | Chronological splits, walk-forward folds, Monte Carlo bootstrap, one-at-a-time sensitivity, random entries with identical costs. |
 | Persistence | SQLite run history with compressed full results; CSV/JSON export. |
-| UI | React dashboard: KPI tiles, equity curve, M15 candles with entry/exit markers, sortable trades, rejection breakdown, research report, run history, print-to-PDF. |
+| UI | React dashboard: KPI tiles, equity curve, M15 candles with entry/exit markers, sortable trades, **per-trade explainer** (M1 candles with sweep, zone, legs, BOS, entry, stop, exit), R by hour/weekday/month, rejection breakdown, research report, run history, bilingual notice/method page. |
+| Reports | Server-generated PDF (cover with notice and reproducibility hashes, data, results, breakdowns, sensitivity, limitations): `GET /api/runs/{id}/report.pdf` or `python -m backend.cli report`. |
+| Instruments | `config/instruments.yaml` (pip size, Dukascopy scale, contract size) for 11 majors/crosses incl. JPY pairs; each strategy lists which it may trade. |
 | CLI | `python -m backend.cli …` for data download/conversion, validation, backtests, research and history without the UI. |
 
 ## Quick start
@@ -102,7 +104,8 @@ with a time limit, and the Docker image build.
 ## Status
 
 - Implemented: data import and quality checks, UTC/DST handling, V1 engine with causal gates, metrics
-  (per-trade and daily-series), research protocol, SQLite history, background jobs, CLI, dashboard, Docker.
+  (per-trade, daily-series and by hour/weekday/month), research protocol, SQLite history, background jobs,
+  CLI, dashboard with trade explainers and method page, PDF reports, multi-instrument specs, Docker.
 - First real-data runs done on Dukascopy EUR/USD 2024 ticks (see `docs/FIRST_REAL_RUN.md`). The baseline
   triggers very rarely in its 02:15–04:15 Madrid windows; the pattern completes mostly at the London and New
   York opens. Publish nothing as evidence before the research protocol has been run on independent periods.

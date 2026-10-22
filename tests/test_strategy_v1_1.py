@@ -81,3 +81,27 @@ def test_zone_distal_stop_changes_candidate_stop_but_not_detection():
     assert [e["candidate_id"] for e in complete_base] == [e["candidate_id"] for e in complete_other]
     assert complete_base and complete_base[0]["stop_reference"] == "sweep_extreme" and complete_other[0]["stop_reference"] == "zone_distal"
     assert complete_other[0]["stop_price"] == pytest.approx(complete_other[0]["zone"]["distal"] - 0.10 * complete_other[0]["atr_at_setup"])
+
+
+def test_instrument_pip_size_drives_execution_costs(tmp_path):
+    """A JPY pair prices one pip at 0.01: the same spread in pips costs 100x more in price terms."""
+    from backend.app.instruments import dukascopy_point, known_instruments, pip_size, spec
+    from backend.app.strategy.simulation import _simulate_candidate
+
+    assert pip_size("USDJPY") == 0.01 and dukascopy_point("USDJPY") == 1000 and pip_size("EURUSD") == 0.0001
+    assert "USDJPY" in known_instruments() and spec("UNKNOWN")["pip"] == 0.0001
+    execution = load_config(ROOT / "config" / "execution.yaml")
+    strategy = load_config(ROOT / "config" / "strategy_v1.yaml")
+    timestamps = pd.date_range("2024-01-01T02:31:00Z", periods=3, freq="min")
+    bars = pd.DataFrame({"timestamp": timestamps, "open": [150.000, 150.010, 150.050], "high": [150.020, 150.070, 150.400],
+                         "low": [149.995, 150.000, 150.040], "close": [150.010, 150.060, 150.350], "volume": 1, "spread_pips": 1.0})
+    candidate = {"candidate_id": "jpy", "symbol": "USDJPY", "direction": "LONG", "actual_execution_time": "2024-01-01T02:30:00+00:00",
+                 "actual_signal_time": "2024-01-01T02:30:00+00:00", "bos_timestamp": "2024-01-01T02:30:00+00:00", "stop_price": 149.90,
+                 "atr_at_setup": 0.10, "liquidity_level": 149.95, "sweep_timestamp": "2024-01-01T02:30:00+00:00", "sweep_extreme": 149.94,
+                 "zone": {"proximal": 150.0, "distal": 149.9, "source_timestamp": "2024-01-01T02:30:00+00:00"},
+                 "scheduled_observation_time": "03:30", "observation_window_index": 1}
+    outcome = _simulate_candidate(candidate, bars, execution, strategy, 1.0)
+    trade = outcome["trade"]
+    assert trade is not None
+    # entry = open + spread/2 + slippage = 150.000 + 0.005 + 0.001
+    assert trade["entry_price"] == pytest.approx(150.006) and trade["exit_reason"] == "TAKE_PROFIT"

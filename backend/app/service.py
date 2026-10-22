@@ -17,6 +17,7 @@ import pandas as pd
 
 from .core import load_config
 from .data import Dataset, aggregate_bars, load_market_data
+from .explain import explain_all
 from .metrics import equity_curve, metrics
 from .research import research_report
 from .strategy_v1 import canonical_config_hash, run_v1_portfolio
@@ -26,7 +27,7 @@ log = logging.getLogger("fxlab")
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = ROOT / "config"
-SOFTWARE_VERSION = "0.3.0"
+SOFTWARE_VERSION = "0.4.0"
 
 EDUCATIONAL_NOTICE = {
     "title": "Educational research tool",
@@ -70,6 +71,10 @@ def available_strategies() -> list[str]:
     return names
 
 
+def available_strategy_instruments(strategy_file: str) -> list[str]:
+    return list(load_config(resolve_strategy_file(strategy_file)).get("instruments", []))
+
+
 def resolve_strategy_file(name: str | None) -> Path:
     candidate = Path(name or DEFAULT_STRATEGY).name  # no directories: configs live in config/ only
     if not candidate.startswith("strategy_") or not candidate.endswith(".yaml"):
@@ -93,7 +98,7 @@ def load_configs(fixed_spread_pips: float | None = None, strategy_file: str | No
 
 def split_by_symbol(dataset: Dataset, symbol: str, strategy: dict[str, Any]) -> dict[str, pd.DataFrame]:
     if symbol != "PORTFOLIO" and symbol not in strategy["instruments"]:
-        raise ValueError("Baseline permits EURUSD, GBPUSD, or PORTFOLIO")
+        raise ValueError(f"Strategy {strategy['strategy_version']} permits {', '.join(strategy['instruments'])} or PORTFOLIO; add the instrument to its YAML to research it")
     if symbol == "PORTFOLIO":
         if "symbol" not in dataset.bars.columns:
             raise ValueError("Portfolio uploads require a symbol column containing EURUSD and/or GBPUSD")
@@ -177,6 +182,8 @@ def run_backtest(dataset: Dataset, symbol: str, options: dict[str, Any] | None =
     period = base["reproducibility"]["dataset_date_range_utc"]
     result["metrics"] = metrics(result["trades"], period["start"], period["end"])
     result["equity_curve"] = equity_curve(result["trades"])
+    if options.get("include_explainers", True):
+        result["trade_explainers"] = explain_all(result["trades"], result["events"], data_by_symbol, strategy)
     if options["include_chart"]:
         result["chart"] = {"timeframe": options["chart_timeframe"], "series": chart_series(data_by_symbol, options["chart_timeframe"])}
     base["reproducibility"]["spread_source"] = result["spread_sources"]

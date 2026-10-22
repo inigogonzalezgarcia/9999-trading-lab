@@ -3,6 +3,7 @@ import { api, formatR, shortTime, type RunOptions } from './api';
 import type { BacktestResult, Job, Notice, ResearchReport, RunRow } from './types';
 import { BacktestView } from './components/Results';
 import { ResearchView } from './components/Research';
+import { MethodPage } from './components/Method';
 
 type Mode = 'backtest' | 'research';
 type Loaded = { kind: 'backtest'; data: BacktestResult; title: string } | { kind: 'research'; data: ResearchReport; title: string };
@@ -20,13 +21,15 @@ export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [options, setOptions] = useState<RunOptions>({ symbol: 'EURUSD', strategy: 'strategy_v1.yaml', dailyContexts: 'lookback:30', sourceTimezone: '', fixedSpreadPips: null, label: '' });
   const [strategies, setStrategies] = useState<string[]>(['strategy_v1.yaml']);
+  const [instruments, setInstruments] = useState<Record<string, string[]>>({ 'strategy_v1.yaml': ['EURUSD', 'GBPUSD'] });
+  const [specs, setSpecs] = useState<Record<string, { pip: number; description?: string }>>({});
   const [research, setResearch] = useState({ train_days: 120, test_days: 30, anchored: false, mc_simulations: 1000, benchmark_simulations: 200, sensitivity: true, walk_forward: true });
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [runs, setRuns] = useState<RunRow[]>([]);
-  const [view, setView] = useState<'result' | 'history'>('result');
+  const [view, setView] = useState<'result' | 'history' | 'method'>('result');
   const poll = useRef<number | null>(null);
 
   const refreshRuns = useCallback(() => api.runs().then(setRuns).catch(() => setRuns([])), []);
@@ -34,7 +37,7 @@ export default function App() {
   useEffect(() => {
     api.health().then((h) => { setHealth(h); setOffline(false); }).catch(() => setOffline(true));
     api.notice().then(setNotice).catch(() => undefined);
-    api.config().then((c) => { setStrategies(c.strategies); setOptions((o) => ({ ...o, strategy: c.default_strategy })); }).catch(() => undefined);
+    api.config().then((c) => { setStrategies(c.strategies); setInstruments(c.instruments ?? {}); setSpecs(c.instrument_specs ?? {}); setOptions((o) => ({ ...o, strategy: c.default_strategy })); }).catch(() => undefined);
     refreshRuns();
     return () => { if (poll.current) window.clearInterval(poll.current); };
   }, [refreshRuns]);
@@ -44,7 +47,7 @@ export default function App() {
     try {
       const { meta, result } = await api.run(id);
       const title = `${meta.kind} · ${meta.symbol ?? ''} · ${meta.dataset_name ?? ''} · ${shortTime(meta.created_at)}`;
-      setLoaded(meta.kind === 'research' ? { kind: 'research', data: result as ResearchReport, title } : { kind: 'backtest', data: { ...(result as BacktestResult), run_id: id }, title });
+      setLoaded(meta.kind === 'research' ? { kind: 'research', data: { ...(result as ResearchReport), run_id: id }, title } : { kind: 'backtest', data: { ...(result as BacktestResult), run_id: id }, title });
       setView('result');
     } catch (e) {
       setError((e as Error).message);
@@ -137,14 +140,15 @@ export default function App() {
           </label>
           <label>
             Strategy version
-            <select value={options.strategy} onChange={(e) => setOptions({ ...options, strategy: e.target.value })}>
+            <select value={options.strategy} onChange={(e) => { const strategy = e.target.value; const allowed = instruments[strategy] ?? []; setOptions({ ...options, strategy, symbol: options.symbol === 'PORTFOLIO' || allowed.includes(options.symbol) ? options.symbol : allowed[0] ?? options.symbol }); }}>
               {strategies.map((name) => <option key={name} value={name}>{name.replace('strategy_', '').replace('.yaml', '').replace('_', '.')}{name === 'strategy_v1.yaml' ? ' (baseline)' : ' (experiment)'}</option>)}
             </select>
           </label>
           <label>
             Symbol
             <select value={options.symbol} onChange={(e) => setOptions({ ...options, symbol: e.target.value })}>
-              <option>EURUSD</option><option>GBPUSD</option><option value="PORTFOLIO">PORTFOLIO (file with symbol column)</option>
+              {(instruments[options.strategy] ?? ['EURUSD', 'GBPUSD']).map((s) => <option key={s} value={s}>{s}{specs[s] ? ` · pip ${specs[s].pip}` : ''}</option>)}
+              <option value="PORTFOLIO">PORTFOLIO (file with symbol column)</option>
             </select>
           </label>
           <label>
@@ -193,10 +197,12 @@ export default function App() {
           <div className="tabs">
             <button type="button" className={view === 'result' ? 'active' : ''} onClick={() => setView('result')}>Result</button>
             <button type="button" className={view === 'history' ? 'active' : ''} onClick={() => { setView('history'); refreshRuns(); }}>History ({runs.length})</button>
+            <button type="button" className={view === 'method' ? 'active' : ''} onClick={() => setView('method')}>Notice / Method</button>
             {loaded && view === 'result' && (
               <span className="tab-actions">
                 <button type="button" className="ghost" onClick={() => window.print()}>Print / PDF</button>
                 {'run_id' in loaded.data && (loaded.data as BacktestResult).run_id && <a className="ghost button" href={api.resultJsonUrl((loaded.data as BacktestResult).run_id!)}>JSON</a>}
+                {'run_id' in loaded.data && (loaded.data as BacktestResult).run_id && <a className="ghost button" href={api.reportPdfUrl((loaded.data as BacktestResult).run_id!)} target="_blank" rel="noreferrer">PDF report</a>}
               </span>
             )}
           </div>
@@ -213,6 +219,7 @@ export default function App() {
               {loaded.kind === 'backtest' ? <BacktestView result={loaded.data} /> : <ResearchView report={loaded.data} />}
             </>
           )}
+          {view === 'method' && <MethodPage />}
           {view === 'history' && (
             <div className="table-wrap">
               {runs.length === 0 && <p className="muted">No persisted runs yet.</p>}
@@ -233,6 +240,7 @@ export default function App() {
                         <td className="row-actions">
                           <button type="button" className="ghost" onClick={() => openRun(r.id)}>Open</button>
                           <a className="ghost button" href={api.tradesCsvUrl(r.id)}>CSV</a>
+                          <a className="ghost button" href={api.reportPdfUrl(r.id)} target="_blank" rel="noreferrer">PDF</a>
                           <button type="button" className="ghost danger" onClick={() => remove(r.id)}>Delete</button>
                         </td>
                       </tr>

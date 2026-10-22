@@ -127,3 +127,19 @@
   two-symbol run.
 - **Open for V1.2 (strategy):** stop placement relative to entry is the binding constraint (110/204 complete
   setups rejected at 3 ATR); and multi-year data before any claim.
+
+## 2026-10-22 — Explainability and product surface (v0.4.0)
+
+- **Decision:** Every trade must be explainable on its own chart. The explainer is derived only from the
+  events the engine already emits (no rule is recomputed in the UI or the PDF), so what the learner sees is
+  exactly what the engine did. Explainers are stored with the run; older runs show a "re-run" hint instead.
+- **Decision:** The method and the legal notice live inside the app (ES/EN), not only in the repository, so a
+  web visitor meets the educational framing before any number.
+- **Decision:** PDF reports are server-side and carry the notice, dataset hash, config hash and software
+  revision on the cover; a report without its reproducibility block is not a report.
+- **Decision:** Time breakdowns use the strategy reference timezone recorded on each trade. Buckets with few
+  trades are shown with their count and must not be read as evidence.
+- **Decision:** Instrument specifications move to `config/instruments.yaml`; a strategy may only trade the
+  instruments it lists. Pip size is per symbol in the simulator (JPY pairs 0.01).
+- **Status:** V1 output bit-identical to 0.3.0; offline suite extended (explainers, PDF, instruments, metrics
+  breakdowns).

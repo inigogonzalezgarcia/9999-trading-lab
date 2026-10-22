@@ -10,6 +10,10 @@ methodology: experiment_derived_from_v1_first_real_run_2024
 instruments:
 - EURUSD
 - GBPUSD
+- AUDUSD
+- USDJPY
+- USDCHF
+- USDCAD
 timezones:
   reference: Europe/Madrid
   market: America/New_York

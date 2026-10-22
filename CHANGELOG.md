@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.0 — 2026-10-22
+
+- Trade explainer: every executed trade carries its M1 candles plus the rule levels (liquidity, sweep extreme,
+  zone, BOS, entry, stop, target) and the timestamped rule events (`backend/app/explain.py`,
+  `GET /api/runs/{run_id}/trades/{trade_id}/explain`). Clicking a trade in the UI draws them.
+- "Notice / Method" page (ES/EN): legal notice, the V1 hypothesis and the research protocol in plain language,
+  how to read a result, current state of the research.
+- Server-generated PDF report (`backend/app/report.py`, reportlab): cover with notice and reproducibility,
+  data, results, time breakdowns, sensitivity (research runs), limitations. `GET /api/runs/{run_id}/report.pdf`
+  and `python -m backend.cli report`.
+- Metrics: R by entry hour, weekday, month, direction and exit reason (strategy reference timezone), with
+  signed bar charts and tables in the UI.
+- Instruments: `config/instruments.yaml` + `backend/app/instruments.py` (pip size, Dukascopy point scale,
+  contract size). Simulation, ingest and CLI use per-symbol pips; JPY pairs supported. Strategy YAML lists
+  which instruments it may trade; `/api/config` exposes them and the UI symbol selector follows the strategy.
+- V1 configuration unchanged (bit-identical output); V1.1 instrument list extended.
+
 ## 0.3.0 — 2026-10-16
 
 - Strategy V1.1 experiment (`config/strategy_v1_1.yaml`): London-open windows, zone-distal stop, liquidity

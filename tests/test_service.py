@@ -81,3 +81,35 @@ def test_job_manager_tracks_progress_and_failures():
     assert manager.public(good["job_id"])["result"] == {"ok": True}
     assert manager.public(bad["job_id"])["error"] == "boom"
     assert len(manager.list()) == 2 and manager.public("missing") is None
+
+
+def test_trade_explainers_cover_every_trade_with_candles_levels_and_steps(tmp_path):
+    dataset = _dataset(tmp_path)
+    result = service.run_backtest(dataset, "EURUSD", {"daily_contexts": "none", "include_chart": False})
+    assert result["trades"], "fixture must produce a trade"
+    for trade in result["trades"]:
+        explainer = result["trade_explainers"][trade["trade_id"]]
+        assert explainer["candles"] and explainer["window"]["bars"] == len(explainer["candles"])
+        ids = {level["id"] for level in explainer["levels"]}
+        assert {"liquidity", "sweep_extreme", "zone_proximal", "zone_distal", "entry", "stop", "target"} <= ids
+        steps = [step["id"] for step in explainer["steps"]]
+        assert steps[0] == "sweep" and steps[-1] == "exit" and "bos" in steps and "entry" in steps
+        assert all(step["time"] for step in explainer["steps"])
+        first, last = explainer["candles"][0]["time"], explainer["candles"][-1]["time"]
+        assert first <= explainer["steps"][0]["time"] and last >= explainer["steps"][-1]["time"]
+        assert explainer["rules"]["stop_distance_atr"] is not None and explainer["notice"]
+
+
+def test_pdf_report_renders_for_backtest_and_research(tmp_path):
+    pytest.importorskip("reportlab")
+    from backend.app.report import build_pdf
+
+    dataset = _dataset(tmp_path)
+    result = service.run_backtest(dataset, "EURUSD", {"daily_contexts": "none", "include_chart": False})
+    payload = build_pdf(result, "backtest", {"label": "fixture"})
+    assert payload.startswith(b"%PDF") and len(payload) > 3000
+    research = {"baseline": {"trades": 1, "expectancy_r": 0.5, "total_r": 0.5, "win_rate": 1.0, "profit_factor": None, "max_drawdown_r": 0.0, "annualized_sharpe": None, "trading_days": 5},
+                "limitations": ["synthetic"], "reproducibility": result["reproducibility"], "quality": result["quality"],
+                "monte_carlo": {"simulations": 10, "trades_per_path": 1, "probability_losing": 0.0, "final_r_percentiles": {"5": 0.5, "50": 0.5, "95": 0.5}, "max_drawdown_r_percentiles": {"50": 0.0, "95": 0.0}},
+                "sensitivity": {"baseline": {"trades": 1, "expectancy_r": 0.5, "total_r": 0.5, "max_drawdown_r": 0.0}, "variants": [{"scope": "strategy", "parameter": "x", "value": 1, "trades": 1, "expectancy_r": 0.5, "total_r": 0.5, "max_drawdown_r": 0.0, "error": None}], "note": "n"}}
+    assert build_pdf(research, "research").startswith(b"%PDF")

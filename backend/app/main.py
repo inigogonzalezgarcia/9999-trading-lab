@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import service
+from . import instruments, service
 from .data import DataQualityError
 from .jobs import JobManager
 from .store import RunStore, dumps
@@ -66,6 +66,8 @@ def config() -> Any:
     strategy, execution, data_config = service.load_configs()
     return _JSON({"strategy": strategy, "execution": execution, "data": data_config, "notice": service.EDUCATIONAL_NOTICE,
                   "strategies": service.available_strategies(), "default_strategy": service.DEFAULT_STRATEGY,
+                  "instruments": {name: service.available_strategy_instruments(name) for name in service.available_strategies()},
+                  "instrument_specs": {name: instruments.spec(name) for name in instruments.known_instruments()},
                   "limits": {"max_upload_mb": MAX_UPLOAD_MB}, "software_revision": service.software_revision()})
 
 
@@ -220,6 +222,31 @@ def run_trades_csv(run_id: str) -> Response:
     for trade in trades:
         writer.writerow([trade.get(column) for column in columns])
     return Response(buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="trades-{run_id[:8]}.csv"'})
+
+
+@app.get("/api/runs/{run_id}/trades/{trade_id}/explain")
+def run_trade_explainer(run_id: str, trade_id: str) -> Any:
+    """Candles and annotated rule events for one executed trade (precomputed with the run)."""
+    result = store().get(run_id)
+    if result is None:
+        raise HTTPException(404, "Unknown run")
+    explainer = (result.get("trade_explainers") or {}).get(trade_id)
+    if explainer is None:
+        raise HTTPException(404, "No explainer for this trade")
+    return _JSON(explainer)
+
+
+@app.get("/api/runs/{run_id}/report.pdf")
+def run_report_pdf(run_id: str) -> Response:
+    """Printable research report with the educational notice on every page."""
+    from .report import build_pdf  # reportlab import kept lazy: the API starts even if it is missing
+
+    result = store().get(run_id)
+    if result is None:
+        raise HTTPException(404, "Unknown run")
+    meta = store().meta(run_id) or {}
+    payload = build_pdf(result, meta.get("kind", "backtest"), meta)
+    return Response(payload, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="fxlab-report-{run_id[:8]}.pdf"'})
 
 
 @app.get("/api/runs/{run_id}/result.json")

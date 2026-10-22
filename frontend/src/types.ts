@@ -67,8 +67,54 @@ export interface Metrics {
   exit_reasons: Record<string, number>;
   by_symbol: Record<string, { trades: number; total_r: number; expectancy_r: number; win_rate: number }>;
   by_window: Record<string, { trades: number; total_r: number; expectancy_r: number; win_rate: number }>;
+  by_hour?: Record<string, Bucket>;
+  by_weekday?: Record<string, Bucket>;
+  by_month?: Record<string, Bucket>;
+  by_direction?: Record<string, Bucket>;
+  by_exit_reason?: Record<string, Bucket>;
   daily: DailyMetrics;
   methodology: Record<string, string>;
+}
+
+export interface Bucket {
+  trades: number;
+  total_r: number;
+  expectancy_r: number;
+  win_rate: number;
+}
+
+export interface ExplainerLevel {
+  id: string;
+  price: number;
+  label: string;
+  style: 'solid' | 'dashed' | 'dotted';
+  color: string;
+}
+
+export interface ExplainerStep {
+  id: string;
+  time: number;
+  timestamp: string;
+  local: string;
+  title: string;
+  text: string;
+  position: 'aboveBar' | 'belowBar';
+}
+
+export interface TradeExplainer {
+  trade_id: string;
+  candidate_id: string;
+  symbol: string;
+  direction: 'LONG' | 'SHORT';
+  timezone: string;
+  timeframe: string;
+  candles: Candle[];
+  levels: ExplainerLevel[];
+  steps: ExplainerStep[];
+  window: { start: string | null; end: string | null; bars: number };
+  rules: { stop_reference: string; atr_at_setup: number | null; stop_distance_atr: number | null; observation_window: string | null; scheduled_observation_time: string | null };
+  notice: string;
+  error?: string;
 }
 
 export interface Candle {
@@ -102,6 +148,7 @@ export interface BacktestResult {
   events?: CandidateEvent[];
   metrics: Metrics | null;
   equity_curve?: EquityPoint[];
+  trade_explainers?: Record<string, TradeExplainer>;
   chart?: { timeframe: string; series: Record<string, Candle[]> };
   quality: Record<string, unknown> & { warnings?: string[]; errors?: string[] };
   dataset_version: string;
@@ -130,6 +177,7 @@ export interface PeriodSummary {
 }
 
 export interface ResearchReport {
+  run_id?: string;
   symbol: string;
   baseline: PeriodSummary;
   splits?: { splits: Record<string, { start: string; end: string }>; results: Record<string, PeriodSummary>; note: string };

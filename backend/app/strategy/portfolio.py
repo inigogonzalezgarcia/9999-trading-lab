@@ -99,7 +99,7 @@ def run_v1_portfolio(data_by_symbol: dict[str, pd.DataFrame], strategy_config: d
     if strategy_config.get("status") != "FULLY_SPECIFIED":
         raise ValueError("Strategy V1 cannot run until its implementation and tests are validated")
     if not data_by_symbol or set(data_by_symbol) - set(strategy_config["instruments"]):
-        raise ValueError("Portfolio input must contain EURUSD and/or GBPUSD M1 bars")
+        raise ValueError(f"Portfolio input must contain M1 bars for instruments listed by the strategy: {', '.join(strategy_config['instruments'])}")
     generator = candidate_generator or generate_v1_candidates
     report = progress or (lambda _stage, _fraction: None)
     bars_by_symbol = {symbol: data.sort_values("timestamp").reset_index(drop=True).copy() for symbol, data in data_by_symbol.items()}
