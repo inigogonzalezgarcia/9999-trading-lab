@@ -111,6 +111,9 @@ def _bar_chart(labels: list[str], values: list[float], width: float = 170 * mm, 
     chart.valueAxis.visibleGrid = True
     chart.valueAxis.gridStrokeColor = LINE
     chart.valueAxis.labelTextFormat = lambda value: fmt.format(value)
+    # Bars must always start at zero; otherwise a small positive bucket disappears below the axis.
+    chart.valueAxis.valueMin = min(0.0, min(values)) if values else 0.0
+    chart.valueAxis.valueMax = max(0.0, max(values)) * 1.05 if values and max(values) > 0 else 0.0
     chart.bars[0].fillColor = color
     chart.bars[0].strokeColor = None
     if any(value < 0 for value in values):
