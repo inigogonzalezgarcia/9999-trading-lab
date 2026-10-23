@@ -144,13 +144,16 @@ def dukascopy_hour_url(symbol: str, moment: datetime) -> str:
 
 def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str | Path | None = None,
                           fetch: Callable[[str], bytes] | None = None, progress: Callable[[str], None] | None = None,
-                          pause_seconds: float = 0.15, max_retries: int = 6) -> dict[str, Any]:
+                          pause_seconds: float = 0.3, max_retries: int = 30, checkpoint_dir: str | Path | None = None) -> dict[str, Any]:
     """Download hourly tick files for ``[start, end)`` (UTC) and aggregate them into canonical M1 bars.
 
     ``fetch`` receives a URL and returns the raw bytes (empty bytes for a 404/no-data hour); the
-    default uses ``urllib`` with exponential back-off on HTTP 503/429, which Dukascopy returns when a
-    client is too aggressive (keep ``pause_seconds`` >= 0.1 and never run several downloads in
-    parallel). Weekend hours are skipped. Ticks are aggregated month by month to bound memory.
+    default uses ``urllib`` with exponential back-off (capped at 10 minutes, ``Retry-After`` honoured)
+    on HTTP 429/503 and on connection resets, which Dukascopy returns when a client is too aggressive
+    (keep ``pause_seconds`` >= 0.1 and never run several downloads in parallel). Weekend hours are
+    skipped. Ticks are aggregated month by month to bound memory, and every completed calendar month
+    is checkpointed as ``<checkpoint_dir>/<SYMBOL>_<YYYY-MM>.csv`` (default: ``<out>.parts/``) so an
+    interrupted download resumes from the next month instead of starting over.
     """
     if fetch is None:
         import ssl
@@ -168,7 +171,7 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
             pass
 
         def fetch(url: str) -> bytes:  # pragma: no cover - network
-            delay = 4.0
+            delay = 5.0
             for attempt in range(max_retries):
                 try:
                     with urlopen(Request(url, headers={"User-Agent": "fx-research-lab/0.4 (educational research)"}), timeout=30, context=context) as response:
@@ -178,36 +181,72 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
                         return b""
                     if exc.code not in (429, 503) or attempt == max_retries - 1:
                         raise
-                except URLError as exc:
+                    retry_after = exc.headers.get("Retry-After") if exc.headers else None
+                    if retry_after and str(retry_after).isdigit():
+                        delay = max(delay, float(retry_after))
+                except (URLError, ConnectionResetError, TimeoutError, OSError) as exc:
                     if "CERTIFICATE_VERIFY_FAILED" in str(exc):
                         raise RuntimeError("TLS certificates not available to Python. Run 'Install Certificates.command' from the Python folder "
                                            "in /Applications, or 'pip install certifi', then relaunch.") from exc
                     if attempt == max_retries - 1:
                         raise
+                if progress:
+                    progress(f"throttled; waiting {delay:.0f}s (attempt {attempt + 1}/{max_retries})")
                 _time.sleep(delay)
-                delay *= 2
+                delay = min(delay * 2, 600.0)
             return b""
 
     point = dukascopy_point(symbol)
     start = start.replace(minute=0, second=0, microsecond=0, tzinfo=start.tzinfo or timezone.utc)
     end = end.replace(tzinfo=end.tzinfo or timezone.utc)
+    parts_dir: Path | None = None
+    if checkpoint_dir is not None:
+        parts_dir = Path(checkpoint_dir)
+    elif out is not None:
+        parts_dir = Path(out).with_name(Path(out).stem + ".parts")
+
+    def part_path(year: int, month: int) -> Path | None:
+        return parts_dir / f"{symbol.upper()}_{year:04d}-{month:02d}.csv" if parts_dir else None
+
+    def month_complete(year: int, month: int) -> bool:
+        """True when the whole calendar month lies inside [start, end) and so can be checkpointed/reused."""
+        first = datetime(year, month, 1, tzinfo=timezone.utc)
+        nxt = datetime(year + (month == 12), month % 12 + 1, 1, tzinfo=timezone.utc)
+        return first >= start and nxt <= end
+
     hours = []
     moment = start
+    reused_months: list[tuple[int, int]] = []
     while moment < end:
-        if not (moment.weekday() == 5 or (moment.weekday() == 6 and moment.hour < 20) or (moment.weekday() == 4 and moment.hour >= 22)):
+        key = (moment.year, moment.month)
+        path = part_path(*key)
+        if path is not None and path.exists() and month_complete(*key):
+            if key not in reused_months:
+                reused_months.append(key)
+        elif not (moment.weekday() == 5 or (moment.weekday() == 6 and moment.hour < 20) or (moment.weekday() == 4 and moment.hour >= 22)):
             hours.append(moment)
         moment += timedelta(hours=1)
-    monthly_frames: list[pd.DataFrame] = []
+    monthly_frames: dict[tuple[int, int], pd.DataFrame] = {}
+    for key in reused_months:
+        monthly_frames[key] = pd.read_csv(part_path(*key), dtype={"timestamp": str})
+        if progress:
+            progress(f"reusing checkpoint {key[0]:04d}-{key[1]:02d}")
     current_month: tuple[int, int] | None = None
     month_ticks: list[pd.DataFrame] = []
     empty_hours = 0
     tick_count = 0
 
     def flush() -> None:
-        if month_ticks:
-            ticks = pd.concat(month_ticks, ignore_index=True)
-            monthly_frames.append(ticks_to_m1(ticks, symbol))
-            month_ticks.clear()
+        if current_month is None:
+            return
+        ticks = pd.concat(month_ticks, ignore_index=True) if month_ticks else pd.DataFrame()
+        bars = ticks_to_m1(ticks, symbol) if len(ticks) else pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
+        monthly_frames[current_month] = bars
+        month_ticks.clear()
+        path = part_path(*current_month)
+        if path is not None and month_complete(*current_month):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            bars.to_csv(path, index=False)
 
     for index, hour in enumerate(hours):
         if progress and index % 24 == 0:
@@ -226,9 +265,11 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
         tick_count += int(len(ticks))
         month_ticks.append(ticks)
     flush()
-    bars = pd.concat(monthly_frames, ignore_index=True) if monthly_frames else pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
+    ordered = [monthly_frames[key] for key in sorted(monthly_frames) if len(monthly_frames[key])]
+    bars = pd.concat(ordered, ignore_index=True) if ordered else pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
     report = _finish(bars, Path(out) if out else None, "dukascopy_bi5_ticks", symbol)
-    report.update({"hours_requested": len(hours), "hours_without_data": empty_hours, "ticks": tick_count})
+    report.update({"hours_requested": len(hours), "hours_without_data": empty_hours, "ticks": tick_count,
+                   "months_reused_from_checkpoint": [f"{y:04d}-{m:02d}" for y, m in reused_months]})
     return report
 
 

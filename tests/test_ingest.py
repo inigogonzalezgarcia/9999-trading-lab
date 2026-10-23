@@ -105,3 +105,28 @@ def test_dukascopy_fetch_aggregates_real_payloads_month_by_month():
     report = ingest.fetch_dukascopy_ticks("EURUSD", hour, hour + timedelta(hours=2), fetch=lambda url: payloads.get(url, b""), pause_seconds=0)
     frame = report["frame"]
     assert report["ticks"] == 2 and frame.timestamp.tolist() == ["2024-01-31T23:00:00Z", "2024-02-01T00:00:00Z"]
+
+
+def test_fetch_checkpoints_complete_months_and_resumes(tmp_path):
+    """A full calendar month is written to <out>.parts and reused by the next run; partial months are refetched."""
+    calls: list[str] = []
+    payload = ingest.encode_bi5([(0, 1.10010, 1.10000, 1.0, 2.0)], 100_000)
+
+    def fake_fetch(url: str) -> bytes:
+        calls.append(url)
+        return payload if url.endswith("/2024/00/02/07h_ticks.bi5") else b""
+
+    start, end = datetime(2024, 1, 1, tzinfo=timezone.utc), datetime(2024, 2, 1, 6, tzinfo=timezone.utc)  # January complete, February partial
+    out = tmp_path / "EURUSD.csv"
+    first = ingest.fetch_dukascopy_ticks("EURUSD", start, end, out, fetch=fake_fetch, pause_seconds=0)
+    assert (tmp_path / "EURUSD.parts" / "EURUSD_2024-01.csv").exists()
+    assert not (tmp_path / "EURUSD.parts" / "EURUSD_2024-02.csv").exists()
+    january_calls = sum("/2024/00/" in url for url in calls)
+    assert first["rows"] == 1 and january_calls > 400
+
+    calls.clear()
+    second = ingest.fetch_dukascopy_ticks("EURUSD", start, end, out, fetch=fake_fetch, pause_seconds=0)
+    assert second["months_reused_from_checkpoint"] == ["2024-01"]
+    assert not any("/2024/00/" in url for url in calls)  # January served from the checkpoint
+    assert calls and all("/2024/01/" in url for url in calls)  # February refetched
+    assert second["rows"] == 1 and second["frame"].timestamp.tolist() == ["2024-01-02T07:00:00Z"]

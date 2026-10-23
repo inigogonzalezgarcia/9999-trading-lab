@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1 — 2026-10-23
+
+- Dukascopy downloader: every complete calendar month is checkpointed to `<out>.parts/<SYMBOL>_<YYYY-MM>.csv`
+  and reused on the next run, so an interrupted download resumes instead of restarting; back-off on
+  HTTP 429/503 and connection resets is capped at 10 minutes with up to 30 attempts (`Retry-After` honoured);
+  default pause 0.3 s between hours; certifi CA bundle used when the Python build has none.
+- PDF report: signed bar charts colour losses red, keep category labels under the plot and always start at zero.
+
 ## 0.4.0 — 2026-10-22
 
 - Trade explainer: every executed trade carries its M1 candles plus the rule levels (liquidity, sweep extreme,
