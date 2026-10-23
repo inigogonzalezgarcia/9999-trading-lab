@@ -155,6 +155,7 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
     is checkpointed as ``<checkpoint_dir>/<SYMBOL>_<YYYY-MM>.csv`` (default: ``<out>.parts/``) so an
     interrupted download resumes from the next month instead of starting over.
     """
+    pacing = {"pause": float(pause_seconds), "base": float(pause_seconds), "throttles": 0}
     if fetch is None:
         import ssl
         import time as _time
@@ -190,8 +191,12 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
                                            "in /Applications, or 'pip install certifi', then relaunch.") from exc
                     if attempt == max_retries - 1:
                         raise
+                # Adaptive pacing: every throttle doubles the pause between hours (up to 5 s); it decays
+                # back towards the base pause while requests succeed.
+                pacing["throttles"] += 1
+                pacing["pause"] = min(max(pacing["pause"] * 2, 0.5), 5.0)
                 if progress:
-                    progress(f"throttled; waiting {delay:.0f}s (attempt {attempt + 1}/{max_retries})")
+                    progress(f"throttled; waiting {delay:.0f}s (attempt {attempt + 1}/{max_retries}), pause now {pacing['pause']:.1f}s")
                 _time.sleep(delay)
                 delay = min(delay * 2, 600.0)
             return b""
@@ -255,9 +260,10 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
             flush()
             current_month = (hour.year, hour.month)
         payload = fetch(dukascopy_hour_url(symbol, hour))
-        if pause_seconds:
+        if pacing["pause"]:
             import time as _time
-            _time.sleep(pause_seconds)
+            _time.sleep(pacing["pause"])
+            pacing["pause"] = max(pacing["base"], pacing["pause"] * 0.99)
         ticks = decode_bi5(payload, hour, point)
         if ticks.empty:
             empty_hours += 1
@@ -269,6 +275,7 @@ def fetch_dukascopy_ticks(symbol: str, start: datetime, end: datetime, out: str 
     bars = pd.concat(ordered, ignore_index=True) if ordered else pd.DataFrame(columns=CANONICAL_COLUMNS + ["spread_pips"])
     report = _finish(bars, Path(out) if out else None, "dukascopy_bi5_ticks", symbol)
     report.update({"hours_requested": len(hours), "hours_without_data": empty_hours, "ticks": tick_count,
+                   "throttled_responses": pacing["throttles"],
                    "months_reused_from_checkpoint": [f"{y:04d}-{m:02d}" for y, m in reused_months]})
     return report
 
