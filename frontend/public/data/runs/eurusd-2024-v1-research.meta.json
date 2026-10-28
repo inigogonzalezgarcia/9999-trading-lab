@@ -14,7 +14,7 @@
   "en": "Independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark on the baseline."
  },
  "order": 50,
- "created_at": "2026-10-28T17:13:08+00:00",
+ "created_at": "2026-10-28T17:53:25+00:00",
  "summary": {
   "trades": 5,
   "expectancy_r": -0.5220669310748988,
@@ -25,5 +25,6 @@
  },
  "software_version": "0.5.0",
  "pdf": "runs/eurusd-2024-v1-research.pdf",
+ "sparkline": [],
  "size_bytes": 42030
 }

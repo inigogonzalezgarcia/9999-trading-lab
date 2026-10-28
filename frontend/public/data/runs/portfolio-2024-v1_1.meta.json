@@ -14,7 +14,7 @@
   "en": "The experiment on two pairs. Compare with the single-pair version."
  },
  "order": 40,
- "created_at": "2026-10-28T17:10:14+00:00",
+ "created_at": "2026-10-28T17:50:25+00:00",
  "summary": {
   "trades": 20,
   "expectancy_r": -0.05913946591323995,
@@ -27,7 +27,6 @@
  },
  "software_version": "0.5.0",
  "pdf": "runs/portfolio-2024-v1_1.pdf",
- "size_bytes": 4624541,
  "sparkline": [
   0.0,
   -1.007,
@@ -50,5 +49,6 @@
   -0.151,
   -1.151,
   -1.183
- ]
+ ],
+ "size_bytes": 4657893
 }
