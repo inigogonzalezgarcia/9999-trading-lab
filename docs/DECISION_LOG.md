@@ -143,3 +143,19 @@
   instruments it lists. Pip size is per symbol in the simulator (JPY pairs 0.01).
 - **Status:** V1 output bit-identical to 0.3.0; offline suite extended (explainers, PDF, instruments, metrics
   breakdowns).
+
+## 2026-10-28 — Public site as an educational simulator (v0.5.0)
+
+- **Decision:** The product is "learn to test a trading idea with method", never the strategy. The public site
+  shows the lab's real results (including negative ones), explains every trade and teaches the protocol; it
+  does not run anything live and never will.
+- **Decision:** No backend in public. Cloudflare Pages serves precomputed, trimmed results (`export-web`);
+  the FastAPI tool stays local/Docker for the author. Reasons: no auth surface, no CPU bill, no uploads from
+  strangers, and the results shown are exactly the ones in the repository.
+- **Decision:** Lessons are built on real runs via widgets that read the same JSON the lab uses, so a lesson
+  can never quote a number the lab does not show.
+- **Decision:** Mailing list stored in Cloudflare KV by a Pages Function with Turnstile; consent evidence
+  (timestamp, source page, hashed IP) kept per GDPR art. 7; no third-party email tool until there is a list.
+- **Decision:** Legal pages (notice, privacy, cookies, terms) ship with the site, ES/EN, with the owner block
+  to be completed before launch; paid products, when they exist, go through a merchant of record.
+- **Status:** 63 offline tests; `tsc` clean; static build verified on the author's machine / Pages.

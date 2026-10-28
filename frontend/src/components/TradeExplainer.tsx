@@ -12,6 +12,7 @@ import {
 } from 'lightweight-charts';
 import { formatR } from '../api';
 import type { Trade, TradeExplainer as Explainer } from '../types';
+import { useT } from '../i18n';
 
 const STEP_SHAPES: Record<string, { shape: 'circle' | 'square' | 'arrowUp' | 'arrowDown'; color: string; short: string }> = {
   sweep: { shape: 'circle', color: '#8a8f98', short: 'sweep' },
@@ -84,14 +85,15 @@ export function ExplainerChart({ explainer, focus }: { explainer: Explainer; foc
 }
 
 export function TradeExplainerPanel({ trade, explainer, onClose }: { trade: Trade; explainer: Explainer | undefined; onClose: () => void }) {
+  const { t } = useT();
   const [focus, setFocus] = useState<string | null>(null);
   const panel = useRef<HTMLElement>(null);
   useEffect(() => { panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [trade.trade_id]);
   if (!explainer || explainer.error) {
     return (
       <section className="explainer" ref={panel}>
-        <div className="section-head"><h2>Trade explainer</h2><button type="button" className="ghost" onClick={onClose}>Close</button></div>
-        <p className="muted">No explainer is available for this trade{explainer?.error ? `: ${explainer.error}` : ' (runs made before v0.4 do not carry them; re-run the backtest).'}</p>
+        <div className="section-head"><h2>{t('ex.title')}</h2><button type="button" className="ghost" onClick={onClose}>{t('ex.close')}</button></div>
+        <p className="muted">{t('ex.none')}{explainer?.error ? `: ${explainer.error}` : t('ex.noneOld')}</p>
       </section>
     );
   }
@@ -99,12 +101,11 @@ export function TradeExplainerPanel({ trade, explainer, onClose }: { trade: Trad
   return (
     <section className="explainer" ref={panel}>
       <div className="section-head">
-        <h2>How this trade happened — {trade.symbol} {trade.direction} on {trade.date} ({formatR(trade.r_multiple)})</h2>
-        <button type="button" className="ghost" onClick={onClose}>Close</button>
+        <h2>{t('ex.title')} — {trade.symbol} {trade.direction} · {trade.date} ({formatR(trade.r_multiple)})</h2>
+        <button type="button" className="ghost" onClick={onClose}>{t('ex.close')}</button>
       </div>
       <p className="muted small">
-        M1 candles from {explainer.window.start?.slice(0, 16).replace('T', ' ')} to {explainer.window.end?.slice(0, 16).replace('T', ' ')} UTC ({explainer.window.bars} bars).
-        Horizontal lines are the rule levels; markers are the moments each rule fired. Click a step to highlight it. {explainer.notice}
+        {t('ex.intro', { start: explainer.window.start?.slice(0, 16).replace('T', ' ') ?? '—', end: explainer.window.end?.slice(0, 16).replace('T', ' ') ?? '—', n: explainer.window.bars })} {explainer.notice}
       </p>
       <ExplainerChart explainer={explainer} focus={focus} />
       <div className="explainer-grid">
@@ -120,16 +121,16 @@ export function TradeExplainerPanel({ trade, explainer, onClose }: { trade: Trad
           ))}
         </ol>
         <div className="legend">
-          <div className="tile-label">Levels</div>
+          <div className="tile-label">{t('ex.levels')}</div>
           {explainer.levels.map((level) => (
             <div key={level.id} className="legend-row"><span className="swatch" style={{ borderTop: `2px ${level.style} ${level.color}` }} /><span>{level.label}</span><span className="mono">{level.price.toFixed(5)}</span></div>
           ))}
-          <div className="tile-label" style={{ marginTop: 10 }}>Rules applied</div>
-          <div className="small">Stop reference: <span className="mono">{r.stop_reference}</span></div>
-          <div className="small">Stop distance: <span className="mono">{r.stop_distance_atr?.toFixed(2) ?? '—'} ATR</span> (ATR at setup {r.atr_at_setup?.toFixed(5) ?? '—'})</div>
-          <div className="small">Observation window #{r.observation_window ?? '—'}{r.scheduled_observation_time ? ` · scheduled ${r.scheduled_observation_time}` : ''}</div>
-          <div className="small">Costs: spread {trade.spread_pips} pips ({trade.spread_source ?? 'n/a'}), slippage {trade.slippage_pips} pips, commission {trade.commission}</div>
-          <div className="small">Excursion: MFE {formatR(trade.mfe)} · MAE {formatR(trade.mae)}</div>
+          <div className="tile-label" style={{ marginTop: 10 }}>{t('ex.rules')}</div>
+          <div className="small">{t('ex.stopRef')}: <span className="mono">{r.stop_reference}</span></div>
+          <div className="small">{t('ex.stopDist')}: <span className="mono">{r.stop_distance_atr?.toFixed(2) ?? '—'} ATR</span> ({t('ex.atr')} {r.atr_at_setup?.toFixed(5) ?? '—'})</div>
+          <div className="small">{t('ex.window')} #{r.observation_window ?? '—'}{r.scheduled_observation_time ? ` · ${r.scheduled_observation_time}` : ''}</div>
+          <div className="small">{t('ex.costs')}: spread {trade.spread_pips} pips ({trade.spread_source ?? 'n/a'}), slippage {trade.slippage_pips} pips, commission {trade.commission}</div>
+          <div className="small">{t('ex.excursion')}: MFE {formatR(trade.mfe)} · MAE {formatR(trade.mae)}</div>
         </div>
       </div>
     </section>

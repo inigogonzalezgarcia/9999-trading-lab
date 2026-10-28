@@ -192,6 +192,19 @@ def cmd_runs(args) -> int:
     return 0
 
 
+def cmd_export_web(args) -> int:
+    """Precompute every run listed in config/web_runs.yaml for the static site."""
+    from backend.app import webexport
+
+    _print_notice()
+    spec = webexport.load_spec(args.spec)
+    index = webexport.export_site(spec, args.out, data_root=args.data_root, pdf=not args.no_pdf, only=args.only,
+                                  progress=lambda text: print(f"  {text}", file=sys.stderr, flush=True))
+    print(json.dumps({"runs": [(run["id"], run["kind"], run["summary"].get("trades"), run["summary"].get("total_r")) for run in index["runs"]],
+                      "out": str(args.out)}, indent=2, default=str))
+    return 0
+
+
 def cmd_stress(args) -> int:
     frame = make_stress_bars(args.start, args.months, args.seed, 1.10 if args.symbol == "EURUSD" else 1.27)
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -272,6 +285,14 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("--out", type=Path, required=True)
     report.add_argument("--db")
     report.set_defaults(func=cmd_report)
+
+    export = sub.add_parser("export-web", help="precompute the runs listed in config/web_runs.yaml for the static site (Cloudflare Pages)")
+    export.add_argument("--spec", type=Path, default=Path("config/web_runs.yaml"))
+    export.add_argument("--out", type=Path, default=Path("frontend/public/data"))
+    export.add_argument("--data-root", type=Path, default=Path("."), help="directory the spec's dataset paths are relative to")
+    export.add_argument("--only", nargs="*", help="run ids to (re)build; others are kept from the existing index")
+    export.add_argument("--no-pdf", action="store_true")
+    export.set_defaults(func=cmd_export_web)
 
     stress = sub.add_parser("stress", help="generate labelled synthetic data for performance testing")
     stress.add_argument("--months", type=int, default=3)

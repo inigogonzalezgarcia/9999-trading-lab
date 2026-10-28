@@ -27,7 +27,7 @@ log = logging.getLogger("fxlab")
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = ROOT / "config"
-SOFTWARE_VERSION = "0.4.1"
+SOFTWARE_VERSION = "0.5.0"
 
 EDUCATIONAL_NOTICE = {
     "title": "Educational research tool",

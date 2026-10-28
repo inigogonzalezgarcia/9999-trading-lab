@@ -1,13 +1,15 @@
 {
   "name": "fx-research-dashboard",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:static": "tsc --noEmit && VITE_STATIC_MODE=1 vite build",
+    "dev:static": "VITE_STATIC_MODE=1 vite --host 0.0.0.0"
   },
   "dependencies": {
     "lightweight-charts": "5.0.6",

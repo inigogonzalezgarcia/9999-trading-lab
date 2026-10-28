@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { formatPercent, formatR } from '../api';
 import type { Bucket, Metrics } from '../types';
+import { useT } from '../i18n';
 
 type Measure = 'total_r' | 'expectancy_r';
 
@@ -47,26 +48,27 @@ function BucketTable({ buckets }: { buckets: Record<string, Bucket> }) {
 }
 
 export function PerformanceBreakdowns({ metrics, timezone }: { metrics: Metrics; timezone?: string }) {
+  const { t } = useT();
   const [measure, setMeasure] = useState<Measure>('total_r');
   const [table, setTable] = useState(false);
   const groups: { key: string; title: string; data?: Record<string, Bucket> }[] = [
-    { key: 'hour', title: `By entry hour (${timezone ?? 'local'})`, data: metrics.by_hour },
-    { key: 'weekday', title: 'By weekday', data: metrics.by_weekday },
-    { key: 'month', title: 'By month', data: metrics.by_month },
-    { key: 'direction', title: 'By direction', data: metrics.by_direction },
-    { key: 'exit', title: 'By exit reason', data: metrics.by_exit_reason },
+    { key: 'hour', title: t('bd.hour', { tz: timezone ?? 'local' }), data: metrics.by_hour },
+    { key: 'weekday', title: t('bd.weekday'), data: metrics.by_weekday },
+    { key: 'month', title: t('bd.month'), data: metrics.by_month },
+    { key: 'direction', title: t('bd.direction'), data: metrics.by_direction },
+    { key: 'exit', title: t('bd.exit'), data: metrics.by_exit_reason },
   ];
   const available = groups.filter((g) => g.data && Object.keys(g.data).length);
-  if (!available.length) return <p className="muted">This run predates v0.4 and has no time breakdowns; re-run the backtest to get them.</p>;
+  if (!available.length) return <p className="muted">{t('bd.old')}</p>;
   return (
     <>
       <div className="row-actions">
         <div className="segmented">
-          <button type="button" className={measure === 'total_r' ? 'active' : ''} onClick={() => setMeasure('total_r')}>Total R</button>
-          <button type="button" className={measure === 'expectancy_r' ? 'active' : ''} onClick={() => setMeasure('expectancy_r')}>Expectancy (R/trade)</button>
+          <button type="button" className={measure === 'total_r' ? 'active' : ''} onClick={() => setMeasure('total_r')}>{t('bd.totalR')}</button>
+          <button type="button" className={measure === 'expectancy_r' ? 'active' : ''} onClick={() => setMeasure('expectancy_r')}>{t('bd.expectancy')}</button>
         </div>
-        <button type="button" className="ghost" onClick={() => setTable(!table)}>{table ? 'Show charts' : 'Show tables'}</button>
-        <span className="muted small">The number under each bar is the trade count. Buckets with one or two trades say nothing reliable.</span>
+        <button type="button" className="ghost" onClick={() => setTable(!table)}>{table ? t('bd.showCharts') : t('bd.showTables')}</button>
+        <span className="muted small">{t('bd.note')}</span>
       </div>
       <div className="breakdown-grid">
         {available.map((g) => (

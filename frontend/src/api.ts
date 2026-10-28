@@ -1,4 +1,5 @@
-import type { BacktestResult, Job, Notice, ResearchReport, RunRow } from './types';
+import type { BacktestResult, Job, Notice, ResearchReport, RunRow, SiteIndex } from './types';
+import { DATA_BASE, STATIC_MODE } from './site';
 
 // Empty base means same origin (production image); dev defaults to the local API port.
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:8000' : '');
@@ -41,7 +42,7 @@ function form(file: File, options: RunOptions, extra: Record<string, string> = {
   return data;
 }
 
-export const api = {
+const serverApi = {
   health: () => request<{ status: string; version: string; max_upload_mb: number }>('/api/health'),
   config: () => request<{ strategies: string[]; default_strategy: string; instruments: Record<string, string[]>; instrument_specs: Record<string, { pip: number; description?: string }> }>('/api/config'),
   notice: () => request<Notice>('/api/notice'),
@@ -61,6 +62,64 @@ export const api = {
   resultJsonUrl: (id: string) => `${API_BASE}/api/runs/${id}/result.json`,
   reportPdfUrl: (id: string) => `${API_BASE}/api/runs/${id}/report.pdf`,
 };
+
+export type Api = typeof serverApi;
+
+/* ---------- Static site (Cloudflare Pages): precomputed JSON, no backend ---------- */
+
+let indexPromise: Promise<SiteIndex> | null = null;
+function siteIndex(): Promise<SiteIndex> {
+  if (!indexPromise) {
+    indexPromise = fetch(`${DATA_BASE}runs.json`).then(async (response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return (await response.json()) as SiteIndex;
+    });
+    indexPromise.catch(() => { indexPromise = null; });
+  }
+  return indexPromise;
+}
+
+function notAvailable(): never {
+  throw new Error('This installation is read-only: run the engine locally to compute new results.');
+}
+
+const staticApi: Api = {
+  health: async () => ({ status: 'static', version: (await siteIndex()).software_version, max_upload_mb: 0 }),
+  config: async () => {
+    const index = await siteIndex();
+    return { strategies: index.strategies, default_strategy: index.strategies[0] ?? 'strategy_v1.yaml', instruments: {}, instrument_specs: {} };
+  },
+  notice: async () => (await siteIndex()).notice,
+  backtest: async () => notAvailable(),
+  submitJob: async () => notAvailable(),
+  job: async () => notAvailable(),
+  jobs: async () => [],
+  runs: async (kind?: string) => {
+    const index = await siteIndex();
+    return index.runs
+      .filter((run) => !kind || run.kind === kind)
+      .map<RunRow>((run) => ({
+        id: run.id, created_at: run.created_at, kind: run.kind, label: run.label?.en ?? run.id, labels: run.label, description: run.description,
+        symbol: run.symbol, dataset_name: run.dataset_name, dataset_hash: run.dataset_hash, strategy_version: null, strategy: run.strategy,
+        size: run.size_bytes, summary: run.summary, pdf: run.pdf, order: run.order,
+      }));
+  },
+  run: async (id: string) => {
+    const rows = await staticApi.runs();
+    const meta = rows.find((row) => row.id === id);
+    if (!meta) throw new Error(`Unknown run ${id}`);
+    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.json`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = (await response.json()) as BacktestResult | ResearchReport;
+    return { meta, result };
+  },
+  deleteRun: async () => ({ deleted: false }),
+  tradesCsvUrl: () => '',
+  resultJsonUrl: (id: string) => `${DATA_BASE}runs/${encodeURIComponent(id)}.json`,
+  reportPdfUrl: (id: string) => `${DATA_BASE}runs/${encodeURIComponent(id)}.pdf`,
+};
+
+export const api: Api = STATIC_MODE ? staticApi : serverApi;
 
 export function formatR(value: number | null | undefined, digits = 2): string {
   if (value == null || Number.isNaN(value)) return '—';

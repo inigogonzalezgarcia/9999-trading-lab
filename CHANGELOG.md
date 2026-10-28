@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 — 2026-10-28
+
+- Public educational site (Cloudflare Pages, no backend): `python -m backend.cli export-web` precomputes the
+  runs listed in `config/web_runs.yaml` into trimmed JSON (+ PDF) under `frontend/public/data/`; the frontend
+  built with `VITE_STATIC_MODE=1` reads them instead of the API.
+- Frontend becomes a small site: landing page, lab (catalogue of published results or the local tool), three
+  free lessons with real-result widgets, quizzes and graded lab notes (progress in localStorage), Notice/Method,
+  legal pages (ES/EN), mailing-list opt-in (Pages Function `/api/subscribe` with Turnstile + KV).
+- Whole UI bilingual (ES/EN) with a global language switch; tiny history router (no new dependencies).
+- `_headers` (CSP, nosniff, frame-ancestors) and SPA `_redirects` for Pages.
+
 ## 0.4.1 — 2026-10-23
 
 - Dukascopy downloader: every complete calendar month is checkpointed to `<out>.parts/<SYMBOL>_<YYYY-MM>.csv`

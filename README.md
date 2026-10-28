@@ -111,6 +111,12 @@ with a time limit, and the Docker image build.
   York opens. Publish nothing as evidence before the research protocol has been run on independent periods.
 - Not implemented: multi-user authentication, alerts, broker connectivity (deliberately never).
 
+## Public site
+
+The frontend doubles as a public educational site on Cloudflare Pages: `python -m backend.cli export-web`
+precomputes the runs in `config/web_runs.yaml` and `npm run build:static` builds the site that reads them
+(landing, lab explorer, free lessons, method, legal pages, ES/EN). See `docs/SITE.md`.
+
 ## Customisation and contact
 
 Questions or customisation requests: [contact form](https://inigogonzalezgarcia.github.io/about.html#contacto)

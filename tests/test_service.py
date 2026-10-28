@@ -113,3 +113,33 @@ def test_pdf_report_renders_for_backtest_and_research(tmp_path):
                 "monte_carlo": {"simulations": 10, "trades_per_path": 1, "probability_losing": 0.0, "final_r_percentiles": {"5": 0.5, "50": 0.5, "95": 0.5}, "max_drawdown_r_percentiles": {"50": 0.0, "95": 0.0}},
                 "sensitivity": {"baseline": {"trades": 1, "expectancy_r": 0.5, "total_r": 0.5, "max_drawdown_r": 0.0}, "variants": [{"scope": "strategy", "parameter": "x", "value": 1, "trades": 1, "expectancy_r": 0.5, "total_r": 0.5, "max_drawdown_r": 0.0, "error": None}], "note": "n"}}
     assert build_pdf(research, "research").startswith(b"%PDF")
+
+
+def test_export_web_writes_trimmed_runs_and_index(tmp_path):
+    """The static site export keeps what the UI renders, drops the audit streams and carries the notice."""
+    import json
+
+    from backend.app import webexport
+
+    frame = _raw_m1_fixture()
+    frame = frame.assign(timestamp=frame.timestamp - __import__("pandas").Timedelta(minutes=1))
+    (tmp_path / "data").mkdir()
+    frame.to_csv(tmp_path / "data" / "SYNTHETIC.csv", index=False)
+    spec = {"runs": [
+        {"id": "synthetic-v1", "kind": "backtest", "dataset": "data/SYNTHETIC.csv", "symbol": "EURUSD", "label": {"es": "Sintético", "en": "Synthetic"}, "order": 1},
+        {"id": "synthetic-v1-research", "kind": "research", "dataset": "data/SYNTHETIC.csv", "symbol": "EURUSD", "mc_simulations": 50,
+         "benchmark_simulations": 5, "walk_forward": False, "sensitivity": False, "order": 2},
+    ]}
+    index = webexport.export_site(spec, tmp_path / "site", data_root=tmp_path, pdf=False)
+    assert [run["id"] for run in index["runs"]] == ["synthetic-v1", "synthetic-v1-research"]
+    assert index["notice"] == service.EDUCATIONAL_NOTICE
+    payload = json.loads((tmp_path / "site" / "runs" / "synthetic-v1.json").read_text())
+    assert payload["run_id"] == "synthetic-v1" and payload["notice"] == service.EDUCATIONAL_NOTICE
+    assert "events" not in payload and "liquidity_events" not in payload and "daily_contexts" not in payload
+    assert payload["trades"] and payload["trade_explainers"] and payload["chart"]["series"]["EURUSD"]
+    assert payload["web_export"]["trimmed"] is True
+    research = json.loads((tmp_path / "site" / "runs" / "synthetic-v1-research.json").read_text())
+    assert research["baseline"] and research["monte_carlo"] and "options" not in research
+    # Re-exporting a single run keeps the other entry in the index.
+    index = webexport.export_site(spec, tmp_path / "site", data_root=tmp_path, pdf=False, only=["synthetic-v1"])
+    assert len(index["runs"]) == 2

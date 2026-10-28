@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { api, formatNumber, formatPercent, formatR, shortTime } from '../api';
 import type { BacktestResult, Metrics, Trade } from '../types';
 import { CandleChart, EquityChart } from './Charts';
+import { useT } from '../i18n';
+import { STATIC_MODE } from '../site';
 import { PerformanceBreakdowns } from './Breakdowns';
 import { TradeExplainerPanel } from './TradeExplainer';
 
@@ -16,22 +18,24 @@ export function Tile({ label, value, hint, tone }: { label: string; value: strin
 }
 
 export function KpiTiles({ metrics }: { metrics: Metrics }) {
+  const { t } = useT();
   const tone = (v: number | null | undefined) => (v == null ? 'neutral' : v > 0 ? 'good' : v < 0 ? 'bad' : 'neutral');
   return (
     <div className="tiles">
-      <Tile label="Trades" value={String(metrics.total_trades)} hint={`${metrics.winning_trades} won · ${metrics.losing_trades} lost`} />
-      <Tile label="Expectancy" value={formatR(metrics.expectancy_r)} hint="mean R per trade" tone={tone(metrics.expectancy_r)} />
-      <Tile label="Total" value={formatR(metrics.total_r)} tone={tone(metrics.total_r)} />
-      <Tile label="Win rate" value={formatPercent(metrics.win_rate)} hint={`payoff ${formatNumber(metrics.payoff_ratio)}`} />
-      <Tile label="Profit factor" value={formatNumber(metrics.profit_factor)} />
-      <Tile label="Max drawdown" value={formatR(metrics.max_drawdown_r)} hint={`${metrics.max_consecutive_losses} losses in a row`} tone={metrics.max_drawdown_r > 0 ? 'bad' : 'neutral'} />
-      <Tile label="Sharpe (annualised)" value={formatNumber(metrics.daily.annualized_sharpe)} hint={`daily R series · ${metrics.daily.trading_days} days`} />
-      <Tile label="Sharpe (per trade)" value={formatNumber(metrics.sharpe_per_trade)} hint="not annualised" />
+      <Tile label={t('kpi.trades')} value={String(metrics.total_trades)} hint={`${metrics.winning_trades} ${t('kpi.won')} · ${metrics.losing_trades} ${t('kpi.lost')}`} />
+      <Tile label={t('kpi.expectancy')} value={formatR(metrics.expectancy_r)} hint={t('kpi.expectancyHint')} tone={tone(metrics.expectancy_r)} />
+      <Tile label={t('kpi.total')} value={formatR(metrics.total_r)} tone={tone(metrics.total_r)} />
+      <Tile label={t('kpi.winRate')} value={formatPercent(metrics.win_rate)} hint={`${t('kpi.payoff')} ${formatNumber(metrics.payoff_ratio)}`} />
+      <Tile label={t('kpi.pf')} value={formatNumber(metrics.profit_factor)} />
+      <Tile label={t('kpi.dd')} value={formatR(metrics.max_drawdown_r)} hint={t('kpi.ddHint', { n: metrics.max_consecutive_losses })} tone={metrics.max_drawdown_r > 0 ? 'bad' : 'neutral'} />
+      <Tile label={t('kpi.sharpeAnn')} value={formatNumber(metrics.daily.annualized_sharpe)} hint={t('kpi.sharpeAnnHint', { n: metrics.daily.trading_days })} />
+      <Tile label={t('kpi.sharpeTrade')} value={formatNumber(metrics.sharpe_per_trade)} hint={t('kpi.notAnnualised')} />
     </div>
   );
 }
 
 export function TradesTable({ trades, runId, onSelect, selected }: { trades: Trade[]; runId?: string; onSelect?: (trade: Trade) => void; selected?: string }) {
+  const { t } = useT();
   const [sortKey, setSortKey] = useState<keyof Trade>('entry_timestamp');
   const [descending, setDescending] = useState(false);
   const sorted = useMemo(() => {
@@ -67,29 +71,29 @@ export function TradesTable({ trades, runId, onSelect, selected }: { trades: Tra
     a.click();
     URL.revokeObjectURL(url);
   };
-  if (!trades.length) return <p className="muted">No executable trades were generated. Review the rejection reasons above: most candidates fail a causal rule, a cost rule, or a risk limit.</p>;
+  if (!trades.length) return <p className="muted">{t('res.noTrades')}</p>;
   return (
     <>
       <div className="row-actions">
-        <button type="button" className="ghost" onClick={download}>Export CSV</button>
-        {runId && <a className="ghost button" href={api.tradesCsvUrl(runId)}>Server CSV</a>}
-        <span className="muted">{trades.length} trades · click a header to sort{onSelect ? ' · click a row to see how the trade happened' : ''}</span>
+        <button type="button" className="ghost" onClick={download}>{t('res.exportCsv')}</button>
+        {runId && !STATIC_MODE && <a className="ghost button" href={api.tradesCsvUrl(runId)}>{t('res.serverCsv')}</a>}
+        <span className="muted">{t('res.tradesHint', { n: trades.length })}{onSelect ? t('res.tradesClick') : ''}</span>
       </div>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              {header('date', 'Date')}
-              {header('symbol', 'Symbol')}
-              {header('direction', 'Side')}
-              {header('observation_window', 'Window')}
-              {header('entry_timestamp', 'Entry (UTC)')}
-              {header('entry_price', 'Entry')}
-              {header('stop_price', 'Stop')}
-              {header('target_price', 'Target')}
-              {header('exit_timestamp', 'Exit (UTC)')}
-              {header('exit_reason', 'Exit reason')}
-              {header('spread_pips', 'Spread')}
+              {header('date', t('th.date'))}
+              {header('symbol', t('th.symbol'))}
+              {header('direction', t('th.side'))}
+              {header('observation_window', t('th.window'))}
+              {header('entry_timestamp', t('th.entryTime'))}
+              {header('entry_price', t('th.entry'))}
+              {header('stop_price', t('th.stop'))}
+              {header('target_price', t('th.target'))}
+              {header('exit_timestamp', t('th.exitTime'))}
+              {header('exit_reason', t('th.exitReason'))}
+              {header('spread_pips', t('th.spread'))}
               {header('r_multiple', 'R')}
               {header('mfe', 'MFE')}
               {header('mae', 'MAE')}
@@ -197,31 +201,32 @@ export function Reproducibility({ result }: { result: BacktestResult }) {
 }
 
 export function BacktestView({ result }: { result: BacktestResult }) {
+  const { t } = useT();
   const symbols = result.chart ? Object.keys(result.chart.series) : [];
   const [symbol, setSymbol] = useState(symbols[0] ?? '');
   const [selected, setSelected] = useState<Trade | null>(null);
   const metrics = result.metrics;
   const explainers = result.trade_explainers ?? {};
   if (result.backtest_blocked) {
-    return <div className="notice-box"><strong>Strategy status: {result.strategy_status}</strong><p>{result.blocked_reason}</p><QualityPanel result={result} /></div>;
+    return <div className="notice-box"><strong>{t('res.blocked')}: {result.strategy_status}</strong><p>{result.blocked_reason}</p><QualityPanel result={result} /></div>;
   }
   return (
     <div className="stack">
       <section>
-        <h2>Summary</h2>
+        <h2>{t('res.summary')}</h2>
         {metrics && <KpiTiles metrics={metrics} />}
-        <p className="muted small">R = multiple of the risk taken per trade. Per-trade statistics are not annualised; the annualised Sharpe uses the daily sum of R over every weekday in the dataset range.</p>
+        <p className="muted small">{t('res.summaryNote')}</p>
       </section>
       {result.equity_curve && result.equity_curve.length > 0 && (
         <section>
-          <h2>Equity curve (cumulative R)</h2>
+          <h2>{t('res.equity')}</h2>
           <EquityChart points={result.equity_curve} />
         </section>
       )}
       {result.chart && symbol && (
         <section>
           <div className="section-head">
-            <h2>Candles {result.chart.timeframe} with entries and exits</h2>
+            <h2>{t('res.candles', { tf: result.chart.timeframe })}</h2>
             {symbols.length > 1 && (
               <div className="segmented">
                 {symbols.map((s) => <button key={s} type="button" className={s === symbol ? 'active' : ''} onClick={() => setSymbol(s)}>{s}</button>)}
@@ -229,36 +234,36 @@ export function BacktestView({ result }: { result: BacktestResult }) {
             )}
           </div>
           <CandleChart candles={result.chart.series[symbol]} trades={result.trades} symbol={symbol} timeframe={result.chart.timeframe} />
-          <p className="muted small">Arrows mark entries, circles mark exits with the realised R. Scroll to zoom, drag to pan.</p>
+          <p className="muted small">{t('res.candlesNote')}</p>
         </section>
       )}
       <section>
-        <h2>Why candidates did not become trades</h2>
-        <p className="muted small">{result.candidate_count ?? 0} candidates were tracked; each is kept with its event sequence for audit.</p>
+        <h2>{t('res.rejections')}</h2>
+        <p className="muted small">{t('res.rejectionsNote', { n: result.candidate_count ?? 0 })}</p>
         {result.report && <Rejections rejections={result.report.rejections} total={Math.max(1, result.candidate_count ?? 1)} />}
       </section>
       {result.report?.timing && (
         <section>
-          <h2>When the pattern completes (hour, {result.report.timing.timezone})</h2>
-          <p className="muted small">{result.report.timing.complete_setups} complete setups (BOS confirmed); {result.report.timing.complete_setups_outside_windows} fell outside the observation windows. Shaded hours are the configured windows.</p>
-          <HourHistogram title="Complete setups by hour" counts={result.report.timing.complete_setups_by_hour} highlight={inWindows(result.report.timing.windows)} />
-          <HourHistogram title="Sweep confirmations by hour" counts={result.report.timing.sweep_confirmations_by_hour} highlight={inWindows(result.report.timing.windows)} />
+          <h2>{t('res.timing', { tz: result.report.timing.timezone })}</h2>
+          <p className="muted small">{t('res.timingNote', { n: result.report.timing.complete_setups, out: result.report.timing.complete_setups_outside_windows })}</p>
+          <HourHistogram title={t('res.setupsByHour')} counts={result.report.timing.complete_setups_by_hour} highlight={inWindows(result.report.timing.windows)} />
+          <HourHistogram title={t('res.sweepsByHour')} counts={result.report.timing.sweep_confirmations_by_hour} highlight={inWindows(result.report.timing.windows)} />
         </section>
       )}
       {metrics && metrics.total_trades > 0 && (
         <section>
-          <h2>Performance by hour, weekday and month</h2>
+          <h2>{t('res.breakdowns')}</h2>
           <PerformanceBreakdowns metrics={metrics} timezone={result.report?.timing?.timezone} />
         </section>
       )}
       <section>
-        <h2>Trades</h2>
+        <h2>{t('res.trades')}</h2>
         <TradesTable trades={result.trades} runId={result.run_id} selected={selected?.trade_id} onSelect={(t) => setSelected(selected?.trade_id === t.trade_id ? null : t)} />
       </section>
       {selected && <TradeExplainerPanel trade={selected} explainer={explainers[selected.trade_id]} onClose={() => setSelected(null)} />}
       <section className="two-col">
-        <div><h2>Data quality</h2><QualityPanel result={result} /></div>
-        <div><h2>Reproducibility</h2><Reproducibility result={result} /></div>
+        <div><h2>{t('res.quality')}</h2><QualityPanel result={result} /></div>
+        <div><h2>{t('res.repro')}</h2><Reproducibility result={result} /></div>
       </section>
     </div>
   );

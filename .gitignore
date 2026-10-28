@@ -13,8 +13,8 @@ frontend/dist/
 .env
 .env.*
 !.env.example
-data/**
-!data/.gitkeep
+/data/**
+!/data/.gitkeep
 *.sqlite3
 *.db
 

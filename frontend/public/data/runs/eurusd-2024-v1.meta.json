@@ -1,0 +1,31 @@
+{
+ "id": "eurusd-2024-v1",
+ "kind": "backtest",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1.yaml",
+ "dataset_name": "EURUSD_2024.csv",
+ "dataset_hash": "65a7a807004594d4a14e4408ce4abc71db1bc8f2d6c73e72a19f5ca25acde62d",
+ "label": {
+  "es": "EUR/USD 2024 \u00b7 V1 (l\u00ednea base)",
+  "en": "EUR/USD 2024 \u00b7 V1 (baseline)"
+ },
+ "description": {
+  "es": "La hip\u00f3tesis original, congelada, sobre un a\u00f1o de velas M1 reales. Ventanas 02:15\u201304:15 Madrid.",
+  "en": "The original, frozen hypothesis on one year of real M1 candles. 02:15\u201304:15 Madrid windows."
+ },
+ "order": 10,
+ "created_at": "2026-10-28T17:04:16+00:00",
+ "summary": {
+  "trades": 5,
+  "expectancy_r": -0.5220669310748988,
+  "total_r": -2.6103346553744937,
+  "win_rate": 0.2,
+  "profit_factor": 0.24312705020527195,
+  "max_drawdown_r": 3.4488412567557662,
+  "candidates": 3138,
+  "blocked": false
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2024-v1.pdf",
+ "size_bytes": 2152326
+}

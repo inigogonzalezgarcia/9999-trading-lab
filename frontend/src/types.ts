@@ -235,4 +235,36 @@ export interface RunRow {
   strategy_version: string | null;
   size: number;
   summary: Record<string, number | string | boolean | null>;
+  /** Static site only: localized label/description, strategy file, PDF path. */
+  labels?: { es: string; en: string };
+  description?: { es: string; en: string };
+  strategy?: string;
+  pdf?: string | null;
+  order?: number;
+}
+
+export interface SiteIndex {
+  generated_at: string;
+  software_version: string;
+  software_revision: string;
+  notice: Notice;
+  strategies: string[];
+  runs: SiteRun[];
+}
+
+export interface SiteRun {
+  id: string;
+  kind: 'backtest' | 'research';
+  symbol: string;
+  strategy: string;
+  dataset_name: string;
+  dataset_hash: string | null;
+  label: { es: string; en: string };
+  description: { es: string; en: string };
+  order: number;
+  created_at: string;
+  summary: Record<string, number | string | boolean | null>;
+  software_version: string;
+  pdf: string | null;
+  size_bytes: number;
 }

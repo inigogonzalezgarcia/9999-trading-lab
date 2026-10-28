@@ -1,0 +1,73 @@
+# Runs precomputed for the public site (python -m backend.cli export-web).
+# Datasets are relative to --data-root (default: repository root). Every entry is re-run from the raw
+# data with the current software, so the site always shows reproducible, current results.
+version: web_runs_v1
+runs:
+  - id: eurusd-2024-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2024.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    order: 10
+    label: {es: "EUR/USD 2024 · V1 (línea base)", en: "EUR/USD 2024 · V1 (baseline)"}
+    description:
+      es: "La hipótesis original, congelada, sobre un año de velas M1 reales. Ventanas 02:15–04:15 Madrid."
+      en: "The original, frozen hypothesis on one year of real M1 candles. 02:15–04:15 Madrid windows."
+  - id: eurusd-2024-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2024.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    order: 20
+    label: {es: "EUR/USD 2024 · V1.1 (experimento)", en: "EUR/USD 2024 · V1.1 (experiment)"}
+    description:
+      es: "Ventanas de Londres, stop en el lado distal de la zona, caducidad de niveles. Más operaciones, no más evidencia."
+      en: "London windows, zone-distal stop, level expiry. More trades, not more evidence."
+  - id: portfolio-2024-v1
+    kind: backtest
+    dataset: data/raw/PORTFOLIO_2024.csv
+    symbol: PORTFOLIO
+    strategy: strategy_v1.yaml
+    order: 30
+    label: {es: "EUR/USD + GBP/USD 2024 · V1", en: "EUR/USD + GBP/USD 2024 · V1"}
+    description:
+      es: "La línea base sobre dos pares a la vez, con el límite de riesgo de cartera."
+      en: "The baseline on two pairs at once, with the portfolio risk limit."
+  - id: portfolio-2024-v1_1
+    kind: backtest
+    dataset: data/raw/PORTFOLIO_2024.csv
+    symbol: PORTFOLIO
+    strategy: strategy_v1_1.yaml
+    order: 40
+    label: {es: "EUR/USD + GBP/USD 2024 · V1.1", en: "EUR/USD + GBP/USD 2024 · V1.1"}
+    description:
+      es: "El experimento sobre dos pares. Compara con la versión de un solo par."
+      en: "The experiment on two pairs. Compare with the single-pair version."
+  - id: eurusd-2024-v1-research
+    kind: research
+    dataset: data/raw/EURUSD_2024.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    order: 50
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2024 · V1", en: "Protocol · EUR/USD 2024 · V1"}
+    description:
+      es: "Periodos independientes, walk-forward, Monte Carlo, sensibilidad y benchmark aleatorio sobre la línea base."
+      en: "Independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark on the baseline."
+  - id: eurusd-2024-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2024.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    order: 60
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2024 · V1.1", en: "Protocol · EUR/USD 2024 · V1.1"}
+    description:
+      es: "El mismo protocolo sobre el experimento: aquí es donde el +2,35R deja de parecer una ventaja."
+      en: "The same protocol on the experiment: this is where the +2.35R stops looking like an edge."

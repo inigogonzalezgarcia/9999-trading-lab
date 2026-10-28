@@ -1,6 +1,4 @@
-import { useState } from 'react';
-
-type Lang = 'es' | 'en';
+import { useT } from '../i18n';
 
 const TEXT = {
   es: {
@@ -88,17 +86,12 @@ const TEXT = {
 };
 
 export function MethodPage() {
-  const [lang, setLang] = useState<Lang>(navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en');
+  const { lang } = useT();
   const t = TEXT[lang];
   return (
     <article className="method">
-      <div className="section-head">
-        <h2>{t.noticeTitle}</h2>
-        <div className="segmented">
-          <button type="button" className={lang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>
-          <button type="button" className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
-        </div>
-      </div>
+      <h1 className="page-title">{t.tab}</h1>
+      <h2>{t.noticeTitle}</h2>
       <div className="notice-box">{t.notice.map((p) => <p key={p.slice(0, 20)}>{p}</p>)}</div>
       <h2>{t.whatTitle}</h2>
       <p>{t.what}</p>
