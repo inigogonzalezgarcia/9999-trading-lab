@@ -5,9 +5,17 @@ import { useT } from '../i18n';
 
 type Measure = 'total_r' | 'expectancy_r';
 
+const WEEKDAY_ORDER = new Map(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => [day, index]));
+
+/** "2024-02" → "24-02"; other labels unchanged (lower-cased exit reasons read better). */
+function shortLabel(key: string): string {
+  if (/^\d{4}-\d{2}$/.test(key)) return key.slice(2);
+  return key.replace(/_/g, ' ').toLowerCase();
+}
+
 /** Signed bar chart of R per bucket (hour, weekday, month, …). Bars above the axis are positive R. */
 export function SignedBars({ title, buckets, measure, caption }: { title: string; buckets: Record<string, Bucket>; measure: Measure; caption?: string }) {
-  const entries = Object.entries(buckets);
+  const entries = Object.entries(buckets).sort(([a], [b]) => (WEEKDAY_ORDER.has(a) && WEEKDAY_ORDER.has(b) ? WEEKDAY_ORDER.get(a)! - WEEKDAY_ORDER.get(b)! : a.localeCompare(b)));
   if (!entries.length) return null;
   const max = Math.max(0.01, ...entries.map(([, b]) => Math.abs(b[measure])));
   return (
@@ -21,7 +29,7 @@ export function SignedBars({ title, buckets, measure, caption }: { title: string
             <div key={key} className="signed-col" title={`${key} · ${bucket.trades} trades · total ${formatR(bucket.total_r)} · expectancy ${formatR(bucket.expectancy_r)} · win rate ${formatPercent(bucket.win_rate)}`}>
               <div className="signed-half top">{value > 0 && <span className="signed-bar good" style={{ height: `${height}%` }} />}</div>
               <div className="signed-half bottom">{value < 0 && <span className="signed-bar bad" style={{ height: `${height}%` }} />}</div>
-              <span className="signed-label">{key.length > 4 ? key.slice(2) : key}</span>
+              <span className="signed-label" title={key}>{shortLabel(key)}</span>
               <span className="signed-n mono">{bucket.trades}</span>
             </div>
           );

@@ -87,6 +87,7 @@ export interface ExplainerLevel {
   id: string;
   price: number;
   label: string;
+  label_es?: string;
   style: 'solid' | 'dashed' | 'dotted';
   color: string;
 }
@@ -98,6 +99,8 @@ export interface ExplainerStep {
   local: string;
   title: string;
   text: string;
+  title_es?: string;
+  text_es?: string;
   position: 'aboveBar' | 'belowBar';
 }
 

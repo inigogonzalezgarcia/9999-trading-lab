@@ -34,7 +34,7 @@ const trade_was_loss = (explainer: Explainer) => (explainer.steps.find((s) => s.
 
 const lineStyle = (style: string) => (style === 'dashed' ? LineStyle.Dashed : style === 'dotted' ? LineStyle.Dotted : LineStyle.Solid);
 
-export function ExplainerChart({ explainer, focus }: { explainer: Explainer; focus: string | null }) {
+export function ExplainerChart({ explainer, focus, lang = 'en' }: { explainer: Explainer; focus: string | null; lang?: 'es' | 'en' }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const element = ref.current;
@@ -55,7 +55,7 @@ export function ExplainerChart({ explainer, focus }: { explainer: Explainer; foc
     });
     series.setData(explainer.candles.map((c) => ({ time: c.time as UTCTimestamp, open: c.open, high: c.high, low: c.low, close: c.close })));
     explainer.levels.forEach((level) => {
-      series.createPriceLine({ price: level.price, color: level.color, lineWidth: level.id === 'entry' || level.id === 'stop' || level.id === 'target' ? 2 : 1, lineStyle: lineStyle(level.style), axisLabelVisible: true, title: level.label });
+      series.createPriceLine({ price: level.price, color: level.color, lineWidth: level.id === 'entry' || level.id === 'stop' || level.id === 'target' ? 2 : 1, lineStyle: lineStyle(level.style), axisLabelVisible: true, title: lang === 'es' && level.label_es ? level.label_es : level.label });
     });
     const markers: SeriesMarker<Time>[] = explainer.steps.map((step) => {
       const look = STEP_SHAPES[step.id] ?? { shape: 'circle' as const, color: '#8a8f98', short: step.id };
@@ -77,13 +77,14 @@ export function ExplainerChart({ explainer, focus }: { explainer: Explainer; foc
       observer.disconnect();
       chart.remove();
     };
-  }, [explainer, focus]);
+  }, [explainer, focus, lang]);
   return <div ref={ref} className="chart" aria-label="M1 candles of the setup with every rule event" />;
 }
 
 export function TradeExplainerPanel({ trade, explainer, onClose }: { trade: Trade; explainer: Explainer | undefined; onClose: () => void }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [focus, setFocus] = useState<string | null>(null);
+  const es = lang === 'es';
   const panel = useRef<HTMLElement>(null);
   useEffect(() => { panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [trade.trade_id]);
   if (!explainer || explainer.error) {
@@ -104,15 +105,15 @@ export function TradeExplainerPanel({ trade, explainer, onClose }: { trade: Trad
       <p className="muted small">
         {t('ex.intro', { start: explainer.window.start?.slice(0, 16).replace('T', ' ') ?? '—', end: explainer.window.end?.slice(0, 16).replace('T', ' ') ?? '—', n: explainer.window.bars })} {explainer.notice}
       </p>
-      <ExplainerChart explainer={explainer} focus={focus} />
+      <ExplainerChart explainer={explainer} focus={focus} lang={lang} />
       <div className="explainer-grid">
         <ol className="steps">
           {explainer.steps.map((step, index) => (
             <li key={step.id} className={focus === step.id ? 'active' : ''} onClick={() => setFocus(focus === step.id ? null : step.id)}>
               <span className="step-index">{index + 1}</span>
               <div>
-                <div className="step-title">{step.title} <span className="mono muted small">{step.local} {explainer.timezone.split('/')[1]}</span></div>
-                <div className="small">{step.text}</div>
+                <div className="step-title">{es && step.title_es ? step.title_es : step.title} <span className="mono muted small">{step.local} {explainer.timezone.split('/')[1]}</span></div>
+                <div className="small">{es && step.text_es ? step.text_es : step.text}</div>
               </div>
             </li>
           ))}
@@ -120,7 +121,7 @@ export function TradeExplainerPanel({ trade, explainer, onClose }: { trade: Trad
         <div className="legend">
           <div className="tile-label">{t('ex.levels')}</div>
           {explainer.levels.map((level) => (
-            <div key={level.id} className="legend-row"><span className="swatch" style={{ borderTop: `2px ${level.style} ${level.color}` }} /><span>{level.label}</span><span className="mono">{level.price.toFixed(5)}</span></div>
+            <div key={level.id} className="legend-row"><span className="swatch" style={{ borderTop: `2px ${level.style} ${level.color}` }} /><span>{es && level.label_es ? level.label_es : level.label}</span><span className="mono">{level.price.toFixed(5)}</span></div>
           ))}
           <div className="tile-label" style={{ marginTop: 10 }}>{t('ex.rules')}</div>
           <div className="small">{t('ex.stopRef')}: <span className="mono">{r.stop_reference}</span></div>

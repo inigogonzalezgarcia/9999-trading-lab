@@ -45,16 +45,31 @@ def explain_trade(trade: dict[str, Any], candidate: dict[str, Any], bars: pd.Dat
 
     direction = trade["direction"]
     levels = [
-        {"id": "liquidity", "price": trade["liquidity_price"], "label": "Liquidity level swept", "style": "dashed", "color": "#8a9199"},
-        {"id": "sweep_extreme", "price": trade["sweep_price"], "label": "Sweep extreme", "style": "dotted", "color": "#8a9199"},
-        {"id": "zone_proximal", "price": zone.get("proximal"), "label": "Zone proximal", "style": "solid", "color": "#9a6a1f"},
-        {"id": "zone_distal", "price": zone.get("distal"), "label": "Zone distal", "style": "solid", "color": "#9a6a1f"},
-        {"id": "bos", "price": candidate.get("bos_level"), "label": "Structure broken (BOS level)", "style": "dashed", "color": "#5c6670"},
-        {"id": "entry", "price": trade["entry_price"], "label": "Entry (incl. half spread + slippage)", "style": "solid", "color": "#c4672b"},
-        {"id": "stop", "price": trade["stop_price"], "label": "Stop", "style": "solid", "color": "#b5443a"},
-        {"id": "target", "price": trade["target_price"], "label": "Target", "style": "solid", "color": "#2f7d6b"},
+        {"id": "liquidity", "price": trade["liquidity_price"], "label": "Liquidity level swept", "label_es": "Nivel de liquidez barrido", "style": "dashed", "color": "#8a9199"},
+        {"id": "sweep_extreme", "price": trade["sweep_price"], "label": "Sweep extreme", "label_es": "Extremo del barrido", "style": "dotted", "color": "#8a9199"},
+        {"id": "zone_proximal", "price": zone.get("proximal"), "label": "Zone proximal", "label_es": "Zona (lado proximal)", "style": "solid", "color": "#9a6a1f"},
+        {"id": "zone_distal", "price": zone.get("distal"), "label": "Zone distal", "label_es": "Zona (lado distal)", "style": "solid", "color": "#9a6a1f"},
+        {"id": "bos", "price": candidate.get("bos_level"), "label": "Structure broken (BOS level)", "label_es": "Ruptura de estructura (nivel BOS)", "style": "dashed", "color": "#5c6670"},
+        {"id": "entry", "price": trade["entry_price"], "label": "Entry (incl. half spread + slippage)", "label_es": "Entrada (con medio spread + deslizamiento)", "style": "solid", "color": "#c4672b"},
+        {"id": "stop", "price": trade["stop_price"], "label": "Stop", "label_es": "Stop", "style": "solid", "color": "#b5443a"},
+        {"id": "target", "price": trade["target_price"], "label": "Target", "label_es": "Objetivo", "style": "solid", "color": "#2f7d6b"},
     ]
     levels = [level for level in levels if level["price"] is not None]
+    side_es = "mínimo" if direction == "LONG" else "máximo"
+    zone_es = "demanda" if direction == "LONG" else "oferta"
+    exit_es = {"take_profit": "Objetivo alcanzado", "stop_loss": "Stop ejecutado", "session_expiry": "Cierre de sesión"}.get(trade["exit_reason"], trade["exit_reason"].replace("_", " "))
+    spanish = {
+        "sweep": ("Barrido de liquidez", f"Una vela M1 atravesó el {side_es} de liquidez en {trade['liquidity_price']:.5f}; extremo en {trade['sweep_price']:.5f}."),
+        "sweep_confirmed": ("Barrido confirmado", "La vela M15 que lo contiene cerró de vuelta al otro lado del nivel, así que el toque cuenta como barrido (regla de cierre de vuelta)."),
+        "zone": ("Vela origen de la zona", f"La última vela M15 de sentido contrario antes del impulso define la zona de {zone_es} {zone.get('distal')}–{zone.get('proximal')}."),
+        "displacement_start": ("Empieza el impulso", "Primera vela M15 del movimiento direccional que se aleja del barrido."),
+        "displacement_end": ("El impulso cumple", f"Movimiento de {displacement.get('atr_multiple', 0):.2f} ATR (mínimo {strategy_config['displacement']['minimum_atr']}) que además rompió estructura M15; zona confirmada."),
+        "retracement": ("Retroceso", f"Vuelta al rango {strategy_config['two_leg'][direction.lower()]['retracement_range']} del tramo 1."),
+        "leg2": ("Segundo tramo", "Un segundo tramo direccional de al menos 0,50 ATR confirma la estructura de dos tramos."),
+        "bos": ("Ruptura de estructura", f"Cierre M15 más allá de {candidate.get('bos_level')}: el setup está completo y solo es operable dentro de una ventana de observación."),
+        "entry": ("Entrada", f"{direction} a {trade['entry_price']:.5f} al primer precio M1 ejecutable tras el BOS (spread {trade['spread_pips']} pips, deslizamiento {trade['slippage_pips']} pips). Stop {trade['stop_price']:.5f}, objetivo {trade['target_price']:.5f} ({strategy_config['target']['baseline']})."),
+        "exit": (f"Salida — {exit_es}", f"{trade['r_multiple']:+.2f}R a {trade['exit_price']:.5f}. MFE {trade['mfe']:+.2f}R, MAE {trade['mae']:+.2f}R."),
+    }
 
     steps = [
         ("sweep", candidate.get("sweep_timestamp"), "Liquidity sweep", f"An M1 bar traded through the {'low' if direction == 'LONG' else 'high'} liquidity level at {trade['liquidity_price']:.5f}; extreme {trade['sweep_price']:.5f}."),
@@ -72,8 +87,9 @@ def explain_trade(trade: dict[str, Any], candidate: dict[str, Any], bars: pd.Dat
     for key, stamp, title, text in steps:
         if not stamp:
             continue
+        title_es, text_es = spanish.get(key, (title, text))
         markers.append({"id": key, "time": _seconds(stamp), "timestamp": stamp, "local": _fmt(stamp, zone_name), "title": title, "text": text,
-                        "position": "belowBar" if direction == "LONG" else "aboveBar"})
+                        "title_es": title_es, "text_es": text_es, "position": "belowBar" if direction == "LONG" else "aboveBar"})
     # Entry and exit markers always face the price action.
     for marker in markers:
         if marker["id"] == "exit":

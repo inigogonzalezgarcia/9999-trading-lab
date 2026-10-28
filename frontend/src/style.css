@@ -376,3 +376,26 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
   .home { gap: 40px; }
 }
 @media (prefers-reduced-motion: reduce) { .art-candle, .art-marker { animation: none; } }
+
+/* fixes after browser review (1280/768/390) */
+.layout { grid-template-columns: 320px minmax(0, 1fr); }
+.layout > * { min-width: 0; }
+.stack section, .chart, .widget, .explainer { min-width: 0; }
+.hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.hero-title { font-size: clamp(1.9rem, 3.6vw, 2.7rem); }
+.hero-actions .button { white-space: nowrap; }
+.result-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) { .result-cards { grid-template-columns: 1fr; } }
+.checklist li::before { mask: none; -webkit-mask: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%232f7d6b'/%3E%3Cpath d='M6.5 12.5l3.5 3.5 7.5-8' stroke='%23f9f6f0' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
+.checklist.no li::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23b5443a'/%3E%3Cpath d='M8 8l8 8M16 8l-8 8' stroke='%23f9f6f0' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.row-actions { flex-wrap: wrap; row-gap: 8px; }
+.segmented button { white-space: nowrap; font-size: 0.85rem; padding: 6px 10px; }
+.signed-label { font-size: 0.66rem; white-space: normal; line-height: 1.15; word-break: break-word; }
+@media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .hero-title { font-size: clamp(1.8rem, 8vw, 2.3rem); } .notice { font-size: 0.85rem; padding: 10px 12px; } }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .layout.has-result .catalogue { order: 2; }
+  .catalogue .run-yourself code.block { font-size: 0.68rem; }
+}
+@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .tile-value { font-size: 1.3rem; } }
