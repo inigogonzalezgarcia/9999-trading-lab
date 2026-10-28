@@ -27,5 +27,16 @@
  },
  "software_version": "0.5.0",
  "pdf": "runs/portfolio-2024-v1.pdf",
- "size_bytes": 4233547
+ "size_bytes": 4233547,
+ "sparkline": [
+  0.0,
+  -1.0,
+  -2.0,
+  -3.0,
+  -2.897,
+  -3.897,
+  -4.346,
+  -3.508,
+  -4.067
+ ]
 }

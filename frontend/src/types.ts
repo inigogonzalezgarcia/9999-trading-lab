@@ -241,6 +241,7 @@ export interface RunRow {
   strategy?: string;
   pdf?: string | null;
   order?: number;
+  sparkline?: number[];
 }
 
 export interface SiteIndex {
@@ -267,4 +268,5 @@ export interface SiteRun {
   software_version: string;
   pdf: string | null;
   size_bytes: number;
+  sparkline?: number[];
 }

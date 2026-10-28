@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-28T17:15:52+00:00",
+ "generated_at": "2026-10-28T17:41:31+00:00",
  "software_version": "0.5.0",
- "software_revision": "source-sha256:8b375a8ef34173bc3af0397019cdec648cd55a7400f31b32f1e3df7eeb304d64",
+ "software_revision": "source-sha256:4c9c1faf4015f137017f027d6900fd0fe3bc5936988dddfc7478d0d56e5f25a1",
  "notice": {
   "title": "Educational research tool",
   "lines": [
@@ -31,7 +31,7 @@
     "en": "The original, frozen hypothesis on one year of real M1 candles. 02:15\u201304:15 Madrid windows."
    },
    "order": 10,
-   "created_at": "2026-10-28T17:09:48+00:00",
+   "created_at": "2026-10-28T17:40:45+00:00",
    "summary": {
     "trades": 5,
     "expectancy_r": -0.5220669310748988,
@@ -44,6 +44,14 @@
    },
    "software_version": "0.5.0",
    "pdf": "runs/eurusd-2024-v1.pdf",
+   "sparkline": [
+    0.0,
+    -1.0,
+    -2.0,
+    -3.0,
+    -3.449,
+    -2.61
+   ],
    "size_bytes": 2152326
   },
   {
@@ -62,7 +70,7 @@
     "en": "London windows, zone-distal stop, level expiry. More trades, not more evidence."
    },
    "order": 20,
-   "created_at": "2026-10-28T17:09:53+00:00",
+   "created_at": "2026-10-28T17:40:53+00:00",
    "summary": {
     "trades": 12,
     "expectancy_r": 0.1960458121439842,
@@ -75,6 +83,21 @@
    },
    "software_version": "0.5.0",
    "pdf": "runs/eurusd-2024-v1_1.pdf",
+   "sparkline": [
+    0.0,
+    -1.007,
+    -2.007,
+    -3.007,
+    -2.644,
+    -0.644,
+    -0.644,
+    -0.929,
+    1.071,
+    1.385,
+    3.385,
+    2.385,
+    2.353
+   ],
    "size_bytes": 2397716
   },
   {
@@ -106,7 +129,18 @@
    },
    "software_version": "0.5.0",
    "pdf": "runs/portfolio-2024-v1.pdf",
-   "size_bytes": 4233547
+   "size_bytes": 4233547,
+   "sparkline": [
+    0.0,
+    -1.0,
+    -2.0,
+    -3.0,
+    -2.897,
+    -3.897,
+    -4.346,
+    -3.508,
+    -4.067
+   ]
   },
   {
    "id": "portfolio-2024-v1_1",
@@ -137,7 +171,30 @@
    },
    "software_version": "0.5.0",
    "pdf": "runs/portfolio-2024-v1_1.pdf",
-   "size_bytes": 4624541
+   "size_bytes": 4624541,
+   "sparkline": [
+    0.0,
+    -1.007,
+    -2.007,
+    -3.007,
+    -4.007,
+    -3.644,
+    -1.644,
+    0.356,
+    -0.644,
+    -0.179,
+    -0.179,
+    -1.179,
+    -1.465,
+    0.535,
+    -0.465,
+    -0.151,
+    1.849,
+    0.849,
+    -0.151,
+    -1.151,
+    -1.183
+   ]
   },
   {
    "id": "eurusd-2024-v1-research",

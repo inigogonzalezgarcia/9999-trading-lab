@@ -3,6 +3,7 @@ import { api, formatR, shortTime, type RunOptions } from '../api';
 import { useT } from '../i18n';
 import { Link, useRoute } from '../router';
 import { REPO_URL, STATIC_MODE } from '../site';
+import { Sparkline } from '../components/Visuals';
 import type { BacktestResult, Job, ResearchReport, RunRow } from '../types';
 import { BacktestView } from '../components/Results';
 import { ResearchView } from '../components/Research';
@@ -124,8 +125,9 @@ export function LabPage({ runId }: { runId?: string }) {
               <span className="run-kind">{r.kind === 'research' ? t('lab.research') : t('lab.backtest')}</span>
               <strong>{r.labels ? pick(r.labels) : r.label}</strong>
               <span className="small muted">{r.description ? pick(r.description) : ''}</span>
-              <span className="mono small">
-                {r.summary.trades != null ? `${String(r.summary.trades)} ${t('home.trades')} · ` : ''}{formatR(r.summary.total_r as number)}
+              <span className="run-foot">
+                <span className="mono small">{r.summary.trades != null ? `${String(r.summary.trades)} ${t('home.trades')} · ` : ''}<b className={(r.summary.total_r as number) > 0 ? 'good' : (r.summary.total_r as number) < 0 ? 'bad' : ''}>{formatR(r.summary.total_r as number)}</b></span>
+                {r.sparkline && <Sparkline values={r.sparkline} width={90} height={26} />}
               </span>
             </Link>
           </li>

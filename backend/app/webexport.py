@@ -79,13 +79,31 @@ def export_site(spec: dict[str, Any], out_dir: str | Path, data_root: str | Path
     return index
 
 
+def equity_sparkline(equity_curve: list[dict[str, Any]], points: int = 60) -> list[float]:
+    """Cumulative R after each trade, downsampled for the small cards."""
+    values = [float(point["cumulative_r"]) for point in equity_curve]
+    if not values:
+        return []
+    step = max(1, len(values) // points)
+    sampled = values[::step]
+    if sampled[-1] != values[-1]:
+        sampled.append(values[-1])
+    return [round(value, 3) for value in [0.0, *sampled]]
+
+
 def write_index(out: Path) -> dict[str, Any]:
     """Rebuild runs.json from the per-run sidecars, so a crash never loses what was already exported."""
     runs = []
     for sidecar in sorted((out / "runs").glob("*.meta.json")):
         meta = json.loads(sidecar.read_text(encoding="utf-8"))
-        if (out / "runs" / f"{meta['id']}.json").exists():
-            runs.append(meta)
+        payload_path = out / "runs" / f"{meta['id']}.json"
+        if not payload_path.exists():
+            continue
+        if meta.get("kind") == "backtest" and not meta.get("sparkline"):
+            payload = json.loads(payload_path.read_text(encoding="utf-8"))
+            meta["sparkline"] = equity_sparkline(payload.get("equity_curve") or [])
+            sidecar.write_text(json.dumps(meta, indent=1, default=str), encoding="utf-8")
+        runs.append(meta)
     runs.sort(key=lambda item: (item.get("order", 0), item["id"]))
     index = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -120,12 +138,13 @@ def _export_one(entry: dict[str, Any], out: Path, data_root: Path, datasets: dic
     payload["run_id"] = run_id
     (out / "runs" / f"{run_id}.json").write_text(json.dumps(payload, default=str, separators=(",", ":")), encoding="utf-8")
     summary = service.summarize(result, kind)
+    sparkline = equity_sparkline(result.get("equity_curve") or []) if kind == "backtest" else []
     meta = {
         "id": run_id, "kind": kind, "symbol": entry["symbol"], "strategy": options["strategy"],
         "dataset_name": dataset_path.name, "dataset_hash": result.get("dataset_hash") or result.get("reproducibility", {}).get("dataset_hash"),
         "label": entry.get("label", {}), "description": entry.get("description", {}), "order": entry.get("order", 0),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "summary": summary,
-        "software_version": service.SOFTWARE_VERSION, "pdf": None,
+        "software_version": service.SOFTWARE_VERSION, "pdf": None, "sparkline": [round(value, 3) for value in sparkline],
         "size_bytes": (out / "runs" / f"{run_id}.json").stat().st_size,
     }
     if pdf:

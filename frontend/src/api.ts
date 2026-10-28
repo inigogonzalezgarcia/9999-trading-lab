@@ -101,7 +101,7 @@ const staticApi: Api = {
       .map<RunRow>((run) => ({
         id: run.id, created_at: run.created_at, kind: run.kind, label: run.label?.en ?? run.id, labels: run.label, description: run.description,
         symbol: run.symbol, dataset_name: run.dataset_name, dataset_hash: run.dataset_hash, strategy_version: null, strategy: run.strategy,
-        size: run.size_bytes, summary: run.summary, pdf: run.pdf, order: run.order,
+        size: run.size_bytes, summary: run.summary, pdf: run.pdf, order: run.order, sparkline: run.sparkline,
       }));
   },
   run: async (id: string) => {

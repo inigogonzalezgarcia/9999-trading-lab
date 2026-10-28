@@ -19,9 +19,10 @@ export function LessonsIndex() {
         {LESSONS.map((lesson) => {
           const p = progress[lesson.slug];
           return (
-            <li key={lesson.slug} className="lesson-card">
+            <li key={lesson.slug} className={`lesson-card ${p?.completed ? 'done' : ''}`}>
+              <span className="lesson-no" aria-hidden="true">{lesson.order}</span>
               <div className="lesson-meta"><span className="badge soft">{t('lessons.free')}</span><span className="muted small">{t('lessons.minutes', { n: lesson.minutes })}</span>{p?.completed && <span className="good small">✓ {t('lessons.done')}</span>}</div>
-              <h2>{lesson.order}. {pick(lesson.title)}</h2>
+              <h2>{pick(lesson.title)}</h2>
               <p className="muted">{pick(lesson.summary)}</p>
               <Link to={`/lessons/${lesson.slug}`} className="button">{p?.completed ? t('lessons.review') : t('lessons.start')}</Link>
             </li>
@@ -29,8 +30,9 @@ export function LessonsIndex() {
         })}
         {UPCOMING.map((item, index) => (
           <li key={index} className="lesson-card upcoming">
+            <span className="lesson-no" aria-hidden="true">{LESSONS.length + index + 1}</span>
             <div className="lesson-meta"><span className="badge soft">{t('lessons.soon')}</span></div>
-            <h2>{LESSONS.length + index + 1}. {pick(item.title)}</h2>
+            <h2>{pick(item.title)}</h2>
             <p className="muted">{pick(item.summary)}</p>
           </li>
         ))}
@@ -58,9 +60,9 @@ export function LessonPage({ slug }: { slug: string }) {
       <p className="lead">{pick(lesson.summary)}</p>
       {lesson.sections.map((section, index) => (
         <section key={index} className="lesson-section">
-          <h2>{pick(section.heading)}</h2>
+          <h2><span className="sec-no mono">{String(index + 1).padStart(2, '0')}</span> {pick(section.heading)}</h2>
           {(pick(section.paragraphs) ?? []).map((paragraph, i) => <p key={i}>{paragraph}</p>)}
-          {section.widget && <LessonWidget widget={section.widget} />}
+          {section.widget && <div className="widget-frame"><span className="widget-chip">{lang === 'es' ? 'Resultado real del laboratorio' : 'Real lab result'}</span><LessonWidget widget={section.widget} /></div>}
           {section.callout && <aside className="notice">{pick(section.callout)}</aside>}
         </section>
       ))}
