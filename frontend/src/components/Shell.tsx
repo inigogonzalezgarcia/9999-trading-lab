@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { api } from '../api';
 import { useT } from '../i18n';
-import { Link } from '../router';
-import { AUTHOR_SITE, REPO_URL, SITE_NAME, STATIC_MODE } from '../site';
+import { Link, useRoute } from '../router';
+import { AUTHOR_SITE, REPO_URL, SITE_NAME } from '../site';
 import type { Notice } from '../types';
 
 export function Shell({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useT();
+  const { path } = useRoute();
   const [version, setVersion] = useState<string>('');
   const [notice, setNotice] = useState<Notice | null>(null);
   const [menu, setMenu] = useState(false);
@@ -19,7 +20,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="masthead">
         <div>
           <small>{t('shell.tagline')}</small>
-          <h1><Link to="/">{SITE_NAME}</Link></h1>
+          <div><Link to="/" className="brand"><span className="brand-mark" aria-hidden="true" />{SITE_NAME}</Link></div>
         </div>
         <button type="button" className="ghost menu-toggle" aria-expanded={menu} onClick={() => setMenu(!menu)}>☰</button>
         <nav className={`site-nav ${menu ? 'open' : ''}`} aria-label="main">
@@ -41,14 +42,14 @@ export function Shell({ children }: { children: ReactNode }) {
       <aside className="notice" role="note">
         <strong>{t('notice.title')}.</strong> {t('notice.short')}
       </aside>
-      {children}
+      <div className="page" key={path.split('/')[1] ?? ''}>{children}</div>
       <footer className="site-footer muted small">
         <div>
           <Link to="/legal/aviso">{lang === 'es' ? 'Aviso legal' : 'Legal notice'}</Link> · <Link to="/legal/privacidad">{lang === 'es' ? 'Privacidad' : 'Privacy'}</Link> · <Link to="/legal/cookies">Cookies</Link> · <Link to="/legal/condiciones">{lang === 'es' ? 'Condiciones' : 'Terms'}</Link>
           {' · '}<a href={REPO_URL} target="_blank" rel="noreferrer">{t('footer.source')}</a>
           {' · '}<a href={AUTHOR_SITE} target="_blank" rel="noreferrer">{t('footer.author')}</a>
         </div>
-        <div>{notice ? notice.lines[notice.lines.length - 1] : t('notice.short')} {t('footer.hash')}{STATIC_MODE ? '' : ''}</div>
+        <div>{notice ? notice.lines[notice.lines.length - 1] : t('notice.short')} {t('footer.hash')}</div>
       </footer>
     </div>
   );

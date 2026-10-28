@@ -45,14 +45,14 @@ def explain_trade(trade: dict[str, Any], candidate: dict[str, Any], bars: pd.Dat
 
     direction = trade["direction"]
     levels = [
-        {"id": "liquidity", "price": trade["liquidity_price"], "label": "Liquidity level swept", "style": "dashed", "color": "#8a8f98"},
-        {"id": "sweep_extreme", "price": trade["sweep_price"], "label": "Sweep extreme", "style": "dotted", "color": "#8a8f98"},
-        {"id": "zone_proximal", "price": zone.get("proximal"), "label": "Zone proximal", "style": "solid", "color": "#e0a458"},
-        {"id": "zone_distal", "price": zone.get("distal"), "label": "Zone distal", "style": "solid", "color": "#e0a458"},
-        {"id": "bos", "price": candidate.get("bos_level"), "label": "Structure broken (BOS level)", "style": "dashed", "color": "#8ab4f8"},
-        {"id": "entry", "price": trade["entry_price"], "label": "Entry (incl. half spread + slippage)", "style": "solid", "color": "#2457c5"},
-        {"id": "stop", "price": trade["stop_price"], "label": "Stop", "style": "solid", "color": "#c2544b"},
-        {"id": "target", "price": trade["target_price"], "label": "Target", "style": "solid", "color": "#2a9d8f"},
+        {"id": "liquidity", "price": trade["liquidity_price"], "label": "Liquidity level swept", "style": "dashed", "color": "#8a9199"},
+        {"id": "sweep_extreme", "price": trade["sweep_price"], "label": "Sweep extreme", "style": "dotted", "color": "#8a9199"},
+        {"id": "zone_proximal", "price": zone.get("proximal"), "label": "Zone proximal", "style": "solid", "color": "#9a6a1f"},
+        {"id": "zone_distal", "price": zone.get("distal"), "label": "Zone distal", "style": "solid", "color": "#9a6a1f"},
+        {"id": "bos", "price": candidate.get("bos_level"), "label": "Structure broken (BOS level)", "style": "dashed", "color": "#5c6670"},
+        {"id": "entry", "price": trade["entry_price"], "label": "Entry (incl. half spread + slippage)", "style": "solid", "color": "#c4672b"},
+        {"id": "stop", "price": trade["stop_price"], "label": "Stop", "style": "solid", "color": "#b5443a"},
+        {"id": "target", "price": trade["target_price"], "label": "Target", "style": "solid", "color": "#2f7d6b"},
     ]
     levels = [level for level in levels if level["price"] is not None]
 

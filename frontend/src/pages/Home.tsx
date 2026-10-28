@@ -36,6 +36,26 @@ export function HomePage() {
         </div>
       </section>
 
+      {runs.length >= 2 && (
+        <section className="evidence" aria-label="evidence">
+          {runs.slice(0, 2).map((run) => {
+            const total = run.summary.total_r as number;
+            return (
+              <div key={run.id}>
+                <span className="ev-label">{pick(run.labels)}</span>
+                <span className={`ev-value ${total > 0 ? 'good' : total < 0 ? 'bad' : ''}`}>{formatR(total)}</span>
+                <span className="ev-note">{String(run.summary.trades ?? '—')} {t('home.trades')} · {lang === 'es' ? 'un año de datos reales' : 'one year of real data'}</span>
+              </div>
+            );
+          })}
+          <div>
+            <span className="ev-label">{lang === 'es' ? 'Veredicto' : 'Verdict'}</span>
+            <span className="ev-value">{lang === 'es' ? 'Sin evidencia' : 'No evidence'}</span>
+            <span className="ev-note">{lang === 'es' ? 'y eso es lo que enseñamos a comprobar' : 'and that is what we teach you to check'}</span>
+          </div>
+        </section>
+      )}
+
       <section className="two-col is-isnt">
         <div className="card"><h2>{t('home.isTitle')}</h2><ul>{IS[lang].map((line) => <li key={line}>{line}</li>)}</ul></div>
         <div className="card"><h2>{t('home.isntTitle')}</h2><ul>{ISNT[lang].map((line) => <li key={line}>{line}</li>)}</ul></div>

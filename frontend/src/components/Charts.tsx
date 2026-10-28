@@ -14,16 +14,21 @@ import {
 } from 'lightweight-charts';
 import type { Candle, EquityPoint, Trade } from '../types';
 
-function palette() {
+export function cssVar(name: string, fallback: string): string {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
+}
+
+export function palette() {
   const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return {
-    background: dark ? '#14161b' : '#ffffff',
-    text: dark ? '#c9ced6' : '#333a45',
-    grid: dark ? '#23262e' : '#eef0f3',
-    up: '#2a9d8f',
-    down: '#c2544b',
-    line: dark ? '#8ab4f8' : '#2457c5',
-    drawdown: dark ? '#e0a458' : '#b26d12',
+    background: cssVar('--panel', dark ? '#142331' : '#f9f6f0'),
+    text: cssVar('--muted', dark ? '#9aa6b0' : '#5c6670'),
+    grid: cssVar('--line', dark ? '#24364a' : '#e1dacd'),
+    up: cssVar('--good', '#2f7d6b'),
+    down: cssVar('--bad', '#b5443a'),
+    line: cssVar('--accent', '#c4672b'),
+    drawdown: cssVar('--warn', '#9a6a1f'),
   };
 }
 

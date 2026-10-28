@@ -1,0 +1,31 @@
+{
+ "id": "portfolio-2024-v1_1",
+ "kind": "backtest",
+ "symbol": "PORTFOLIO",
+ "strategy": "strategy_v1_1.yaml",
+ "dataset_name": "PORTFOLIO_2024.csv",
+ "dataset_hash": "47a6906263ff7f4b244553391c3aa07eee99be61daafa845232b14d566ee7da2",
+ "label": {
+  "es": "EUR/USD + GBP/USD 2024 \u00b7 V1.1",
+  "en": "EUR/USD + GBP/USD 2024 \u00b7 V1.1"
+ },
+ "description": {
+  "es": "El experimento sobre dos pares. Compara con la versi\u00f3n de un solo par.",
+  "en": "The experiment on two pairs. Compare with the single-pair version."
+ },
+ "order": 40,
+ "created_at": "2026-10-28T17:10:14+00:00",
+ "summary": {
+  "trades": 20,
+  "expectancy_r": -0.05913946591323995,
+  "total_r": -1.182789318264799,
+  "win_rate": 0.35,
+  "profit_factor": 0.8854370395745992,
+  "max_drawdown_r": 4.006628003314007,
+  "candidates": 4259,
+  "blocked": false
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/portfolio-2024-v1_1.pdf",
+ "size_bytes": 4624541
+}

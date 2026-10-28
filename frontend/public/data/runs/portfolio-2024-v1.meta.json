@@ -1,0 +1,31 @@
+{
+ "id": "portfolio-2024-v1",
+ "kind": "backtest",
+ "symbol": "PORTFOLIO",
+ "strategy": "strategy_v1.yaml",
+ "dataset_name": "PORTFOLIO_2024.csv",
+ "dataset_hash": "47a6906263ff7f4b244553391c3aa07eee99be61daafa845232b14d566ee7da2",
+ "label": {
+  "es": "EUR/USD + GBP/USD 2024 \u00b7 V1",
+  "en": "EUR/USD + GBP/USD 2024 \u00b7 V1"
+ },
+ "description": {
+  "es": "La l\u00ednea base sobre dos pares a la vez, con el l\u00edmite de riesgo de cartera.",
+  "en": "The baseline on two pairs at once, with the portfolio risk limit."
+ },
+ "order": 30,
+ "created_at": "2026-10-28T17:10:05+00:00",
+ "summary": {
+  "trades": 8,
+  "expectancy_r": -0.508392067086108,
+  "total_r": -4.067136536688864,
+  "win_rate": 0.25,
+  "profit_factor": 0.18792033662469798,
+  "max_drawdown_r": 4.346186908610884,
+  "candidates": 6529,
+  "blocked": false
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/portfolio-2024-v1.pdf",
+ "size_bytes": 4233547
+}

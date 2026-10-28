@@ -11,26 +11,23 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts';
 import { formatR } from '../api';
+import { palette } from './Charts';
 import type { Trade, TradeExplainer as Explainer } from '../types';
 import { useT } from '../i18n';
 
 const STEP_SHAPES: Record<string, { shape: 'circle' | 'square' | 'arrowUp' | 'arrowDown'; color: string; short: string }> = {
   sweep: { shape: 'circle', color: '#8a8f98', short: 'sweep' },
   sweep_confirmed: { shape: 'square', color: '#8a8f98', short: 'confirmed' },
-  zone: { shape: 'square', color: '#e0a458', short: 'zone' },
-  displacement_start: { shape: 'circle', color: '#8ab4f8', short: 'leg 1' },
-  displacement_end: { shape: 'square', color: '#8ab4f8', short: 'displacement' },
+  zone: { shape: 'square', color: '#9a6a1f', short: 'zone' },
+  displacement_start: { shape: 'circle', color: '#5c6670', short: 'leg 1' },
+  displacement_end: { shape: 'square', color: '#5c6670', short: 'displacement' },
   retracement: { shape: 'circle', color: '#b26d12', short: 'retrace' },
-  leg2: { shape: 'circle', color: '#8ab4f8', short: 'leg 2' },
-  bos: { shape: 'square', color: '#2457c5', short: 'BOS' },
-  entry: { shape: 'arrowUp', color: '#2457c5', short: 'entry' },
-  exit: { shape: 'circle', color: '#2a9d8f', short: 'exit' },
+  leg2: { shape: 'circle', color: '#5c6670', short: 'leg 2' },
+  bos: { shape: 'square', color: '#c4672b', short: 'BOS' },
+  entry: { shape: 'arrowUp', color: '#c4672b', short: 'entry' },
+  exit: { shape: 'circle', color: '#2f7d6b', short: 'exit' },
 };
 
-function palette() {
-  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return { background: dark ? '#14161b' : '#ffffff', text: dark ? '#c9ced6' : '#333a45', grid: dark ? '#23262e' : '#eef0f3', up: '#2a9d8f', down: '#c2544b' };
-}
 
 // The exit step text carries the realised R ("+1.80R at …" / "-1.00R at …").
 const trade_was_loss = (explainer: Explainer) => (explainer.steps.find((s) => s.id === 'exit')?.text ?? '').startsWith('-');
@@ -66,7 +63,7 @@ export function ExplainerChart({ explainer, focus }: { explainer: Explainer; foc
         time: step.time as UTCTimestamp,
         position: step.position,
         shape: step.id === 'entry' ? (explainer.direction === 'LONG' ? 'arrowUp' : 'arrowDown') : look.shape,
-        color: step.id === 'exit' && trade_was_loss(explainer) ? '#c2544b' : look.color,
+        color: step.id === 'exit' && trade_was_loss(explainer) ? '#b5443a' : look.color,
         text: focus === step.id ? `▶ ${look.short}` : look.short,
         size: focus === step.id ? 2 : 1,
       };

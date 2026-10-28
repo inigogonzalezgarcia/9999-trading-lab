@@ -22,12 +22,12 @@ from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemp
 
 from .service import EDUCATIONAL_NOTICE, SOFTWARE_VERSION
 
-INK = colors.HexColor("#1f2430")
-MUTED = colors.HexColor("#6b7280")
-LINE = colors.HexColor("#d9dde3")
-ACCENT = colors.HexColor("#2457c5")
-GOOD = colors.HexColor("#2a9d8f")
-BAD = colors.HexColor("#c2544b")
+INK = colors.HexColor("#0e1a24")
+MUTED = colors.HexColor("#5c6670")
+LINE = colors.HexColor("#e1dacd")
+ACCENT = colors.HexColor("#c4672b")
+GOOD = colors.HexColor("#2f7d6b")
+BAD = colors.HexColor("#b5443a")
 WARN = colors.HexColor("#b26d12")
 
 

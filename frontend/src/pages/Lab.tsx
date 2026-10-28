@@ -210,6 +210,7 @@ export function LabPage({ runId }: { runId?: string }) {
   return (
     <>
       {offline && !STATIC_MODE && <p className="error">{t('lab.offline')} <code>uvicorn backend.app.main:app --reload --port 8000</code> / <code>docker compose up</code>.</p>}
+      <h1 className="visually-hidden">{t('nav.lab')} — {loaded?.title ?? ''}</h1>
       <main className="layout">
         {STATIC_MODE ? catalogue : form}
         <section className="content">

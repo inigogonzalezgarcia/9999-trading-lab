@@ -1,6 +1,7 @@
 import { formatNumber, formatPercent, formatR } from '../api';
 import type { PeriodSummary, ResearchReport } from '../types';
 import { Tile } from './Results';
+import { useT } from '../i18n';
 
 function PeriodRow({ name, summary }: { name: string; summary: PeriodSummary }) {
   return (
@@ -19,10 +20,11 @@ function PeriodRow({ name, summary }: { name: string; summary: PeriodSummary }) 
 }
 
 function PeriodTable({ rows }: { rows: [string, PeriodSummary][] }) {
+  const { t } = useT();
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Period</th><th>Range</th><th>Trades</th><th>Expectancy</th><th>Total</th><th>Win rate</th><th>PF</th><th>Max DD</th><th>Sharpe (ann.)</th></tr></thead>
+        <thead><tr><th>{t('rs.period')}</th><th>{t('rs.range')}</th><th>{t('kpi.trades')}</th><th>{t('kpi.expectancy')}</th><th>{t('kpi.total')}</th><th>{t('kpi.winRate')}</th><th>PF</th><th>{t('rs.maxDdShort')}</th><th>{t('rs.sharpeAnn')}</th></tr></thead>
         <tbody>{rows.map(([name, summary]) => <PeriodRow key={name} name={name} summary={summary} />)}</tbody>
       </table>
     </div>
@@ -45,65 +47,66 @@ function Percentiles({ title, values, unit = 'R' }: { title: string; values: Rec
 }
 
 export function ResearchView({ report }: { report: ResearchReport }) {
+  const { t } = useT();
   const wf = report.walk_forward;
   const mc = report.monte_carlo;
   const bench = report.benchmark;
   return (
     <div className="stack">
       <section>
-        <h2>Baseline ({report.symbol})</h2>
+        <h2>{t('rs.baseline')} ({report.symbol})</h2>
         <div className="tiles">
-          <Tile label="Trades" value={String(report.baseline.trades)} hint={`${report.baseline.candidates ?? '—'} candidates`} />
-          <Tile label="Expectancy" value={formatR(report.baseline.expectancy_r)} tone={report.baseline.expectancy_r > 0 ? 'good' : 'bad'} />
-          <Tile label="Total" value={formatR(report.baseline.total_r)} tone={report.baseline.total_r > 0 ? 'good' : 'bad'} />
-          <Tile label="Max drawdown" value={formatR(report.baseline.max_drawdown_r)} tone="bad" />
+          <Tile label={t('kpi.trades')} value={String(report.baseline.trades)} hint={`${report.baseline.candidates ?? '—'} ${t('rs.candidates')}`} />
+          <Tile label={t('kpi.expectancy')} value={formatR(report.baseline.expectancy_r)} tone={report.baseline.expectancy_r > 0 ? 'good' : 'bad'} />
+          <Tile label={t('kpi.total')} value={formatR(report.baseline.total_r)} tone={report.baseline.total_r > 0 ? 'good' : 'bad'} />
+          <Tile label={t('kpi.dd')} value={formatR(report.baseline.max_drawdown_r)} tone="bad" />
           {bench?.baseline_percentile_vs_random != null && (
-            <Tile label="vs random (cost-matched)" value={`p${(bench.baseline_percentile_vs_random * 100).toFixed(0)}`} hint={`one-sided p ≈ ${formatNumber(bench.empirical_p_value_one_sided)}`} tone={bench.baseline_percentile_vs_random >= 0.95 ? 'good' : 'neutral'} />
+            <Tile label={t('rs.vsRandom')} value={`p${(bench.baseline_percentile_vs_random * 100).toFixed(0)}`} hint={`p ≈ ${formatNumber(bench.empirical_p_value_one_sided)}`} tone={bench.baseline_percentile_vs_random >= 0.95 ? 'good' : 'neutral'} />
           )}
           {wf?.out_of_sample_concatenated.consistency != null && (
-            <Tile label="OOS fold consistency" value={formatPercent(wf.out_of_sample_concatenated.consistency)} hint={`${wf.out_of_sample_concatenated.folds_positive}/${wf.out_of_sample_concatenated.folds_with_trades} folds positive`} />
+            <Tile label={t('rs.oos')} value={formatPercent(wf.out_of_sample_concatenated.consistency)} hint={t('rs.foldsPositive', { a: wf.out_of_sample_concatenated.folds_positive, b: wf.out_of_sample_concatenated.folds_with_trades })} />
           )}
         </div>
       </section>
       {report.splits && (
         <section>
-          <h2>Independent chronological periods</h2>
+          <h2>{t('rs.splits')}</h2>
           <PeriodTable rows={Object.entries(report.splits.results)} />
           <p className="muted small">{report.splits.note}</p>
         </section>
       )}
       {wf && (
         <section>
-          <h2>Rolling out-of-sample (walk-forward)</h2>
-          <p className="muted small">{wf.fold_count} folds · train {String(wf.parameters.train_days)} days, test {String(wf.parameters.test_days)} days{wf.parameters.anchored ? ', anchored' : ''}. Concatenated OOS: {wf.out_of_sample_concatenated.trades} trades, {formatR(wf.out_of_sample_concatenated.total_r)} total, {formatR(wf.out_of_sample_concatenated.expectancy_r)} expectancy.</p>
-          <PeriodTable rows={wf.folds.flatMap((f) => [[`Fold ${f.fold} · in-sample`, f.in_sample], [`Fold ${f.fold} · out-of-sample`, f.out_of_sample]] as [string, PeriodSummary][])} />
+          <h2>{t('rs.wf')}</h2>
+          <p className="muted small">{t('rs.wfNote', { n: wf.fold_count, train: String(wf.parameters.train_days), test: String(wf.parameters.test_days), anchored: wf.parameters.anchored ? t('rs.anchored') : '', trades: wf.out_of_sample_concatenated.trades, total: formatR(wf.out_of_sample_concatenated.total_r), exp: formatR(wf.out_of_sample_concatenated.expectancy_r) })}</p>
+          <PeriodTable rows={wf.folds.flatMap((f) => [[`${t('rs.fold')} ${f.fold} · ${t('rs.inSample')}`, f.in_sample], [`${t('rs.fold')} ${f.fold} · ${t('rs.outSample')}`, f.out_of_sample]] as [string, PeriodSummary][])} />
         </section>
       )}
       {mc && mc.trades_per_path > 0 && (
         <section>
-          <h2>Monte Carlo (trade-sequence bootstrap)</h2>
-          <p className="muted small">{mc.simulations} resampled paths of {mc.trades_per_path} trades · probability of a losing path {formatPercent(mc.probability_losing)} · observed {formatR(mc.observed?.final_r)} with {formatR(mc.observed?.max_drawdown_r)} max drawdown.</p>
+          <h2>{t('rs.mc')}</h2>
+          <p className="muted small">{t('rs.mcNote', { sims: mc.simulations, n: mc.trades_per_path, p: formatPercent(mc.probability_losing), final: formatR(mc.observed?.final_r), dd: formatR(mc.observed?.max_drawdown_r) })}</p>
           <div className="two-col">
-            <Percentiles title="Final R" values={mc.final_r_percentiles} />
-            <Percentiles title="Max drawdown R" values={mc.max_drawdown_r_percentiles} />
+            <Percentiles title={t('rs.finalR')} values={mc.final_r_percentiles} />
+            <Percentiles title={t('rs.maxDd')} values={mc.max_drawdown_r_percentiles} />
           </div>
         </section>
       )}
       {bench && bench.random_expectancy_percentiles && (
         <section>
-          <h2>Cost-matched random benchmark</h2>
-          <p className="muted small">{bench.note} {bench.simulations} simulations.</p>
-          <Percentiles title="Random expectancy (R per trade)" values={bench.random_expectancy_percentiles} />
-          <p className="small">Baseline expectancy {formatR(bench.baseline_expectancy_r)} sits at percentile {formatNumber((bench.baseline_percentile_vs_random ?? 0) * 100, 0)} of the random distribution.</p>
+          <h2>{t('rs.bench')}</h2>
+          <p className="muted small">{bench.note} {t('rs.benchSims', { n: bench.simulations })}</p>
+          <Percentiles title={t('rs.benchPct')} values={bench.random_expectancy_percentiles} />
+          <p className="small">{t('rs.benchNote', { exp: formatR(bench.baseline_expectancy_r), pct: formatNumber((bench.baseline_percentile_vs_random ?? 0) * 100, 0) })}</p>
         </section>
       )}
       {report.sensitivity && (
         <section>
-          <h2>Parameter sensitivity (one at a time)</h2>
+          <h2>{t('rs.sens')}</h2>
           <p className="muted small">{report.sensitivity.note}</p>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Parameter</th><th>Value</th><th>Trades</th><th>Expectancy</th><th>Total</th><th>Max DD</th><th>Note</th></tr></thead>
+              <thead><tr><th>{t('rs.param')}</th><th>{t('rs.value')}</th><th>{t('kpi.trades')}</th><th>{t('kpi.expectancy')}</th><th>{t('kpi.total')}</th><th>{t('rs.maxDdShort')}</th><th>{t('rs.note')}</th></tr></thead>
               <tbody>
                 <tr className="baseline-row"><td>baseline</td><td>—</td><td className="mono">{report.sensitivity.baseline.trades}</td><td className="mono strong">{formatR(report.sensitivity.baseline.expectancy_r)}</td><td className="mono">{formatR(report.sensitivity.baseline.total_r)}</td><td className="mono">{formatR(report.sensitivity.baseline.max_drawdown_r)}</td><td /></tr>
                 {report.sensitivity.variants.map((v, i) => (
@@ -123,7 +126,7 @@ export function ResearchView({ report }: { report: ResearchReport }) {
         </section>
       )}
       <section>
-        <h2>Limitations</h2>
+        <h2>{t('rs.limits')}</h2>
         <ul className="small">{report.limitations.map((l) => <li key={l}>{l}</li>)}</ul>
       </section>
     </div>

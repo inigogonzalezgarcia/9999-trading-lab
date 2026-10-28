@@ -1,0 +1,29 @@
+{
+ "id": "eurusd-2024-v1-research",
+ "kind": "research",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1.yaml",
+ "dataset_name": "EURUSD_2024.csv",
+ "dataset_hash": "65a7a807004594d4a14e4408ce4abc71db1bc8f2d6c73e72a19f5ca25acde62d",
+ "label": {
+  "es": "Protocolo \u00b7 EUR/USD 2024 \u00b7 V1",
+  "en": "Protocol \u00b7 EUR/USD 2024 \u00b7 V1"
+ },
+ "description": {
+  "es": "Periodos independientes, walk-forward, Monte Carlo, sensibilidad y benchmark aleatorio sobre la l\u00ednea base.",
+  "en": "Independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark on the baseline."
+ },
+ "order": 50,
+ "created_at": "2026-10-28T17:13:08+00:00",
+ "summary": {
+  "trades": 5,
+  "expectancy_r": -0.5220669310748988,
+  "total_r": -2.6103346553744937,
+  "max_drawdown_r": 3.4488412567557662,
+  "benchmark_percentile": 0.085,
+  "walk_forward_consistency": 0.3333333333333333
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2024-v1-research.pdf",
+ "size_bytes": 42030
+}

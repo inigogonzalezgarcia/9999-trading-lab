@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-28T17:04:22+00:00",
+ "generated_at": "2026-10-28T17:15:52+00:00",
  "software_version": "0.5.0",
  "software_revision": "source-sha256:8b375a8ef34173bc3af0397019cdec648cd55a7400f31b32f1e3df7eeb304d64",
  "notice": {
@@ -31,7 +31,7 @@
     "en": "The original, frozen hypothesis on one year of real M1 candles. 02:15\u201304:15 Madrid windows."
    },
    "order": 10,
-   "created_at": "2026-10-28T17:04:16+00:00",
+   "created_at": "2026-10-28T17:09:48+00:00",
    "summary": {
     "trades": 5,
     "expectancy_r": -0.5220669310748988,
@@ -62,7 +62,7 @@
     "en": "London windows, zone-distal stop, level expiry. More trades, not more evidence."
    },
    "order": 20,
-   "created_at": "2026-10-28T17:04:22+00:00",
+   "created_at": "2026-10-28T17:09:53+00:00",
    "summary": {
     "trades": 12,
     "expectancy_r": 0.1960458121439842,
@@ -76,6 +76,126 @@
    "software_version": "0.5.0",
    "pdf": "runs/eurusd-2024-v1_1.pdf",
    "size_bytes": 2397716
+  },
+  {
+   "id": "portfolio-2024-v1",
+   "kind": "backtest",
+   "symbol": "PORTFOLIO",
+   "strategy": "strategy_v1.yaml",
+   "dataset_name": "PORTFOLIO_2024.csv",
+   "dataset_hash": "47a6906263ff7f4b244553391c3aa07eee99be61daafa845232b14d566ee7da2",
+   "label": {
+    "es": "EUR/USD + GBP/USD 2024 \u00b7 V1",
+    "en": "EUR/USD + GBP/USD 2024 \u00b7 V1"
+   },
+   "description": {
+    "es": "La l\u00ednea base sobre dos pares a la vez, con el l\u00edmite de riesgo de cartera.",
+    "en": "The baseline on two pairs at once, with the portfolio risk limit."
+   },
+   "order": 30,
+   "created_at": "2026-10-28T17:10:05+00:00",
+   "summary": {
+    "trades": 8,
+    "expectancy_r": -0.508392067086108,
+    "total_r": -4.067136536688864,
+    "win_rate": 0.25,
+    "profit_factor": 0.18792033662469798,
+    "max_drawdown_r": 4.346186908610884,
+    "candidates": 6529,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/portfolio-2024-v1.pdf",
+   "size_bytes": 4233547
+  },
+  {
+   "id": "portfolio-2024-v1_1",
+   "kind": "backtest",
+   "symbol": "PORTFOLIO",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "PORTFOLIO_2024.csv",
+   "dataset_hash": "47a6906263ff7f4b244553391c3aa07eee99be61daafa845232b14d566ee7da2",
+   "label": {
+    "es": "EUR/USD + GBP/USD 2024 \u00b7 V1.1",
+    "en": "EUR/USD + GBP/USD 2024 \u00b7 V1.1"
+   },
+   "description": {
+    "es": "El experimento sobre dos pares. Compara con la versi\u00f3n de un solo par.",
+    "en": "The experiment on two pairs. Compare with the single-pair version."
+   },
+   "order": 40,
+   "created_at": "2026-10-28T17:10:14+00:00",
+   "summary": {
+    "trades": 20,
+    "expectancy_r": -0.05913946591323995,
+    "total_r": -1.182789318264799,
+    "win_rate": 0.35,
+    "profit_factor": 0.8854370395745992,
+    "max_drawdown_r": 4.006628003314007,
+    "candidates": 4259,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/portfolio-2024-v1_1.pdf",
+   "size_bytes": 4624541
+  },
+  {
+   "id": "eurusd-2024-v1-research",
+   "kind": "research",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1.yaml",
+   "dataset_name": "EURUSD_2024.csv",
+   "dataset_hash": "65a7a807004594d4a14e4408ce4abc71db1bc8f2d6c73e72a19f5ca25acde62d",
+   "label": {
+    "es": "Protocolo \u00b7 EUR/USD 2024 \u00b7 V1",
+    "en": "Protocol \u00b7 EUR/USD 2024 \u00b7 V1"
+   },
+   "description": {
+    "es": "Periodos independientes, walk-forward, Monte Carlo, sensibilidad y benchmark aleatorio sobre la l\u00ednea base.",
+    "en": "Independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark on the baseline."
+   },
+   "order": 50,
+   "created_at": "2026-10-28T17:13:08+00:00",
+   "summary": {
+    "trades": 5,
+    "expectancy_r": -0.5220669310748988,
+    "total_r": -2.6103346553744937,
+    "max_drawdown_r": 3.4488412567557662,
+    "benchmark_percentile": 0.085,
+    "walk_forward_consistency": 0.3333333333333333
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2024-v1-research.pdf",
+   "size_bytes": 42030
+  },
+  {
+   "id": "eurusd-2024-v1_1-research",
+   "kind": "research",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2024.csv",
+   "dataset_hash": "65a7a807004594d4a14e4408ce4abc71db1bc8f2d6c73e72a19f5ca25acde62d",
+   "label": {
+    "es": "Protocolo \u00b7 EUR/USD 2024 \u00b7 V1.1",
+    "en": "Protocol \u00b7 EUR/USD 2024 \u00b7 V1.1"
+   },
+   "description": {
+    "es": "El mismo protocolo sobre el experimento: aqu\u00ed es donde el +2,35R deja de parecer una ventaja.",
+    "en": "The same protocol on the experiment: this is where the +2.35R stops looking like an edge."
+   },
+   "order": 60,
+   "created_at": "2026-10-28T17:15:52+00:00",
+   "summary": {
+    "trades": 12,
+    "expectancy_r": 0.1960458121439842,
+    "total_r": 2.3525497457278104,
+    "max_drawdown_r": 3.006628003314007,
+    "benchmark_percentile": 0.755,
+    "walk_forward_consistency": 0.5
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2024-v1_1-research.pdf",
+   "size_bytes": 43633
   }
  ]
 }
