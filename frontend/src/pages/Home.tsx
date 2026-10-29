@@ -6,7 +6,6 @@ import { LESSONS } from '../content/lessons';
 import { useT } from '../i18n';
 import { readProgress } from '../progress';
 import { Link } from '../router';
-import { REPO_URL } from '../site';
 import type { RunRow } from '../types';
 
 const IS = {
@@ -138,7 +137,6 @@ export function HomePage() {
 
       <Subscribe />
 
-      <p className="muted small">{lang === 'es' ? 'Todo el código es libre (MIT):' : 'All the code is open source (MIT):'} <a href={REPO_URL} target="_blank" rel="noreferrer">{REPO_URL.replace('https://', '')}</a></p>
     </main>
   );
 }
