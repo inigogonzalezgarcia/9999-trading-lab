@@ -5,9 +5,9 @@
  */
 export const OWNER = {
   name: 'Iñigo González García',
-  taxId: '[NIF]',
-  address: '[dirección postal — rellenar antes de publicar]',
-  email: '[correo de contacto]',
+  taxId: '48082766R',
+  address: 'Calle Melchor Fernández Almagro, n.º 60, 28029 Madrid',
+  email: 'inigogonzalezgarcia@outlook.es',
   site: 'https://inigogonzalezgarcia.github.io',
   contactForm: 'https://inigogonzalezgarcia.github.io/about.html#contacto',
 };
