@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 — 2026-10-30
+
+- `scripts/build_kit.py`: builds the paid kit "Cómo leer un backtest" (bilingual PDF guide computed from the real V1/V1.1 results, report template MD+PDF, decision checklist, derived datasets with SHA-256, data download instructions) into `dist/kit/` and a zip. No raw candles are redistributed.
+
 ## 0.5.0 — 2026-10-28
 
 - Public educational site (Cloudflare Pages, no backend): `python -m backend.cli export-web` precomputes the
