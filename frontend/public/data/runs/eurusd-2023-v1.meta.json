@@ -1,0 +1,38 @@
+{
+ "id": "eurusd-2023-v1",
+ "kind": "backtest",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1.yaml",
+ "dataset_name": "EURUSD_2023.csv",
+ "dataset_hash": "2e215a6d7f370cc49a7dcdaf2d4d0b190751641e99f45a9a84924d7075115f5e",
+ "label": {
+  "es": "EUR/USD 2023 \u00b7 V1 (l\u00ednea base)",
+  "en": "EUR/USD 2023 \u00b7 V1 (baseline)"
+ },
+ "description": {
+  "es": "Mismas reglas sobre otro a\u00f1o (datos HistData, sin columna de spread: 0,3 pips fijos, peor que la mediana de 2024). Periodo que la hip\u00f3tesis nunca vio.",
+  "en": "Same rules on another year (HistData, no spread column: fixed 0.3 pips, worse than the 2024 median). A period the hypothesis never saw."
+ },
+ "order": 100,
+ "created_at": "2026-10-30T08:14:16+00:00",
+ "summary": {
+  "trades": 4,
+  "expectancy_r": 0.24349588013775258,
+  "total_r": 0.9739835205510103,
+  "win_rate": 0.5,
+  "profit_factor": 1.6126486592877995,
+  "max_drawdown_r": 1.589791319682737,
+  "candidates": 2744,
+  "blocked": false
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2023-v1.pdf",
+ "sparkline": [
+  0.0,
+  -1.0,
+  -1.59,
+  -1.026,
+  0.974
+ ],
+ "size_bytes": 1870954
+}

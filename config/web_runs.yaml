@@ -71,3 +71,77 @@ runs:
     description:
       es: "El mismo protocolo sobre el experimento: aquí es donde el +2,35R deja de parecer una ventaja."
       en: "The same protocol on the experiment: this is where the +2.35R stops looking like an edge."
+  - id: eurusd-2022-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2022.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 70
+    label: {es: "EUR/USD 2022 · V1 (línea base)", en: "EUR/USD 2022 · V1 (baseline)"}
+    description:
+      es: "Mismas reglas sobre otro año (datos HistData, sin columna de spread: 0,3 pips fijos, peor que la mediana de 2024). Periodo que la hipótesis nunca vio."
+      en: "Same rules on another year (HistData, no spread column: fixed 0.3 pips, worse than the 2024 median). A period the hypothesis never saw."
+  - id: eurusd-2022-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2022.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 80
+    label: {es: "EUR/USD 2022 · V1.1 (experimento)", en: "EUR/USD 2022 · V1.1 (experiment)"}
+    description:
+      es: "Mismas reglas sobre otro año (datos HistData, sin columna de spread: 0,3 pips fijos, peor que la mediana de 2024). Periodo que la hipótesis nunca vio."
+      en: "Same rules on another year (HistData, no spread column: fixed 0.3 pips, worse than the 2024 median). A period the hypothesis never saw."
+  - id: eurusd-2022-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2022.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 90
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2022 · V1.1", en: "Protocol · EUR/USD 2022 · V1.1"}
+    description:
+      es: "El protocolo completo sobre 2022: ¿se repite lo de 2024 o era ruido?"
+      en: "The full protocol on 2022: does 2024 repeat, or was it noise?"
+  - id: eurusd-2023-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2023.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 100
+    label: {es: "EUR/USD 2023 · V1 (línea base)", en: "EUR/USD 2023 · V1 (baseline)"}
+    description:
+      es: "Mismas reglas sobre otro año (datos HistData, sin columna de spread: 0,3 pips fijos, peor que la mediana de 2024). Periodo que la hipótesis nunca vio."
+      en: "Same rules on another year (HistData, no spread column: fixed 0.3 pips, worse than the 2024 median). A period the hypothesis never saw."
+  - id: eurusd-2023-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2023.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 110
+    label: {es: "EUR/USD 2023 · V1.1 (experimento)", en: "EUR/USD 2023 · V1.1 (experiment)"}
+    description:
+      es: "Mismas reglas sobre otro año (datos HistData, sin columna de spread: 0,3 pips fijos, peor que la mediana de 2024). Periodo que la hipótesis nunca vio."
+      en: "Same rules on another year (HistData, no spread column: fixed 0.3 pips, worse than the 2024 median). A period the hypothesis never saw."
+  - id: eurusd-2023-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2023.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 120
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2023 · V1.1", en: "Protocol · EUR/USD 2023 · V1.1"}
+    description:
+      es: "El protocolo completo sobre 2023: ¿se repite lo de 2024 o era ruido?"
+      en: "The full protocol on 2023: does 2024 repeat, or was it noise?"

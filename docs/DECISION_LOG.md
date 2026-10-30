@@ -159,3 +159,23 @@
 - **Decision:** Legal pages (notice, privacy, cookies, terms) ship with the site, ES/EN, with the owner block
   to be completed before launch; paid products, when they exist, go through a merchant of record.
 - **Status:** 63 offline tests; `tsc` clean; static build verified on the author's machine / Pages.
+
+## 2026-10-30 — 2022–2023 on EUR/USD: the 2024 result does not replicate (v0.5.1)
+
+- **Data:** HistData Generic ASCII M1 for 2022 and 2023 (EUR/USD, GBP/USD), converted by `scripts/fetch_histdata.py`.
+  No spread column → fixed 0.3 pips for EUR/USD (2024 Dukascopy median at the London open was 0.2). 2023 has
+  thinner Asian/night hours (Feb–Jul) but the London-open hours are complete every month; no candles fabricated.
+- **Result (V1.1, London windows):** 2022: 11 trades, **−8.01R** (9 stops out of 11), worse than 99 % of random
+  entries with identical exits and costs (percentile 1 %), Monte Carlo probability of losing 100 %, walk-forward
+  1 positive window out of 6. 2023: 4 trades, −0.29R, percentile 52 % vs random (a coin). Three years pooled:
+  27 trades, **−5.95R**. The 2024 +2.35R was exactly what the protocol said it could be: noise.
+- **Result (V1, 02:15–04:15 windows):** 2022 +0.34R (6 trades), 2023 +0.97R (4), 2024 −2.61R (5): 15 trades,
+  −1.30R. Nothing to see either way; too few trades to say anything.
+- **Sensitivity in 2022:** no parameter rescues V1.1 (every stop reference, lifetime and max-ATR variant stays
+  between −6.8R and −10.9R). The "stop finding" of 2024 was specific to 2024.
+- **Decision:** V1.1 is **discarded as an improvement over V1**; it stays published as the worked example of a
+  false positive. No V1.2 is derived from 2024 alone. Next research step, if any, must start from a hypothesis
+  formed outside these three years (different mechanism, not a parameter), and be tested on 2022–2024 pooled
+  before any single year is read.
+- **Decision:** The site shows the three years side by side (home evidence band and catalogue) and the kit gets
+  a 2022–2023 epilogue, because "the good year did not repeat" is the most useful lesson the lab has produced.

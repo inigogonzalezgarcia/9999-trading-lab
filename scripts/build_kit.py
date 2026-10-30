@@ -44,7 +44,7 @@ from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemp
 
 from app.report import ACCENT, BAD, GOOD, INK, LINE, MUTED, _bar_chart, _line_chart, _styles, _table  # noqa: E402
 
-KIT_VERSION = "1.0"
+KIT_VERSION = "1.1"
 SITE = "https://fx-trading-lab.pages.dev"
 REPO = "https://github.com/inigogonzalezgarcia/9999-trading-lab"
 DISCLAIMER_URL = f"{SITE}/legal/aviso"
@@ -66,6 +66,15 @@ def load_results(results_dir: Path) -> dict[str, dict[str, Any]]:
             path = results_dir / candidate
             if path.exists():
                 runs[name] = json.loads(path.read_text())
+                break
+    for year in (2022, 2023):
+        for candidate in (results_dir / f"EURUSD_{year}_v1_1_research.json", ROOT / "frontend" / "public" / "data" / "runs" / f"eurusd-{year}-v1_1-research.json"):
+            if candidate.exists():
+                runs[f"v1_1_research_{year}"] = json.loads(candidate.read_text())
+                break
+        for candidate in (results_dir / f"EURUSD_{year}_v1_1_backtest.json", ROOT / "frontend" / "public" / "data" / "runs" / f"eurusd-{year}-v1_1.json"):
+            if candidate.exists():
+                runs[f"v1_1_backtest_{year}"] = json.loads(candidate.read_text())
                 break
     missing = [k for k in ("v1_research", "v1_1_backtest", "v1_1_research") if k not in runs]
     if missing:
@@ -365,8 +374,51 @@ def guide_content(runs: dict[str, dict[str, Any]], lang: str) -> list[tuple[str,
               "All the code is public. The kit's datasets (04-datasets) contain the trades, the curve, the metrics, the sensitivity and the Monte Carlo of each run, with the SHA-256 of every file. "
               "The original M1 candles are not included because they belong to the provider; the file COMO-DESCARGAR-DATOS.md explains how to download them with the repository script and check that their hash matches the one in this guide.")))
     A(("table", {"rows": [[t("Recurso", "Resource"), "URL"], [t("Laboratorio (gratis)", "Lab (free)"), SITE], [t("Código", "Code"), REPO], [t("Aviso legal y método", "Legal notice and method"), DISCLAIMER_URL]], "widths": [50 * mm, 120 * mm], "font": 8}))
+    if "v1_1_research_2022" in runs and "v1_1_research_2023" in runs:
+        blocks += epilogue(runs, lang)
     A(("notice", t("Material educativo. No es asesoramiento de inversión. El rendimiento pasado no garantiza resultados futuros.",
                    "Educational material. Not investment advice. Past performance does not guarantee future results.")))
+    return blocks
+
+
+def epilogue(runs: dict[str, dict[str, Any]], lang: str) -> list[tuple[str, Any]]:
+    """Chapter 13: what happened when the same rule met 2022 and 2023."""
+    es = lang == "es"
+    t = lambda a, b: a if es else b  # noqa: E731
+    years = {2024: runs["v1_1_research"], 2022: runs["v1_1_research_2022"], 2023: runs["v1_1_research_2023"]}
+    rows = [[t("Año", "Year"), "N", t("Total R", "Total R"), t("Esperanza", "Expectancy"), t("Acierto", "Win rate"), t("Percentil vs azar", "Percentile vs random"), t("Prob. de perder (MC)", "P(losing) (MC)")]]
+    pooled_n, pooled_r = 0, 0.0
+    for year in (2022, 2023, 2024):
+        b, bm, mc = years[year]["baseline"], years[year]["benchmark"], years[year]["monte_carlo"]
+        rows.append([str(year), str(b["trades"]), r(b["total_r"]), r(b["expectancy_r"]), pct(b["win_rate"]), num(bm["baseline_percentile_vs_random"] * 100, 0) + " %", pct(mc["probability_losing"])])
+        pooled_n += b["trades"]
+        pooled_r += b["total_r"]
+    rows.append([t("Tres años", "Three years"), str(pooled_n), r(pooled_r), r(pooled_r / pooled_n), "", "", ""])
+    b22 = years[2022]["baseline"]
+    bt22 = runs.get("v1_1_backtest_2022")
+    stops22 = (bt22 or {}).get("metrics", {}).get("exit_reasons", {}).get("STOP_LOSS")
+    blocks: list[tuple[str, Any]] = []
+    blocks.append(("h1", t("13. Epílogo: lo que pasó en 2022 y 2023", "13. Epilogue: what happened in 2022 and 2023")))
+    blocks.append(("p", t("Los capítulos anteriores se escribieron con 2024 y terminaban con una promesa: la respuesta estaba en más años, no en más métricas. Aquí está la respuesta. "
+                          "Misma regla V1.1, mismo motor, mismos costes (spread fijo de 0,3 pips porque los datos de 2022-2023 no traen columna de spread; en 2024 la mediana real fue 0,2).",
+                          "The previous chapters were written with 2024 and ended with a promise: the answer was in more years, not more metrics. Here is the answer. "
+                          "Same V1.1 rule, same engine, same costs (fixed 0.3-pip spread because the 2022-2023 data has no spread column; the real 2024 median was 0.2).")))
+    blocks.append(("table", {"rows": rows, "widths": [26 * mm, 12 * mm, 22 * mm, 24 * mm, 20 * mm, 34 * mm, 32 * mm], "font": 8}))
+    blocks.append(("p", t(f"2022 es la respuesta completa: {b22['trades']} operaciones, {r(b22['total_r'])}, {stops22 if stops22 is not None else 'casi todas'} de ellas cerradas por stop, peor que el {num((1 - years[2022]['benchmark']['baseline_percentile_vs_random']) * 100, 0)} % de las entradas aleatorias con las mismas salidas y costes. "
+                          "Ningún parámetro de la tabla de sensibilidad lo rescata: todas las variantes de stop, vida del setup y distancia máxima quedan entre -6,8R y -10,9R. "
+                          "El «hallazgo del stop» del capítulo 6 era un hallazgo de 2024, no de la regla.",
+                          f"2022 is the full answer: {b22['trades']} trades, {r(b22['total_r'])}, {stops22 if stops22 is not None else 'almost all'} of them closed at the stop, worse than {num((1 - years[2022]['benchmark']['baseline_percentile_vs_random']) * 100, 0)} % of random entries with the same exits and costs. "
+                          "No parameter in the sensitivity table rescues it: every stop reference, setup lifetime and max-distance variant stays between -6.8R and -10.9R. "
+                          "The \"stop finding\" of chapter 6 was a finding about 2024, not about the rule.")))
+    blocks.append(("p", t("Vuelve al capítulo 4 y mira la columna de 2024: P25 por debajo de cero, 28 % de probabilidad de perder, percentil 75 frente al azar. El protocolo ya decía «todavía no sabemos». "
+                          "Lo que hacen 2022 y 2023 es convertir ese «no sabemos» en «no». Esa es la secuencia normal de una hipótesis honesta, y por eso el informe de 2024 no decía «operar».",
+                          "Go back to chapter 4 and look at the 2024 column: P25 below zero, 28 % probability of losing, 75th percentile against chance. The protocol already said \"we do not know yet\". "
+                          "What 2022 and 2023 do is turn that \"we do not know\" into \"no\". That is the normal sequence for an honest hypothesis, and it is why the 2024 report did not say \"trade it\".")))
+    blocks.append(("bullets", [
+        t("<b>Decisión registrada.</b> V1.1 se descarta como mejora de V1 y se mantiene publicada como ejemplo de falso positivo. No se deriva ninguna V1.2 de 2024.", "<b>Logged decision.</b> V1.1 is discarded as an improvement over V1 and stays published as a worked example of a false positive. No V1.2 is derived from 2024."),
+        t("<b>Regla nueva para el laboratorio.</b> Ninguna hipótesis se lee sobre un año suelto: primero los tres años juntos, después cada año por separado para ver la dispersión.", "<b>New rule for the lab.</b> No hypothesis is read on a single year: first the three years pooled, then each year on its own to see the dispersion."),
+        t("<b>Para tu propio backtest.</b> Si solo tienes un año, lo que tienes es un capítulo 4. Pide el segundo año antes de creerte nada, y espera que sea peor.", "<b>For your own backtest.</b> If you only have one year, what you have is a chapter 4. Ask for the second year before believing anything, and expect it to be worse."),
+    ]))
     return blocks
 
 
@@ -802,6 +854,17 @@ Hash de configuración · configuration hash: {repro['config_hash']}
 
 Si Dukascopy limita tu IP (429/503), el script espera y reanuda por meses; deja el proceso abierto o relánzalo más tarde.
 If Dukascopy rate-limits your IP (429/503), the script waits and resumes month by month; leave it running or relaunch later.
+
+## 2022 y 2023 · 2022 and 2023
+
+Esos años vienen de HistData.com (gratis, sin columna de spread; las ejecuciones usan 0,3 pips fijos):
+Those years come from HistData.com (free, no spread column; the runs use a fixed 0.3 pips):
+
+```bash
+python3 scripts/fetch_histdata.py --years 2022 2023 --symbols EURUSD GBPUSD
+python -m backend.cli backtest data/raw/EURUSD_2022.csv --strategy config/strategy_v1_1.yaml --fixed-spread-pips 0.3 --out results/EURUSD_2022_v1_1_backtest.json
+python -m backend.cli research data/raw/EURUSD_2022.csv --strategy config/strategy_v1_1.yaml --fixed-spread-pips 0.3 --seed 7 --out results/EURUSD_2022_v1_1_research.json
+```
 """
 
 
@@ -820,7 +883,7 @@ Contenido
   02-plantilla/   Plantilla de informe de backtest (Markdown y PDF).
   03-checklist/   Checklist de decisión (Markdown).
   04-datasets/    Operaciones, curva, métricas, sensibilidad, Monte Carlo, benchmark,
-                  walk-forward y reproducibilidad de cada ejecución, con SHA256SUMS.txt
+                  walk-forward y reproducibilidad de cada ejecución (2022, 2023 y 2024), con SHA256SUMS.txt
                   y las instrucciones para descargar las velas originales.
 
 Licencia
@@ -843,7 +906,7 @@ Contents
   02-plantilla/   Backtest report template (Markdown and PDF).
   03-checklist/   Decision checklist (Markdown).
   04-datasets/    Trades, curve, metrics, sensitivity, Monte Carlo, benchmark,
-                  walk-forward and reproducibility of each run, with SHA256SUMS.txt
+                  walk-forward and reproducibility of each run (2022, 2023 and 2024), with SHA256SUMS.txt
                   and the instructions to download the original candles.
 
 Licence

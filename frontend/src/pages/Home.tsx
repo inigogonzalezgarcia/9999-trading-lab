@@ -32,7 +32,9 @@ export function HomePage() {
     api.runs('backtest').then(setRuns).catch(() => setRuns([]));
     setProgress(readProgress());
   }, []);
-  const featured = runs.slice(0, 2);
+  // The band tells the lab's main lesson: the same rule, the good year and the year it did not repeat.
+  const story = ['eurusd-2024-v1_1', 'eurusd-2022-v1_1'].map((id) => runs.find((run) => run.id === id)).filter(Boolean) as RunRow[];
+  const featured = story.length === 2 ? story : runs.slice(0, 2);
   return (
     <main className="home">
       <section className="hero">
@@ -67,7 +69,7 @@ export function HomePage() {
           <div className="ev verdict">
             <span className="ev-label">{lang === 'es' ? 'Veredicto del protocolo' : 'Protocol verdict'}</span>
             <span className="ev-value">{lang === 'es' ? 'Sin evidencia' : 'No evidence'}</span>
-            <span className="ev-note">{lang === 'es' ? 'Un año de datos reales. Y eso es lo que te enseñamos a comprobar.' : 'One year of real data. And that is what we teach you to check.'}</span>
+            <span className="ev-note">{lang === 'es' ? 'Tres años de datos reales (2022–2024): el buen año no se repitió. Eso es lo que te enseñamos a comprobar.' : 'Three years of real data (2022–2024): the good year did not repeat. That is what we teach you to check.'}</span>
           </div>
         </section>
       )}

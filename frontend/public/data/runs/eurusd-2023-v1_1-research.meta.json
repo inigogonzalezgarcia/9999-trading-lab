@@ -1,0 +1,30 @@
+{
+ "id": "eurusd-2023-v1_1-research",
+ "kind": "research",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1_1.yaml",
+ "dataset_name": "EURUSD_2023.csv",
+ "dataset_hash": "2e215a6d7f370cc49a7dcdaf2d4d0b190751641e99f45a9a84924d7075115f5e",
+ "label": {
+  "es": "Protocolo \u00b7 EUR/USD 2023 \u00b7 V1.1",
+  "en": "Protocol \u00b7 EUR/USD 2023 \u00b7 V1.1"
+ },
+ "description": {
+  "es": "El protocolo completo sobre 2023: \u00bfse repite lo de 2024 o era ruido?",
+  "en": "The full protocol on 2023: does 2024 repeat, or was it noise?"
+ },
+ "order": 120,
+ "created_at": "2026-10-30T08:16:42+00:00",
+ "summary": {
+  "trades": 4,
+  "expectancy_r": -0.07331220795966287,
+  "total_r": -0.29324883183865147,
+  "max_drawdown_r": 2.0,
+  "benchmark_percentile": 0.515,
+  "walk_forward_consistency": 0.5
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2023-v1_1-research.pdf",
+ "sparkline": [],
+ "size_bytes": 41683
+}
