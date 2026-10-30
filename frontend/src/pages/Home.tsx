@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, formatPercent, formatR } from '../api';
+import { KitCard } from '../components/KitCard';
 import { Subscribe } from '../components/Subscribe';
 import { SetupIllustration, Sparkline, StepIcon } from '../components/Visuals';
 import { LESSONS } from '../content/lessons';
@@ -135,8 +136,9 @@ export function HomePage() {
         </ol>
       </section>
 
-      <Subscribe />
+      <KitCard />
 
+      <Subscribe />
     </main>
   );
 }

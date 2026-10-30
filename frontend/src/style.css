@@ -399,3 +399,14 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
   .catalogue .run-yourself code.block { font-size: 0.68rem; }
 }
 @media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .tile-value { font-size: 1.3rem; } }
+
+/* paid kit card (home + lessons) */
+.kit { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: center; padding: 28px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow); }
+.kit.compact { grid-template-columns: 1fr; padding: 22px; margin-top: 28px; }
+.kit .kicker { margin-bottom: 4px; }
+.kit .checklist { margin: 10px 0 14px; }
+.kit-actions { align-items: center; }
+.kit-actions .button { white-space: nowrap; min-height: 44px; }
+.kit-cover { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+.kit-note { margin: 8px 0 0; }
+@media (max-width: 900px) { .kit { grid-template-columns: 1fr; padding: 20px; } }

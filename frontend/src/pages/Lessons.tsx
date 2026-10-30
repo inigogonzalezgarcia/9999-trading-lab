@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { KitCard } from '../components/KitCard';
 import { LessonWidget } from '../components/LessonWidgets';
 import { LabNote, Quiz } from '../components/Quiz';
 import { Subscribe } from '../components/Subscribe';
@@ -37,6 +38,7 @@ export function LessonsIndex() {
           </li>
         ))}
       </ol>
+      <KitCard compact />
       <Subscribe />
     </main>
   );

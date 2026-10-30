@@ -8,3 +8,6 @@ export const AUTHOR_SITE = 'https://inigogonzalezgarcia.github.io';
 export const CONTACT_URL = 'https://inigogonzalezgarcia.github.io/about.html#contacto';
 export const LINKEDIN_URL = 'https://www.linkedin.com/in/inigogonzalezgarcia/';
 export const SITE_NAME = 'FX Research Lab';
+/** Paid kit (Gumroad handles checkout, VAT and delivery). The site only links to it. */
+export const KIT_URL = 'https://fxresearchlab.gumroad.com/l/kit-backtest';
+export const KIT_PRICE = '19 €';
