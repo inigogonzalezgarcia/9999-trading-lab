@@ -37,12 +37,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from reportlab.lib import colors  # noqa: E402
 from reportlab.lib.pagesizes import A4  # noqa: E402
 from reportlab.lib.units import mm  # noqa: E402
 from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer  # noqa: E402
 
-from app.report import ACCENT, BAD, GOOD, INK, LINE, MUTED, _bar_chart, _line_chart, _styles, _table  # noqa: E402
+from app.report import MUTED, _bar_chart, _line_chart, _styles, _table  # noqa: E402
 
 KIT_VERSION = "1.1"
 SITE = "https://fx-trading-lab.pages.dev"
@@ -529,7 +528,7 @@ def render_pdf(blocks: list[tuple[str, Any]], title: str, lang: str) -> bytes:
 def template_md(lang: str) -> str:
     es = lang == "es"
     if es:
-        return f"""# Informe de backtest — <hipótesis> <versión>
+        return """# Informe de backtest — <hipótesis> <versión>
 
 > Material educativo. Resultados simulados sobre datos históricos. No es asesoramiento de inversión. El rendimiento pasado no garantiza resultados futuros.
 
@@ -624,7 +623,7 @@ Entrada en el log de decisiones: `AAAA-MM-DD — …`
 ## 8. Checklist
 Pegar aquí la checklist del kit (03-checklist) con cada pregunta respondida.
 """
-    return f"""# Backtest report — <hypothesis> <version>
+    return """# Backtest report — <hypothesis> <version>
 
 > Educational material. Simulated results on historical data. Not investment advice. Past performance does not guarantee future results.
 

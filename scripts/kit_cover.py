@@ -41,7 +41,6 @@ def cover_svg(lang: str = "es") -> str:
     es = lang == "es"
     values = equity_points()
     d, zero = steps_path(values, 760, 170, 440, 300)
-    title = "Cómo leer<br/>un backtest" if es else "How to read<br/>a backtest"
     t1, t2 = ("Cómo leer", "un backtest") if es else ("How to read", "a backtest")
     sub = "Guía + plantilla de informe + checklist + datasets" if es else "Guide + report template + checklist + datasets"
     kicker = "KIT · FX RESEARCH LAB" if es else "KIT · FX RESEARCH LAB"
