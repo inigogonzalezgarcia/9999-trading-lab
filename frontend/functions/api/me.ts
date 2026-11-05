@@ -2,7 +2,7 @@ import { ensureSchema, getUser, json, sessionSecret, sessionUserId, type PagesCo
 
 /** GET /api/me → {user, progress} for the session, or {user: null}. PUT /api/me {progress} → saves the simulator progress. */
 export const onRequestGet = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!env.DB || !sessionSecret(env)) return json({ user: null, configured: false });
+  if (!env.DB || !sessionSecret(env)) return json({ user: null, configured: false, missing: [!env.DB && 'DB', !sessionSecret(env) && 'SESSION_SECRET'].filter(Boolean) });
   const uid = await sessionUserId(request, env);
   if (!uid) return json({ user: null, configured: true });
   await ensureSchema(env.DB);
