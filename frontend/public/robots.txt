@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /data/
+
+Sitemap: https://fx-trading-lab.pages.dev/sitemap.xml

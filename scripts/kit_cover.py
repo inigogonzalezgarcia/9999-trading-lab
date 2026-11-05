@@ -93,6 +93,32 @@ def thumb_svg(lang: str = "es") -> str:
 </svg>"""
 
 
+def og_svg(lang: str = "es") -> str:
+    """Social preview for the site (1200×630): the lab's lesson in one picture, no product, no price."""
+    es = lang == "es"
+    values = equity_points()
+    d, zero = steps_path(values, 700, 140, 420, 300)
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="{LINE}" stroke-width="0.8"/></pattern></defs>
+  <rect width="1200" height="630" fill="{PAPER}"/>
+  <rect x="660" y="90" width="500" height="400" rx="18" fill="url(#grid)"/>
+  <rect x="660" y="90" width="500" height="400" rx="18" fill="none" stroke="{LINE}" stroke-width="1.5"/>
+  <line x1="680" x2="1140" y1="{zero:.1f}" y2="{zero:.1f}" stroke="{MUTED}" stroke-width="1.2" stroke-dasharray="6 5"/>
+  <text x="682" y="{zero - 8:.1f}" font-family="ui-monospace, Menlo, monospace" font-size="14" fill="{MUTED}">0R</text>
+  <path d="{d}" fill="none" stroke="{ACCENT}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="1136" y="120" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="15" fill="{MUTED}">V1.1 · EUR/USD 2024 · +2.35R</text>
+  <text x="1136" y="470" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="15" fill="{BAD}">{'2022: -8.01R · el año bueno no se repitió' if es else '2022: -8.01R · the good year did not repeat'}</text>
+  <text x="64" y="130" font-family="ui-monospace, Menlo, monospace" font-size="18" letter-spacing="3" fill="{ACCENT}">FX RESEARCH LAB</text>
+  <text x="64" y="230" font-family="{FONT}" font-size="72" font-weight="700" fill="{INK}" letter-spacing="-2">{'Aprende a leer' if es else 'Learn to read'}</text>
+  <text x="64" y="310" font-family="{FONT}" font-size="72" font-weight="700" fill="{INK}" letter-spacing="-2">{'un backtest' if es else 'a backtest'}</text>
+  <text x="64" y="380" font-family="{FONT}" font-size="26" fill="{MUTED}">{'Simulador educativo · resultados reales de tres años' if es else 'Educational simulator · three years of real results'}</text>
+  <text x="64" y="420" font-family="{FONT}" font-size="26" fill="{MUTED}">{'Sin señales · sin ejecución real · código abierto' if es else 'No signals · no live execution · open source'}</text>
+  <line x1="64" x2="1136" y1="530" y2="530" stroke="{LINE}" stroke-width="1.5"/>
+  <text x="64" y="572" font-family="{FONT}" font-size="18" fill="{MUTED}">{'Material educativo · no es asesoramiento de inversión' if es else 'Educational material · not investment advice'}</text>
+  <text x="1136" y="572" text-anchor="end" font-family="{FONT}" font-size="18" font-weight="600" fill="{INK}">fx-trading-lab.pages.dev</text>
+</svg>"""
+
+
 def rasterise(svg: str, out: Path, width: int, height: int) -> None:
     from playwright.sync_api import sync_playwright
 
@@ -116,6 +142,7 @@ def main() -> None:
     rasterise(cover_svg("es"), out / "gumroad-cover-es.png", 1280, 720)
     rasterise(cover_svg("en"), out / "gumroad-cover-en.png", 1280, 720)
     rasterise(thumb_svg("es"), out / "gumroad-thumbnail.png", 600, 600)
+    rasterise(og_svg("es"), ROOT / "frontend" / "public" / "og.png", 1200, 630)
     print("covers written to", out)
 
 

@@ -3,6 +3,8 @@ import { useT } from '../i18n';
 const TEXT = {
   es: {
     tab: 'Aviso / Método',
+    h1: 'Método: cómo investigamos una estrategia',
+    h1Label: 'Aviso y método',
     noticeTitle: 'Aviso legal',
     notice: [
       'FX Research Lab es una herramienta educativa de investigación y backtesting. No constituye asesoramiento de inversión, no es un servicio de señales ni alertas, y no tiene conexión con ningún bróker ni ejecución real de órdenes.',
@@ -40,10 +42,12 @@ const TEXT = {
       'Los informes y CSV incluyen el hash del fichero de datos y de la configuración para que cualquiera pueda reproducir exactamente lo que ves.',
     ],
     stateTitle: 'Estado actual de la investigación',
-    state: 'Con datos reales de 2024 la hipótesis V1 genera muy pocas operaciones y un resultado neto negativo; la variante V1.1 (ventanas de Londres, stop distal) genera más operaciones pero no supera con claridad al benchmark aleatorio. Es decir: a día de hoy no hay evidencia de ventaja. Esta herramienta sirve para aprender a comprobar eso con rigor, no para operar.',
+    state: 'Con tres años de datos reales (2022–2024) ninguna versión muestra ventaja. V1 (ventanas 02:15–04:15): 15 operaciones, −1,30R. V1.1 (ventanas de Londres, stop distal): +2,35R en 2024, y después −8,01R en 2022 (peor que el 99 % de las entradas aleatorias) y −0,29R en 2023: 27 operaciones, −5,95R. El año bueno no se repitió, exactamente como avisaba el protocolo. V1.1 queda descartada como mejora y sigue publicada como ejemplo de falso positivo. Esta herramienta existe para aprender a comprobar eso con rigor, no para operar.',
   },
   en: {
     tab: 'Notice / Method',
+    h1: 'Method: how we research a strategy',
+    h1Label: 'Notice and method',
     noticeTitle: 'Legal notice',
     notice: [
       'FX Research Lab is an educational research and backtesting tool. It is not investment advice, not a trading signal or alert service, and it has no broker connection or live order execution.',
@@ -81,7 +85,7 @@ const TEXT = {
       'Reports and CSVs include the hash of the data file and of the configuration so anyone can reproduce exactly what you see.',
     ],
     stateTitle: 'Current state of the research',
-    state: 'On real 2024 data the V1 hypothesis produces very few trades and a negative net result; the V1.1 variant (London windows, distal stop) produces more trades but does not clearly beat the random benchmark. In other words: as of today there is no evidence of an edge. This tool exists to learn how to check that rigorously, not to trade.',
+    state: 'On three years of real data (2022–2024) neither version shows an edge. V1 (02:15–04:15 windows): 15 trades, −1.30R. V1.1 (London windows, distal stop): +2.35R in 2024, then −8.01R in 2022 (worse than 99 % of random entries) and −0.29R in 2023: 27 trades, −5.95R. The good year did not repeat, exactly as the protocol warned. V1.1 is discarded as an improvement and stays published as a worked example of a false positive. This tool exists to learn how to check that rigorously, not to trade.',
   },
 };
 
@@ -90,7 +94,8 @@ export function MethodPage() {
   const t = TEXT[lang];
   return (
     <article className="method">
-      <h1 className="page-title">{t.tab}</h1>
+      <p className="kicker">{t.h1Label}</p>
+      <h1 className="page-title">{t.h1}</h1>
       <h2>{t.noticeTitle}</h2>
       <div className="notice-box">{t.notice.map((p) => <p key={p.slice(0, 20)}>{p}</p>)}</div>
       <h2>{t.whatTitle}</h2>
