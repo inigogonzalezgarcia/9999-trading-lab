@@ -1,7 +1,1 @@
-# SPA routes that exist; anything else falls through to 404.html (served with a real 404 status).
-/lab            /index.html  200
-/lab/*          /index.html  200
-/lessons        /index.html  200
-/lessons/*      /index.html  200
-/method         /index.html  200
-/legal/*        /index.html  200
+/*  /index.html  200

@@ -37,9 +37,15 @@ function setMeta(selector: string, attr: string, value: string) {
   if (el) el.setAttribute(attr, value);
 }
 
+const KNOWN = /^\/(|lab(\/[^/]+)?|lessons(\/[^/]+)?|method|legal\/[^/]+)$/;
+
 export function useSeo(path: string, lang: Lang) {
   useEffect(() => {
     const meta = routeMeta(path, lang);
+    // Unknown routes are rendered by the SPA (Pages serves index.html for every path); keep them out of the index.
+    let robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; document.head.appendChild(robots); }
+    robots.content = KNOWN.test(path) ? 'index,follow' : 'noindex';
     document.title = meta.title;
     document.documentElement.lang = lang;
     setMeta('meta[name="description"]', 'content', meta.description);
