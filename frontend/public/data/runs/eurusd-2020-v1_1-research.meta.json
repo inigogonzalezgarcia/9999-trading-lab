@@ -1,0 +1,30 @@
+{
+ "id": "eurusd-2020-v1_1-research",
+ "kind": "research",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1_1.yaml",
+ "dataset_name": "EURUSD_2020.csv",
+ "dataset_hash": "90d92b779e1744ddc9de7bcef4f73ab5f016b0ee3ed73128609b4a8ffb28b9a5",
+ "label": {
+  "es": "Protocolo \u00b7 EUR/USD 2020 \u00b7 V1.1",
+  "en": "Protocol \u00b7 EUR/USD 2020 \u00b7 V1.1"
+ },
+ "description": {
+  "es": "El protocolo completo sobre 2020: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+  "en": "The full protocol on 2020: one more year for the pooled 2019\u20132025 reading."
+ },
+ "order": 180,
+ "created_at": "2026-11-05T09:29:54+00:00",
+ "summary": {
+  "trades": 15,
+  "expectancy_r": -0.006620916289499323,
+  "total_r": -0.09931374434248985,
+  "max_drawdown_r": 4.542087011349508,
+  "benchmark_percentile": 0.51,
+  "walk_forward_consistency": 0.3333333333333333
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2020-v1_1-research.pdf",
+ "sparkline": [],
+ "size_bytes": 43941
+}

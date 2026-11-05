@@ -1,0 +1,30 @@
+{
+ "id": "eurusd-2021-v1_1-research",
+ "kind": "research",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1_1.yaml",
+ "dataset_name": "EURUSD_2021.csv",
+ "dataset_hash": "99e96210436038da8e9a7f3d838126f8ada0975f9b5bd49199909fae96e4a3a5",
+ "label": {
+  "es": "Protocolo \u00b7 EUR/USD 2021 \u00b7 V1.1",
+  "en": "Protocol \u00b7 EUR/USD 2021 \u00b7 V1.1"
+ },
+ "description": {
+  "es": "El protocolo completo sobre 2021: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+  "en": "The full protocol on 2021: one more year for the pooled 2019\u20132025 reading."
+ },
+ "order": 210,
+ "created_at": "2026-11-05T09:32:47+00:00",
+ "summary": {
+  "trades": 7,
+  "expectancy_r": 0.5521087842451311,
+  "total_r": 3.8647614897159177,
+  "max_drawdown_r": 1.0,
+  "benchmark_percentile": 0.94,
+  "walk_forward_consistency": 0.6666666666666666
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2021-v1_1-research.pdf",
+ "sparkline": [],
+ "size_bytes": 42336
+}

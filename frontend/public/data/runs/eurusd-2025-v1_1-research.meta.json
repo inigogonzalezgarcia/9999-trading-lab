@@ -1,0 +1,30 @@
+{
+ "id": "eurusd-2025-v1_1-research",
+ "kind": "research",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1_1.yaml",
+ "dataset_name": "EURUSD_2025.csv",
+ "dataset_hash": "f3a0e1fdfdd06863017eb449a149db8e2dc05032f80a5ce5e8ccbf81030070ae",
+ "label": {
+  "es": "Protocolo \u00b7 EUR/USD 2025 \u00b7 V1.1",
+  "en": "Protocol \u00b7 EUR/USD 2025 \u00b7 V1.1"
+ },
+ "description": {
+  "es": "El protocolo completo sobre 2025: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+  "en": "The full protocol on 2025: one more year for the pooled 2019\u20132025 reading."
+ },
+ "order": 240,
+ "created_at": "2026-11-05T09:35:52+00:00",
+ "summary": {
+  "trades": 10,
+  "expectancy_r": -0.09554625436035571,
+  "total_r": -0.9554625436035571,
+  "max_drawdown_r": 1.8923078561926607,
+  "benchmark_percentile": 0.465,
+  "walk_forward_consistency": 0.5
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2025-v1_1-research.pdf",
+ "sparkline": [],
+ "size_bytes": 43536
+}

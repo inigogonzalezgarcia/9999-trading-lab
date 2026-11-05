@@ -1,0 +1,39 @@
+{
+ "id": "eurusd-2020-v1",
+ "kind": "backtest",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1.yaml",
+ "dataset_name": "EURUSD_2020.csv",
+ "dataset_hash": "90d92b779e1744ddc9de7bcef4f73ab5f016b0ee3ed73128609b4a8ffb28b9a5",
+ "label": {
+  "es": "EUR/USD 2020 \u00b7 V1 (l\u00ednea base)",
+  "en": "EUR/USD 2020 \u00b7 V1 (baseline)"
+ },
+ "description": {
+  "es": "Mismas reglas sobre 2020 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+  "en": "Same rules on 2020 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+ },
+ "order": 160,
+ "created_at": "2026-11-05T09:26:57+00:00",
+ "summary": {
+  "trades": 5,
+  "expectancy_r": -0.49566101404819357,
+  "total_r": -2.478305070240968,
+  "win_rate": 0.2,
+  "profit_factor": 0.054060073184130364,
+  "max_drawdown_r": 2.6199391737096835,
+  "candidates": 3080,
+  "blocked": false
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2020-v1.pdf",
+ "sparkline": [
+  0.0,
+  0.142,
+  -0.3,
+  -1.3,
+  -1.478,
+  -2.478
+ ],
+ "size_bytes": 2162092
+}

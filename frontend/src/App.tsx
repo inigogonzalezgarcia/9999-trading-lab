@@ -39,7 +39,7 @@ function NotFound() {
       <p className="muted">{es ? 'Puede que el enlace sea antiguo. Esto es lo que hay:' : 'The link may be old. Here is what exists:'}</p>
       <ul>
         <li><a href="/">{es ? 'Inicio' : 'Home'}</a></li>
-        <li><a href="/lab">{es ? 'Laboratorio (12 ejecuciones reales 2022–2024)' : 'Lab (12 real runs 2022–2024)'}</a></li>
+        <li><a href="/lab">{es ? 'Laboratorio (24 ejecuciones reales 2019–2025)' : 'Lab (24 real runs 2019–2025)'}</a></li>
         <li><a href="/lessons">{es ? 'Lecciones gratis' : 'Free lessons'}</a></li>
         <li><a href="/method">{es ? 'Método y aviso' : 'Method and notice'}</a></li>
       </ul>

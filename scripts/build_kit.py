@@ -43,7 +43,7 @@ from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemp
 
 from app.report import MUTED, _bar_chart, _line_chart, _styles, _table  # noqa: E402
 
-KIT_VERSION = "1.1"
+KIT_VERSION = "1.2"
 SITE = "https://fx-trading-lab.pages.dev"
 REPO = "https://github.com/inigogonzalezgarcia/9999-trading-lab"
 DISCLAIMER_URL = f"{SITE}/legal/aviso"
@@ -66,7 +66,7 @@ def load_results(results_dir: Path) -> dict[str, dict[str, Any]]:
             if path.exists():
                 runs[name] = json.loads(path.read_text())
                 break
-    for year in (2022, 2023):
+    for year in (2019, 2020, 2021, 2022, 2023, 2025):
         for candidate in (results_dir / f"EURUSD_{year}_v1_1_research.json", ROOT / "frontend" / "public" / "data" / "runs" / f"eurusd-{year}-v1_1-research.json"):
             if candidate.exists():
                 runs[f"v1_1_research_{year}"] = json.loads(candidate.read_text())
@@ -384,15 +384,18 @@ def epilogue(runs: dict[str, dict[str, Any]], lang: str) -> list[tuple[str, Any]
     """Chapter 13: what happened when the same rule met 2022 and 2023."""
     es = lang == "es"
     t = lambda a, b: a if es else b  # noqa: E731
-    years = {2024: runs["v1_1_research"], 2022: runs["v1_1_research_2022"], 2023: runs["v1_1_research_2023"]}
+    years = {2024: runs["v1_1_research"]}
+    for year in (2019, 2020, 2021, 2022, 2023, 2025):
+        if f"v1_1_research_{year}" in runs:
+            years[year] = runs[f"v1_1_research_{year}"]
     rows = [[t("Año", "Year"), "N", t("Total R", "Total R"), t("Esperanza", "Expectancy"), t("Acierto", "Win rate"), t("Percentil vs azar", "Percentile vs random"), t("Prob. de perder (MC)", "P(losing) (MC)")]]
     pooled_n, pooled_r = 0, 0.0
-    for year in (2022, 2023, 2024):
+    for year in sorted(years):
         b, bm, mc = years[year]["baseline"], years[year]["benchmark"], years[year]["monte_carlo"]
         rows.append([str(year), str(b["trades"]), r(b["total_r"]), r(b["expectancy_r"]), pct(b["win_rate"]), num(bm["baseline_percentile_vs_random"] * 100, 0) + " %", pct(mc["probability_losing"])])
         pooled_n += b["trades"]
         pooled_r += b["total_r"]
-    rows.append([t("Tres años", "Three years"), str(pooled_n), r(pooled_r), r(pooled_r / pooled_n), "", "", ""])
+    rows.append([t(f"{len(years)} años", f"{len(years)} years"), str(pooled_n), r(pooled_r), r(pooled_r / pooled_n), "", "", ""])
     b22 = years[2022]["baseline"]
     bt22 = runs.get("v1_1_backtest_2022")
     stops22 = (bt22 or {}).get("metrics", {}).get("exit_reasons", {}).get("STOP_LOSS")

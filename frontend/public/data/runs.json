@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T08:16:42+00:00",
+ "generated_at": "2026-11-05T09:35:53+00:00",
  "software_version": "0.5.0",
  "software_revision": "source-sha256:29ff5ab67875481c0f492df189079cf3ca8bc6b0a52693c4da4e2aaad34bb945",
  "notice": {
@@ -476,6 +476,453 @@
    "pdf": "runs/eurusd-2023-v1_1-research.pdf",
    "sparkline": [],
    "size_bytes": 41683
+  },
+  {
+   "id": "eurusd-2019-v1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1.yaml",
+   "dataset_name": "EURUSD_2019.csv",
+   "dataset_hash": "33a140e6ad7c52005a87e635644628cdde84888b20a4095aa64e712f728381de",
+   "label": {
+    "es": "EUR/USD 2019 \u00b7 V1 (l\u00ednea base)",
+    "en": "EUR/USD 2019 \u00b7 V1 (baseline)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2019 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2019 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 130,
+   "created_at": "2026-11-05T09:24:06+00:00",
+   "summary": {
+    "trades": 8,
+    "expectancy_r": 0.1268729297144051,
+    "total_r": 1.014983437715241,
+    "win_rate": 0.375,
+    "profit_factor": 1.4326980158684273,
+    "max_drawdown_r": 2.332076617689461,
+    "candidates": 3297,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2019-v1.pdf",
+   "sparkline": [
+    0.0,
+    -0.125,
+    -0.968,
+    -1.332,
+    -2.332,
+    -1.533,
+    -1.546,
+    0.454,
+    1.015
+   ],
+   "size_bytes": 2249776
+  },
+  {
+   "id": "eurusd-2019-v1_1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2019.csv",
+   "dataset_hash": "33a140e6ad7c52005a87e635644628cdde84888b20a4095aa64e712f728381de",
+   "label": {
+    "es": "EUR/USD 2019 \u00b7 V1.1 (experimento)",
+    "en": "EUR/USD 2019 \u00b7 V1.1 (experiment)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2019 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2019 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 140,
+   "created_at": "2026-11-05T09:24:11+00:00",
+   "summary": {
+    "trades": 5,
+    "expectancy_r": -0.16748911465897115,
+    "total_r": -0.8374455732948558,
+    "win_rate": 0.4,
+    "profit_factor": 0.7208514755683814,
+    "max_drawdown_r": 2.837445573294856,
+    "candidates": 2306,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2019-v1_1.pdf",
+   "sparkline": [
+    0.0,
+    -1.0,
+    -2.0,
+    -1.837,
+    -2.837,
+    -0.837
+   ],
+   "size_bytes": 2164227
+  },
+  {
+   "id": "eurusd-2019-v1_1-research",
+   "kind": "research",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2019.csv",
+   "dataset_hash": "33a140e6ad7c52005a87e635644628cdde84888b20a4095aa64e712f728381de",
+   "label": {
+    "es": "Protocolo \u00b7 EUR/USD 2019 \u00b7 V1.1",
+    "en": "Protocol \u00b7 EUR/USD 2019 \u00b7 V1.1"
+   },
+   "description": {
+    "es": "El protocolo completo sobre 2019: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+    "en": "The full protocol on 2019: one more year for the pooled 2019\u20132025 reading."
+   },
+   "order": 150,
+   "created_at": "2026-11-05T09:26:52+00:00",
+   "summary": {
+    "trades": 5,
+    "expectancy_r": -0.16748911465897115,
+    "total_r": -0.8374455732948558,
+    "max_drawdown_r": 2.837445573294856,
+    "benchmark_percentile": 0.45,
+    "walk_forward_consistency": 0.6666666666666666
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2019-v1_1-research.pdf",
+   "sparkline": [],
+   "size_bytes": 42509
+  },
+  {
+   "id": "eurusd-2020-v1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1.yaml",
+   "dataset_name": "EURUSD_2020.csv",
+   "dataset_hash": "90d92b779e1744ddc9de7bcef4f73ab5f016b0ee3ed73128609b4a8ffb28b9a5",
+   "label": {
+    "es": "EUR/USD 2020 \u00b7 V1 (l\u00ednea base)",
+    "en": "EUR/USD 2020 \u00b7 V1 (baseline)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2020 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2020 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 160,
+   "created_at": "2026-11-05T09:26:57+00:00",
+   "summary": {
+    "trades": 5,
+    "expectancy_r": -0.49566101404819357,
+    "total_r": -2.478305070240968,
+    "win_rate": 0.2,
+    "profit_factor": 0.054060073184130364,
+    "max_drawdown_r": 2.6199391737096835,
+    "candidates": 3080,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2020-v1.pdf",
+   "sparkline": [
+    0.0,
+    0.142,
+    -0.3,
+    -1.3,
+    -1.478,
+    -2.478
+   ],
+   "size_bytes": 2162092
+  },
+  {
+   "id": "eurusd-2020-v1_1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2020.csv",
+   "dataset_hash": "90d92b779e1744ddc9de7bcef4f73ab5f016b0ee3ed73128609b4a8ffb28b9a5",
+   "label": {
+    "es": "EUR/USD 2020 \u00b7 V1.1 (experimento)",
+    "en": "EUR/USD 2020 \u00b7 V1.1 (experiment)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2020 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2020 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 170,
+   "created_at": "2026-11-05T09:27:02+00:00",
+   "summary": {
+    "trades": 15,
+    "expectancy_r": -0.006620916289499323,
+    "total_r": -0.09931374434248985,
+    "win_rate": 0.4,
+    "profit_factor": 0.986433112703573,
+    "max_drawdown_r": 4.542087011349508,
+    "candidates": 2385,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2020-v1_1.pdf",
+   "sparkline": [
+    0.0,
+    0.078,
+    2.078,
+    1.885,
+    2.57,
+    2.443,
+    4.443,
+    3.443,
+    2.443,
+    2.901,
+    1.901,
+    0.901,
+    2.901,
+    1.901,
+    0.901,
+    -0.099
+   ],
+   "size_bytes": 2486538
+  },
+  {
+   "id": "eurusd-2020-v1_1-research",
+   "kind": "research",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2020.csv",
+   "dataset_hash": "90d92b779e1744ddc9de7bcef4f73ab5f016b0ee3ed73128609b4a8ffb28b9a5",
+   "label": {
+    "es": "Protocolo \u00b7 EUR/USD 2020 \u00b7 V1.1",
+    "en": "Protocol \u00b7 EUR/USD 2020 \u00b7 V1.1"
+   },
+   "description": {
+    "es": "El protocolo completo sobre 2020: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+    "en": "The full protocol on 2020: one more year for the pooled 2019\u20132025 reading."
+   },
+   "order": 180,
+   "created_at": "2026-11-05T09:29:54+00:00",
+   "summary": {
+    "trades": 15,
+    "expectancy_r": -0.006620916289499323,
+    "total_r": -0.09931374434248985,
+    "max_drawdown_r": 4.542087011349508,
+    "benchmark_percentile": 0.51,
+    "walk_forward_consistency": 0.3333333333333333
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2020-v1_1-research.pdf",
+   "sparkline": [],
+   "size_bytes": 43941
+  },
+  {
+   "id": "eurusd-2021-v1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1.yaml",
+   "dataset_name": "EURUSD_2021.csv",
+   "dataset_hash": "99e96210436038da8e9a7f3d838126f8ada0975f9b5bd49199909fae96e4a3a5",
+   "label": {
+    "es": "EUR/USD 2021 \u00b7 V1 (l\u00ednea base)",
+    "en": "EUR/USD 2021 \u00b7 V1 (baseline)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2021 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2021 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 190,
+   "created_at": "2026-11-05T09:30:00+00:00",
+   "summary": {
+    "trades": 1,
+    "expectancy_r": 0.3702930326440945,
+    "total_r": 0.3702930326440945,
+    "win_rate": 1.0,
+    "profit_factor": null,
+    "max_drawdown_r": 0.0,
+    "candidates": 2803,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2021-v1.pdf",
+   "sparkline": [
+    0.0,
+    0.37
+   ],
+   "size_bytes": 2034663
+  },
+  {
+   "id": "eurusd-2021-v1_1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2021.csv",
+   "dataset_hash": "99e96210436038da8e9a7f3d838126f8ada0975f9b5bd49199909fae96e4a3a5",
+   "label": {
+    "es": "EUR/USD 2021 \u00b7 V1.1 (experimento)",
+    "en": "EUR/USD 2021 \u00b7 V1.1 (experiment)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2021 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2021 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 200,
+   "created_at": "2026-11-05T09:30:05+00:00",
+   "summary": {
+    "trades": 7,
+    "expectancy_r": 0.5521087842451311,
+    "total_r": 3.8647614897159177,
+    "win_rate": 0.7142857142857143,
+    "profit_factor": 2.932380744857959,
+    "max_drawdown_r": 1.0,
+    "candidates": 2114,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2021-v1_1.pdf",
+   "sparkline": [
+    0.0,
+    0.265,
+    2.265,
+    1.265,
+    2.106,
+    4.106,
+    3.106,
+    3.865
+   ],
+   "size_bytes": 2233156
+  },
+  {
+   "id": "eurusd-2021-v1_1-research",
+   "kind": "research",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2021.csv",
+   "dataset_hash": "99e96210436038da8e9a7f3d838126f8ada0975f9b5bd49199909fae96e4a3a5",
+   "label": {
+    "es": "Protocolo \u00b7 EUR/USD 2021 \u00b7 V1.1",
+    "en": "Protocol \u00b7 EUR/USD 2021 \u00b7 V1.1"
+   },
+   "description": {
+    "es": "El protocolo completo sobre 2021: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+    "en": "The full protocol on 2021: one more year for the pooled 2019\u20132025 reading."
+   },
+   "order": 210,
+   "created_at": "2026-11-05T09:32:47+00:00",
+   "summary": {
+    "trades": 7,
+    "expectancy_r": 0.5521087842451311,
+    "total_r": 3.8647614897159177,
+    "max_drawdown_r": 1.0,
+    "benchmark_percentile": 0.94,
+    "walk_forward_consistency": 0.6666666666666666
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2021-v1_1-research.pdf",
+   "sparkline": [],
+   "size_bytes": 42336
+  },
+  {
+   "id": "eurusd-2025-v1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1.yaml",
+   "dataset_name": "EURUSD_2025.csv",
+   "dataset_hash": "f3a0e1fdfdd06863017eb449a149db8e2dc05032f80a5ce5e8ccbf81030070ae",
+   "label": {
+    "es": "EUR/USD 2025 \u00b7 V1 (l\u00ednea base)",
+    "en": "EUR/USD 2025 \u00b7 V1 (baseline)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2025 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2025 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 220,
+   "created_at": "2026-11-05T09:32:53+00:00",
+   "summary": {
+    "trades": 4,
+    "expectancy_r": -0.3057582316236771,
+    "total_r": -1.2230329264947084,
+    "win_rate": 0.25,
+    "profit_factor": 0.2546862355313732,
+    "max_drawdown_r": 1.3840696244445105,
+    "candidates": 3426,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2025-v1.pdf",
+   "sparkline": [
+    0.0,
+    -0.257,
+    0.161,
+    -0.839,
+    -1.223
+   ],
+   "size_bytes": 2126882
+  },
+  {
+   "id": "eurusd-2025-v1_1",
+   "kind": "backtest",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2025.csv",
+   "dataset_hash": "f3a0e1fdfdd06863017eb449a149db8e2dc05032f80a5ce5e8ccbf81030070ae",
+   "label": {
+    "es": "EUR/USD 2025 \u00b7 V1.1 (experimento)",
+    "en": "EUR/USD 2025 \u00b7 V1.1 (experiment)"
+   },
+   "description": {
+    "es": "Mismas reglas sobre 2025 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hip\u00f3tesis nunca vio.",
+    "en": "Same rules on 2025 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+   },
+   "order": 230,
+   "created_at": "2026-11-05T09:32:57+00:00",
+   "summary": {
+    "trades": 10,
+    "expectancy_r": -0.09554625436035571,
+    "total_r": -0.9554625436035571,
+    "win_rate": 0.5,
+    "profit_factor": 0.7837810231084423,
+    "max_drawdown_r": 1.8923078561926607,
+    "candidates": 2578,
+    "blocked": false
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2025-v1_1.pdf",
+   "sparkline": [
+    0.0,
+    -1.0,
+    -0.718,
+    -1.718,
+    -0.852,
+    -0.473,
+    -0.892,
+    -1.892,
+    -1.064,
+    0.045,
+    -0.955
+   ],
+   "size_bytes": 2352128
+  },
+  {
+   "id": "eurusd-2025-v1_1-research",
+   "kind": "research",
+   "symbol": "EURUSD",
+   "strategy": "strategy_v1_1.yaml",
+   "dataset_name": "EURUSD_2025.csv",
+   "dataset_hash": "f3a0e1fdfdd06863017eb449a149db8e2dc05032f80a5ce5e8ccbf81030070ae",
+   "label": {
+    "es": "Protocolo \u00b7 EUR/USD 2025 \u00b7 V1.1",
+    "en": "Protocol \u00b7 EUR/USD 2025 \u00b7 V1.1"
+   },
+   "description": {
+    "es": "El protocolo completo sobre 2025: un a\u00f1o m\u00e1s para la lectura conjunta 2019\u20132025.",
+    "en": "The full protocol on 2025: one more year for the pooled 2019\u20132025 reading."
+   },
+   "order": 240,
+   "created_at": "2026-11-05T09:35:52+00:00",
+   "summary": {
+    "trades": 10,
+    "expectancy_r": -0.09554625436035571,
+    "total_r": -0.9554625436035571,
+    "max_drawdown_r": 1.8923078561926607,
+    "benchmark_percentile": 0.465,
+    "walk_forward_consistency": 0.5
+   },
+   "software_version": "0.5.0",
+   "pdf": "runs/eurusd-2025-v1_1-research.pdf",
+   "sparkline": [],
+   "size_bytes": 43536
   }
  ]
 }

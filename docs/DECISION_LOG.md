@@ -179,3 +179,20 @@
   before any single year is read.
 - **Decision:** The site shows the three years side by side (home evidence band and catalogue) and the kit gets
   a 2022–2023 epilogue, because "the good year did not repeat" is the most useful lesson the lab has produced.
+
+## 2026-11-05 — Seven years on EUR/USD (2019–2025): no edge, and a clean picture of noise (v0.5.3)
+
+- **Data:** HistData M1 for 2019, 2020, 2021 and 2025 added (same converter, fixed 0.3-pip spread). London-open
+  hours complete; gaps only in quiet hours.
+- **V1.1 by year (N, total R, percentile vs random, P(losing) MC):** 2019: 5, −0.84R, 45 %, 63 % · 2020: 15,
+  −0.10R, 51 %, 52 % · 2021: 7, **+3.86R**, 94 %, 11 % · 2022: 11, **−8.01R**, 1 %, 100 % · 2023: 4, −0.29R,
+  52 %, 62 % · 2024: 12, **+2.35R**, 76 %, 28 % · 2025: 10, −0.96R, 46 %, 62 %. **Pooled: 64 trades, −3.98R,
+  expectancy −0.06R.** Median year percentile vs random: 51 %.
+- **V1 pooled:** 33 trades, −3.62R.
+- **Reading:** two good years out of seven, one catastrophic, four flat: the distribution of a rule with zero
+  expectancy minus costs. 2021 looks like 2024 did (+3.86R on 7 trades, percentile 94) and would have been
+  "promising" on its own; it is followed by the worst year. Sensitivity in 2021 flips the other way
+  (leg1_origin +9.79R, sweep_extreme +7.28R), confirming that the stop parameter only fits each year after the fact.
+- **Decision:** verdict of 2026-10-30 confirmed and closed. No further parameter work on V1/V1.1. The seven-year
+  table becomes the lab's reference example of a false positive and goes into the home band, the method page,
+  the lessons and kit v1.2.
