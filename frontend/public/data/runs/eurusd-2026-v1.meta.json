@@ -1,0 +1,37 @@
+{
+ "id": "eurusd-2026-v1",
+ "kind": "backtest",
+ "symbol": "EURUSD",
+ "strategy": "strategy_v1.yaml",
+ "dataset_name": "EURUSD_2026.csv",
+ "dataset_hash": "e562bfa6a5c51b176aaa863e5855fe18802124ed864b8fb4f3664ce9f38f5b8f",
+ "label": {
+  "es": "EUR/USD 2026 (hasta octubre) \u00b7 V1 (l\u00ednea base)",
+  "en": "EUR/USD 2026 (to October) \u00b7 V1 (baseline)"
+ },
+ "description": {
+  "es": "A\u00f1o en curso (datos HistData mensuales, 0,3 pips fijos). Se actualiza cada mes.",
+  "en": "Current year (monthly HistData files, fixed 0.3 pips). Updated every month."
+ },
+ "order": 250,
+ "created_at": "2026-11-05T09:54:00+00:00",
+ "summary": {
+  "trades": 3,
+  "expectancy_r": -0.35797480588767566,
+  "total_r": -1.073924417663027,
+  "win_rate": 0.3333333333333333,
+  "profit_factor": 0.3333451488707745,
+  "max_drawdown_r": 1.6109151772374273,
+  "candidates": 2610,
+  "blocked": false
+ },
+ "software_version": "0.5.0",
+ "pdf": "runs/eurusd-2026-v1.pdf",
+ "sparkline": [
+  0.0,
+  0.537,
+  -0.074,
+  -1.074
+ ],
+ "size_bytes": 1751697
+}

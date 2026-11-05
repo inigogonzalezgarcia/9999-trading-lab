@@ -43,7 +43,7 @@ from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemp
 
 from app.report import MUTED, _bar_chart, _line_chart, _styles, _table  # noqa: E402
 
-KIT_VERSION = "1.2"
+KIT_VERSION = "1.3"
 SITE = "https://fx-trading-lab.pages.dev"
 REPO = "https://github.com/inigogonzalezgarcia/9999-trading-lab"
 DISCLAIMER_URL = f"{SITE}/legal/aviso"
@@ -66,7 +66,7 @@ def load_results(results_dir: Path) -> dict[str, dict[str, Any]]:
             if path.exists():
                 runs[name] = json.loads(path.read_text())
                 break
-    for year in (2019, 2020, 2021, 2022, 2023, 2025):
+    for year in (2019, 2020, 2021, 2022, 2023, 2025, 2026):
         for candidate in (results_dir / f"EURUSD_{year}_v1_1_research.json", ROOT / "frontend" / "public" / "data" / "runs" / f"eurusd-{year}-v1_1-research.json"):
             if candidate.exists():
                 runs[f"v1_1_research_{year}"] = json.loads(candidate.read_text())
@@ -385,7 +385,7 @@ def epilogue(runs: dict[str, dict[str, Any]], lang: str) -> list[tuple[str, Any]
     es = lang == "es"
     t = lambda a, b: a if es else b  # noqa: E731
     years = {2024: runs["v1_1_research"]}
-    for year in (2019, 2020, 2021, 2022, 2023, 2025):
+    for year in (2019, 2020, 2021, 2022, 2023, 2025, 2026):
         if f"v1_1_research_{year}" in runs:
             years[year] = runs[f"v1_1_research_{year}"]
     rows = [[t("Año", "Year"), "N", t("Total R", "Total R"), t("Esperanza", "Expectancy"), t("Acierto", "Win rate"), t("Percentil vs azar", "Percentile vs random"), t("Prob. de perder (MC)", "P(losing) (MC)")]]

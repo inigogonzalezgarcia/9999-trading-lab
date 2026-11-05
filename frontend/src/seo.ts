@@ -17,8 +17,8 @@ export function routeMeta(path: string, lang: Lang): Meta {
   const legal = LEGAL.find((l) => path === `/legal/${l.slug}`);
   if (legal) return { title: (es ? legal.title.es : legal.title.en) + SUFFIX, description: es ? 'Información legal de FX Research Lab, simulador educativo.' : 'Legal information for FX Research Lab, an educational simulator.' };
   if (path === '/lab' || path.startsWith('/lab/')) {
-    return { title: (es ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2019–2025' : 'Backtesting lab: EUR/USD and GBP/USD 2019–2025') + SUFFIX,
-      description: es ? 'Veinticuatro ejecuciones reales de una hipótesis intradía sobre siete años: curva de capital, cada operación explicada en su gráfico, Monte Carlo, benchmark aleatorio, sensibilidad y walk-forward.' : 'Twenty-four real runs of an intraday hypothesis over seven years: equity curve, every trade explained on its chart, Monte Carlo, random benchmark, sensitivity and walk-forward.' };
+    return { title: (es ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2019–2026' : 'Backtesting lab: EUR/USD and GBP/USD 2019–2026') + SUFFIX,
+      description: es ? 'Veintisiete ejecuciones reales de una hipótesis intradía sobre ocho años: curva de capital, cada operación explicada en su gráfico, Monte Carlo, benchmark aleatorio, sensibilidad y walk-forward.' : 'Twenty-seven real runs of an intraday hypothesis over eight years: equity curve, every trade explained on its chart, Monte Carlo, random benchmark, sensitivity and walk-forward.' };
   }
   if (path === '/lessons') {
     return { title: (es ? 'Cómo leer un backtest, paso a paso: lecciones gratis' : 'How to read a backtest, step by step: free lessons') + SUFFIX,

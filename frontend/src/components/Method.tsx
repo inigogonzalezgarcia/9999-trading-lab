@@ -42,7 +42,7 @@ const TEXT = {
       'Los informes y CSV incluyen el hash del fichero de datos y de la configuración para que cualquiera pueda reproducir exactamente lo que ves.',
     ],
     stateTitle: 'Estado actual de la investigación',
-    state: 'Con siete años de datos reales (2019–2025) ninguna versión muestra ventaja. V1 (ventanas 02:15–04:15): 33 operaciones, −3,62R. V1.1 (ventanas de Londres, stop distal): 64 operaciones, −3,98R, esperanza −0,06R por operación; dos años buenos (+3,86R en 2021, +2,35R en 2024), uno desastroso (−8,01R en 2022, peor que el 99 % de las entradas aleatorias) y cuatro planos. Frente a entradas aleatorias con las mismas salidas y costes, la mediana de los siete años queda en el percentil 51: una moneda. V1.1 queda descartada como mejora y sigue publicada como ejemplo de falso positivo. Esta herramienta existe para aprender a comprobar eso con rigor, no para operar.',
+    state: 'Con ocho años de datos reales (2019–2026, el último hasta octubre) ninguna versión muestra ventaja. V1 (ventanas 02:15–04:15): 36 operaciones, −4,69R. V1.1 (ventanas de Londres, stop distal): 67 operaciones, −2,04R, esperanza −0,03R por operación; tres años buenos (+3,86R en 2021, +2,35R en 2024, +1,94R en 2026 con solo 3 operaciones), uno desastroso (−8,01R en 2022, peor que el 99 % de las entradas aleatorias) y cuatro planos. Frente a entradas aleatorias con las mismas salidas y costes, la mediana de los años queda en el percentil 51: una moneda. V1.1 queda descartada como mejora y sigue publicada como ejemplo de falso positivo. Esta herramienta existe para aprender a comprobar eso con rigor, no para operar.',
   },
   en: {
     tab: 'Notice / Method',
@@ -85,7 +85,7 @@ const TEXT = {
       'Reports and CSVs include the hash of the data file and of the configuration so anyone can reproduce exactly what you see.',
     ],
     stateTitle: 'Current state of the research',
-    state: 'On seven years of real data (2019–2025) neither version shows an edge. V1 (02:15–04:15 windows): 33 trades, −3.62R. V1.1 (London windows, distal stop): 64 trades, −3.98R, expectancy −0.06R per trade; two good years (+3.86R in 2021, +2.35R in 2024), one disastrous (−8.01R in 2022, worse than 99 % of random entries) and four flat. Against random entries with the same exits and costs, the median year sits at the 51st percentile: a coin toss. V1.1 is discarded as an improvement and stays published as a worked example of a false positive. This tool exists to learn how to check that rigorously, not to trade.',
+    state: 'On eight years of real data (2019–2026, the last one to October) neither version shows an edge. V1 (02:15–04:15 windows): 36 trades, −4.69R. V1.1 (London windows, distal stop): 67 trades, −2.04R, expectancy −0.03R per trade; three good years (+3.86R in 2021, +2.35R in 2024, +1.94R in 2026 on only 3 trades), one disastrous (−8.01R in 2022, worse than 99 % of random entries) and four flat. Against random entries with the same exits and costs, the median year sits at the 51st percentile: a coin toss. V1.1 is discarded as an improvement and stays published as a worked example of a false positive. This tool exists to learn how to check that rigorously, not to trade.',
   },
 };
 

@@ -196,3 +196,10 @@
 - **Decision:** verdict of 2026-10-30 confirmed and closed. No further parameter work on V1/V1.1. The seven-year
   table becomes the lab's reference example of a false positive and goes into the home band, the method page,
   the lessons and kit v1.2.
+
+## 2026-11-05 — 2026 to date (January–October) added
+
+- **Data:** HistData publishes the current year as monthly files; `scripts/fetch_histdata.py` downloads the months
+  available and concatenates them (307,869 rows, 2026-01-01 → 2026-10-30). Re-run monthly to extend.
+- **Result:** V1 3 trades −1.07R · V1.1 3 trades +1.94R (percentile 86 % vs random, MC P(losing) 14 %).
+  Eight years pooled, V1.1: 67 trades, −2.04R; V1: 36 trades, −4.69R. Three trades do not move the verdict.

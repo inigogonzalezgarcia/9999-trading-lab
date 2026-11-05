@@ -69,7 +69,7 @@ export function HomePage() {
           <div className="ev verdict">
             <span className="ev-label">{lang === 'es' ? 'Veredicto del protocolo' : 'Protocol verdict'}</span>
             <span className="ev-value">{lang === 'es' ? 'Sin evidencia' : 'No evidence'}</span>
-            <span className="ev-note">{lang === 'es' ? 'Siete años de datos reales (2019–2025): 64 operaciones, −3,98R. Los años buenos no se repiten. Eso es lo que te enseñamos a comprobar.' : 'Seven years of real data (2019–2025): 64 trades, −3.98R. The good years do not repeat. That is what we teach you to check.'}</span>
+            <span className="ev-note">{lang === 'es' ? 'Ocho años de datos reales (2019–2026): 67 operaciones, −2,04R. Los años buenos no se repiten. Eso es lo que te enseñamos a comprobar.' : 'Eight years of real data (2019–2026): 67 trades, −2.04R. The good years do not repeat. That is what we teach you to check.'}</span>
           </div>
         </section>
       )}

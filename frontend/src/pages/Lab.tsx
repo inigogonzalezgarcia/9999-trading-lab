@@ -212,7 +212,7 @@ export function LabPage({ runId }: { runId?: string }) {
   return (
     <>
       {offline && !STATIC_MODE && <p className="error">{t('lab.offline')} <code>uvicorn backend.app.main:app --reload --port 8000</code> / <code>docker compose up</code>.</p>}
-      <h1 className="visually-hidden">{lang === 'es' ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2019–2025' : 'Backtesting lab: EUR/USD and GBP/USD 2019–2025'}</h1>
+      <h1 className="visually-hidden">{lang === 'es' ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2019–2026' : 'Backtesting lab: EUR/USD and GBP/USD 2019–2026'}</h1>
       <main className={`layout ${loaded ? 'has-result' : ''}`}>
         {STATIC_MODE ? catalogue : form}
         <section className="content">

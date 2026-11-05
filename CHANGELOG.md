@@ -2,6 +2,7 @@
 
 ## 0.5.3 — 2026-11-05
 
+- EUR/USD 2026 to date (HistData monthly files; the fetcher falls back to monthly downloads for the current year). 27 runs; texts and kit v1.3 on 2019–2026.
 - EUR/USD 2019, 2020, 2021 and 2025 runs (HistData, fixed 0.3-pip spread): 24 runs published. Home band, method state, titles and kit v1.2 epilogue updated to the seven-year reading (V1.1: 64 trades, −3.98R). Decision logged.
 
 ## 0.5.2 — 2026-11-05
