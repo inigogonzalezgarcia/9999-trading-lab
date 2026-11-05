@@ -41,7 +41,7 @@ def page_url(symbol: str, year: int) -> str:
     return f"{BASE}/download-free-forex-historical-data/?/ascii/1-minute-bar-quotes/{symbol.lower()}/{year}"
 
 
-def _download(url: str, zip_path: Path, label: str) -> Path | None:
+def _download(url: str, zip_path: Path, label: str, strict: bool = True) -> Path | None:
     """Fill HistData's form on ``url`` and save the zip; None when the month/year is not published yet."""
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=60, context=SSL_CONTEXT) as resp:
@@ -54,6 +54,8 @@ def _download(url: str, zip_path: Path, label: str) -> Path | None:
     with urllib.request.urlopen(req, timeout=300, context=SSL_CONTEXT) as resp:
         payload = resp.read()
     if not payload.startswith(b"PK"):
+        if not strict:
+            return None  # the whole-year file is not published (current year): fall back to monthly files
         raise SystemExit(f"{label}: the server answered with HTML instead of a zip (token rejected?). Try again in a minute.")
     zip_path.write_bytes(payload)
     print(f"  {zip_path.name}: {len(payload) / 1e6:.1f} MB")
@@ -66,7 +68,7 @@ def fetch_year(symbol: str, year: int, out_dir: Path) -> list[Path]:
     if zip_path.exists() and zip_path.stat().st_size > 100_000:
         print(f"  {zip_path.name}: already downloaded")
         return [zip_path]
-    got = _download(page_url(symbol, year), zip_path, f"{symbol} {year}")
+    got = _download(page_url(symbol, year), zip_path, f"{symbol} {year}", strict=False)
     if got:
         return [got]
     parts: list[Path] = []
