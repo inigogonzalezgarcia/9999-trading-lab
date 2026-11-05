@@ -41,34 +41,58 @@ def page_url(symbol: str, year: int) -> str:
     return f"{BASE}/download-free-forex-historical-data/?/ascii/1-minute-bar-quotes/{symbol.lower()}/{year}"
 
 
-def fetch_year(symbol: str, year: int, out_dir: Path) -> Path:
-    zip_path = out_dir / f"DAT_ASCII_{symbol}_M1_{year}.zip"
-    if zip_path.exists() and zip_path.stat().st_size > 100_000:
-        print(f"  {zip_path.name}: already downloaded")
-        return zip_path
-    url = page_url(symbol, year)
+def _download(url: str, zip_path: Path, label: str) -> Path | None:
+    """Fill HistData's form on ``url`` and save the zip; None when the month/year is not published yet."""
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=60, context=SSL_CONTEXT) as resp:
         html = resp.read().decode("utf-8", "replace")
     fields = dict(re.findall(r'<input[^>]+name="(tk|date|datemonth|platform|timeframe|fxpair)"[^>]+value="([^"]*)"', html))
     if "tk" not in fields:
-        raise SystemExit(f"could not find the download token on {url}; the page layout may have changed")
+        return None
     data = urllib.parse.urlencode(fields).encode()
     req = urllib.request.Request(f"{BASE}/get.php", data=data, headers={"User-Agent": UA, "Referer": url, "Content-Type": "application/x-www-form-urlencoded", "Origin": BASE})
     with urllib.request.urlopen(req, timeout=300, context=SSL_CONTEXT) as resp:
         payload = resp.read()
     if not payload.startswith(b"PK"):
-        raise SystemExit(f"{symbol} {year}: the server answered with HTML instead of a zip (token rejected?). Try again in a minute.")
+        raise SystemExit(f"{label}: the server answered with HTML instead of a zip (token rejected?). Try again in a minute.")
     zip_path.write_bytes(payload)
     print(f"  {zip_path.name}: {len(payload) / 1e6:.1f} MB")
     return zip_path
 
 
-def convert_year(symbol: str, year: int, zip_path: Path, raw_dir: Path) -> Path:
-    with zipfile.ZipFile(io.BytesIO(zip_path.read_bytes())) as zf:
-        name = next(n for n in zf.namelist() if n.lower().endswith(".csv"))
-        csv_path = zip_path.with_suffix(".csv")
-        csv_path.write_bytes(zf.read(name))
+def fetch_year(symbol: str, year: int, out_dir: Path) -> list[Path]:
+    """Whole-year zip for past years; for the current year HistData publishes one zip per month."""
+    zip_path = out_dir / f"DAT_ASCII_{symbol}_M1_{year}.zip"
+    if zip_path.exists() and zip_path.stat().st_size > 100_000:
+        print(f"  {zip_path.name}: already downloaded")
+        return [zip_path]
+    got = _download(page_url(symbol, year), zip_path, f"{symbol} {year}")
+    if got:
+        return [got]
+    parts: list[Path] = []
+    for month in range(1, 13):
+        part = out_dir / f"DAT_ASCII_{symbol}_M1_{year}{month:02d}.zip"
+        if part.exists() and part.stat().st_size > 10_000:
+            parts.append(part)
+            continue
+        got = _download(f"{page_url(symbol, year)}/{month}", part, f"{symbol} {year}-{month:02d}")
+        if got is None:
+            break
+        parts.append(got)
+        time.sleep(1)
+    if not parts:
+        raise SystemExit(f"{symbol} {year}: nothing published on HistData yet")
+    print(f"  {symbol} {year}: {len(parts)} monthly files")
+    return parts
+
+
+def convert_year(symbol: str, year: int, zip_paths: list[Path], raw_dir: Path) -> Path:
+    csv_path = zip_paths[0].parent / f"DAT_ASCII_{symbol}_M1_{year}.csv"
+    with csv_path.open("wb") as merged:
+        for zip_path in zip_paths:  # monthly files concatenate cleanly: same format, chronological
+            with zipfile.ZipFile(io.BytesIO(zip_path.read_bytes())) as zf:
+                name = next(n for n in zf.namelist() if n.lower().endswith(".csv"))
+                merged.write(zf.read(name))
     out = raw_dir / f"{symbol}_{year}.csv"
     report = convert_histdata(csv_path, out, symbol=symbol)
     rows = report.get("rows") or report.get("quality", {}).get("rows")
@@ -87,8 +111,8 @@ def main() -> None:
     for year in args.years:
         for symbol in args.symbols:
             print(f"== {symbol} {year}")
-            zip_path = fetch_year(symbol, year, out_dir)
-            convert_year(symbol, year, zip_path, args.raw_dir)
+            zip_paths = fetch_year(symbol, year, out_dir)
+            convert_year(symbol, year, zip_paths, args.raw_dir)
             time.sleep(2)
     print("done. Next: python -m backend.cli validate data/raw/EURUSD_2022.csv  (expect spread_available: no)")
 

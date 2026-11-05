@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/.." || exit 1
 if [ -f .venv/bin/activate ]; then . .venv/bin/activate; fi
 LOG="data/run_history.log"
-ONLY="${ONLY:-eurusd-2019-v1 eurusd-2019-v1_1 eurusd-2019-v1_1-research eurusd-2020-v1 eurusd-2020-v1_1 eurusd-2020-v1_1-research eurusd-2021-v1 eurusd-2021-v1_1 eurusd-2021-v1_1-research eurusd-2025-v1 eurusd-2025-v1_1 eurusd-2025-v1_1-research}"
+ONLY="${ONLY:-eurusd-2026-v1 eurusd-2026-v1_1 eurusd-2026-v1_1-research}"
 echo "FX Research Lab — exporting: $ONLY (log: $LOG)"
 caffeinate -i python -m backend.cli export-web --only $ONLY 2>&1 | tee -a "$LOG"
 echo "=== done $(date)"

@@ -293,3 +293,40 @@ runs:
     description:
       es: "El protocolo completo sobre 2025: un año más para la lectura conjunta 2019–2025."
       en: "The full protocol on 2025: one more year for the pooled 2019–2025 reading."
+  - id: eurusd-2026-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2026.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 250
+    label: {es: "EUR/USD 2026 (hasta octubre) · V1 (línea base)", en: "EUR/USD 2026 (to October) · V1 (baseline)"}
+    description:
+      es: "Año en curso (datos HistData mensuales, 0,3 pips fijos). Se actualiza cada mes."
+      en: "Current year (monthly HistData files, fixed 0.3 pips). Updated every month."
+  - id: eurusd-2026-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2026.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 260
+    label: {es: "EUR/USD 2026 (hasta octubre) · V1.1 (experimento)", en: "EUR/USD 2026 (to October) · V1.1 (experiment)"}
+    description:
+      es: "Año en curso (datos HistData mensuales, 0,3 pips fijos). Se actualiza cada mes."
+      en: "Current year (monthly HistData files, fixed 0.3 pips). Updated every month."
+  - id: eurusd-2026-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2026.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 270
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2026 (hasta octubre) · V1.1", en: "Protocol · EUR/USD 2026 (to October) · V1.1"}
+    description:
+      es: "El protocolo sobre el año en curso: octavo año de la lectura conjunta 2019–2026."
+      en: "The protocol on the current year: eighth year of the pooled 2019–2026 reading."
