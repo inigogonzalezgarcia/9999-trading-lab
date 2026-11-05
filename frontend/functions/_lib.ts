@@ -19,6 +19,8 @@ export interface D1Database { prepare(query: string): D1PreparedStatement; batch
 export interface Env {
   DB?: D1Database;
   SESSION_SECRET?: string;
+  /** Alias accepted for the same value (name used in the dashboard). */
+  SECRET_SESSION?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   BREVO_API_KEY?: string;
@@ -35,6 +37,8 @@ export const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 
 export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers } });
+
+export const sessionSecret = (env: Env): string | undefined => env.SESSION_SECRET ?? env.SECRET_SESSION;
 
 export const siteUrl = (request: Request, env: Env) => env.SITE_URL ?? new URL(request.url).origin;
 
@@ -83,7 +87,7 @@ async function hmac(secret: string, data: string): Promise<string> {
 /* ---------- sessions ---------- */
 export async function sessionCookie(env: Env, uid: string): Promise<string> {
   const payload = b64url(enc.encode(JSON.stringify({ uid, exp: Date.now() + SESSION_DAYS * 86400_000 })));
-  const sig = await hmac(env.SESSION_SECRET!, payload);
+  const sig = await hmac(sessionSecret(env)!, payload);
   return `${SESSION_COOKIE}=${payload}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}`;
 }
 export const clearSessionCookie = () => `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
@@ -98,12 +102,13 @@ function readCookie(request: Request, name: string): string | null {
 }
 
 export async function sessionUserId(request: Request, env: Env): Promise<string | null> {
-  if (!env.SESSION_SECRET) return null;
+  const secret = sessionSecret(env);
+  if (!secret) return null;
   const cookie = readCookie(request, SESSION_COOKIE);
   if (!cookie) return null;
   const [payload, sig] = cookie.split('.');
   if (!payload || !sig) return null;
-  const expected = await hmac(env.SESSION_SECRET, payload);
+  const expected = await hmac(secret, payload);
   if (expected.length !== sig.length || expected !== sig) return null;
   try {
     const data = JSON.parse(b64urlDecode(payload)) as { uid: string; exp: number };

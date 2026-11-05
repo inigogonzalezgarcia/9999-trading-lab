@@ -1,10 +1,10 @@
-import { ensureSchema, sessionCookie, sha256, siteUrl, upsertUser, type PagesContext } from '../../../_lib';
+import { ensureSchema, sessionCookie, sessionSecret, sha256, siteUrl, type PagesContext, upsertUser } from '../../../_lib';
 
 /** GET /api/auth/magic/verify?t=token&next=/app → consumes the token and opens a session. */
 export const onRequestGet = async ({ request, env }: PagesContext): Promise<Response> => {
   const origin = siteUrl(request, env);
   const fail = (reason: string) => new Response(null, { status: 302, headers: { location: `${origin}/entrar?error=${reason}`, 'cache-control': 'no-store' } });
-  if (!env.DB || !env.SESSION_SECRET) return fail('not_configured');
+  if (!env.DB || !sessionSecret(env)) return fail('not_configured');
   const url = new URL(request.url);
   const token = url.searchParams.get('t');
   const next = (url.searchParams.get('next') ?? '/app').replace(/[^a-zA-Z0-9/_-]/g, '').slice(0, 100) || '/app';

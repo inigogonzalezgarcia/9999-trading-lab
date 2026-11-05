@@ -1,8 +1,8 @@
-import { ensureSchema, getUser, json, sessionUserId, type PagesContext } from '../_lib';
+import { ensureSchema, getUser, json, sessionSecret, sessionUserId, type PagesContext } from '../_lib';
 
 /** GET /api/me → {user, progress} for the session, or {user: null}. PUT /api/me {progress} → saves the simulator progress. */
 export const onRequestGet = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!env.DB || !env.SESSION_SECRET) return json({ user: null, configured: false });
+  if (!env.DB || !sessionSecret(env)) return json({ user: null, configured: false });
   const uid = await sessionUserId(request, env);
   if (!uid) return json({ user: null, configured: true });
   await ensureSchema(env.DB);
@@ -15,7 +15,7 @@ export const onRequestGet = async ({ request, env }: PagesContext): Promise<Resp
 };
 
 export const onRequestPut = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!env.DB || !env.SESSION_SECRET) return json({ error: 'not_configured' }, 503);
+  if (!env.DB || !sessionSecret(env)) return json({ error: 'not_configured' }, 503);
   const uid = await sessionUserId(request, env);
   if (!uid) return json({ error: 'unauthenticated' }, 401);
   let body: { progress?: unknown };

@@ -1,8 +1,8 @@
-import { EMAIL, ensureSchema, json, randomToken, sendMagicLink, sha256, siteUrl, tooManyRequests, type PagesContext } from '../../../_lib';
+import { EMAIL, ensureSchema, json, randomToken, sendMagicLink, sessionSecret, sha256, siteUrl, tooManyRequests, type PagesContext } from '../../../_lib';
 
 /** POST /api/auth/magic/request {email, lang, next} → emails a single-use sign-in link. Always answers ok to not leak accounts. */
 export const onRequestPost = async ({ request, env }: PagesContext): Promise<Response> => {
-  if (!env.DB || !env.SESSION_SECRET) return json({ error: 'not_configured' }, 503);
+  if (!env.DB || !sessionSecret(env)) return json({ error: 'not_configured' }, 503);
   if (!env.BREVO_API_KEY || !env.MAIL_FROM) return json({ error: 'mail_not_configured' }, 503);
   let body: { email?: string; lang?: string; next?: string };
   try { body = (await request.json()) as typeof body; } catch { return json({ error: 'bad_json' }, 400); }

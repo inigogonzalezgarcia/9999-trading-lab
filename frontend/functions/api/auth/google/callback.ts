@@ -1,10 +1,10 @@
-import { ensureSchema, sessionCookie, siteUrl, upsertUser, type PagesContext } from '../../../_lib';
+import { ensureSchema, sessionCookie, sessionSecret, siteUrl, type PagesContext, upsertUser } from '../../../_lib';
 
 /** GET /api/auth/google/callback?code&state → exchange the code, read the verified email, open a session. */
 export const onRequestGet = async ({ request, env }: PagesContext): Promise<Response> => {
   const origin = siteUrl(request, env);
   const fail = (reason: string) => new Response(null, { status: 302, headers: { location: `${origin}/entrar?error=${reason}`, 'cache-control': 'no-store' } });
-  if (!env.DB || !env.SESSION_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return fail('not_configured');
+  if (!env.DB || !sessionSecret(env) || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return fail('not_configured');
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
