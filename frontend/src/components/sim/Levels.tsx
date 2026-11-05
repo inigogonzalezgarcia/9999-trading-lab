@@ -28,7 +28,9 @@ export function LevelFrame({ n, intro, children, questions, noteHint }:
       <h1 className="page-title">{pick(level.title)}</h1>
       <div className="lead">{intro}</div>
       {children}
-      <Quiz questions={questions} onScore={(ok, total) => setProgress(writeSim(n, { score: { ok, total, at: new Date().toISOString() } }))} />
+      {questions.length
+        ? <Quiz questions={questions} onScore={(ok, total) => setProgress(writeSim(n, { score: { ok, total, at: new Date().toISOString() } }))} />
+        : <p className="notice">{es ? 'El cuestionario se abre cuando llegues a la entrada y hagas tu predicción.' : 'The quiz opens once you reach the entry and make your prediction.'}</p>}
       <section className="labnote">
         <h2>{es ? 'Tu nota de laboratorio' : 'Your lab note'}</h2>
         <p className="muted small">{noteHint}</p>
@@ -191,8 +193,11 @@ export function Level2() {
   const entryIndex = steps.findIndex((s) => s.id === 'entry');
   const current = steps[Math.min(step, steps.length - 1)];
   const atEntry = step === entryIndex && !guess;
-  const partial: TradeExplainer = { ...ex, candles: ex.candles.filter((c) => c.time <= current.time + 60), steps: steps.slice(0, step + 1), levels: step >= entryIndex ? ex.levels : ex.levels.filter((l) => !['entry', 'stop', 'target'].includes(l.id)) };
+  const seenUntil = Math.max(...steps.slice(0, step + 1).map((s) => s.time));
+  const partial: TradeExplainer = { ...ex, candles: ex.candles.filter((c) => c.time <= seenUntil + 60), steps: steps.slice(0, step + 1), levels: step >= entryIndex ? ex.levels : ex.levels.filter((l) => !['entry', 'stop', 'target'].includes(l.id)) };
   const exitReason = trade.exit_reason;
+  const expiries = (result?.trades ?? []).filter((t) => t.exit_reason === 'SESSION_EXPIRY').length;
+  const total = (result?.trades ?? []).length;
   const questions: Question[] = [
     { id: 'l2q1', prompt: { es: '¿Qué ocurre primero en esta hipótesis?', en: 'What happens first in this hypothesis?' },
       options: { es: ['Un barrido de liquidez: el precio supera un extremo previo y vuelve', 'La entrada', 'La ruptura de estructura (BOS)'], en: ['A liquidity sweep: price exceeds a prior extreme and returns', 'The entry', 'The break of structure (BOS)'] }, answer: 0,
@@ -200,12 +205,12 @@ export function Level2() {
     { id: 'l2q2', prompt: { es: `Esta operación salió por ${exitReason === 'TAKE_PROFIT' ? 'objetivo' : exitReason === 'STOP_LOSS' ? 'stop' : 'fin de sesión'} con ${formatR(trade.r_multiple)}. ¿Qué significa ese número?`, en: `This trade exited by ${exitReason === 'TAKE_PROFIT' ? 'target' : exitReason === 'STOP_LOSS' ? 'stop' : 'session expiry'} with ${formatR(trade.r_multiple)}. What does that number mean?` },
       options: { es: ['Veces el riesgo asumido en la operación (distancia al stop)', 'Porcentaje de la cuenta', 'Pips'], en: ['Times the risk taken on the trade (distance to the stop)', 'Percent of the account', 'Pips'] }, answer: 0,
       explanation: { es: 'R es la unidad del laboratorio: +2R es ganar dos veces lo arriesgado; −1R es perder exactamente el riesgo previsto. Hace comparables operaciones con stops distintos.', en: 'R is the lab unit: +2R is winning twice what was risked; −1R is losing exactly the planned risk. It makes trades with different stops comparable.' } },
-    { id: 'l2q3', prompt: { es: 'La operación cerró por fin de sesión en otras cinco de doce ocasiones en 2024. ¿Qué implica esa regla?', en: 'The trade closed at session expiry in five other of twelve cases in 2024. What does that rule imply?' },
+    { id: 'l2q3', prompt: { es: `En 2024, ${expiries} de las ${total} operaciones cerraron por fin de sesión. ¿Qué implica esa regla?`, en: `In 2024, ${expiries} of the ${total} trades closed at session expiry. What does that rule imply?` },
       options: { es: ['Corta pérdidas y también ganancias: nunca deja operaciones abiertas de un día a otro', 'Garantiza beneficio', 'Es un error del motor'], en: ['It cuts losses and gains alike: never holds a trade overnight', 'It guarantees profit', 'It is an engine bug'] }, answer: 0,
       explanation: { es: 'Por eso la pérdida media es menor que 1R y la ganancia media menor que el objetivo. Es una decisión de diseño, documentada, con su coste.', en: 'That is why the average loss is below 1R and the average win below the target. A documented design decision, with its cost.' } },
   ];
   return (
-    <LevelFrame n={2} questions={questions}
+    <LevelFrame n={2} questions={guess ? questions : []}
       intro={<p>{es ? `Esta es la mejor operación de 2024 de V1.1 (${trade.date}, ${trade.direction}). Avanza paso a paso: el gráfico solo muestra lo que el motor había visto hasta ese momento. En la entrada tendrás que predecir la salida antes de verla.` : `This is V1.1's best trade of 2024 (${trade.date}, ${trade.direction}). Step through it: the chart shows only what the engine had seen by then. At the entry you will have to predict the exit before seeing it.`}</p>}
       noteHint={es ? 'Cuenta la operación en tres frases como si se la explicaras a alguien que no ha visto el gráfico: qué pasó, por qué entró el motor y cómo salió.' : 'Tell the trade in three sentences to someone who has not seen the chart: what happened, why the engine entered and how it exited.'}>
       <section className="sim-block">

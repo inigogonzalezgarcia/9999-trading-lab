@@ -44,7 +44,7 @@ export function PlansPage() {
           <Link to="/app" className="button ghost">{es ? 'Empezar el nivel 0' : 'Start level 0'}</Link>
         </section>
         <section className="plan featured">
-          <p className="badge">{es ? `Disponible el ${PRO_LAUNCH.es}` : `Available ${PRO_LAUNCH.en}`}</p>
+          <p className="badge">{es ? 'Abre el 23 de noviembre' : 'Opens 23 November'}</p>
           <h2>Lab Pro</h2>
           <p className="plan-price">{PRO_PRICES.month}<span className="muted small"> / {es ? 'mes' : 'month'}</span></p>
           <p className="muted small">{es ? `o ${PRO_PRICES.year} al año (dos meses gratis) · o ${PRO_PRICES.life} de por vida` : `or ${PRO_PRICES.year} a year (two months free) · or ${PRO_PRICES.life} lifetime`}</p>
