@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { LESSONS } from './content/lessons';
 import { LEGAL } from './content/legal';
+import { LEVELS } from './content/sim';
 import type { Lang } from './i18n';
 
 export const SITE_URL = 'https://fx-trading-lab.pages.dev';
@@ -24,6 +25,20 @@ export function routeMeta(path: string, lang: Lang): Meta {
     return { title: (es ? 'Cómo leer un backtest, paso a paso: lecciones gratis' : 'How to read a backtest, step by step: free lessons') + SUFFIX,
       description: es ? 'Tres lecciones sobre resultados reales: qué es un backtest honesto, cómo leer una operación y por qué doce operaciones no demuestran nada. Con cuestionario y nota evaluada.' : 'Three lessons on real results: what an honest backtest is, how to read a trade and why twelve trades prove nothing. With quiz and graded lab note.' };
   }
+  if (path === '/tour') {
+    return { title: (es ? 'Qué vas a ver: el laboratorio en seis pantallas' : 'What you will see: the lab in six screens') + SUFFIX,
+      description: es ? 'Datos reales minuto a minuto, cada operación explicada, el resultado del año con costes, el protocolo de investigación y el simulador de nueve niveles.' : 'Real minute data, every trade explained, the year result with costs, the research protocol and the nine-level simulator.' };
+  }
+  if (path === '/planes' || path === '/plans') {
+    return { title: (es ? 'Planes: gratis y Lab Pro' : 'Plans: free and Lab Pro') + SUFFIX,
+      description: es ? 'Laboratorio, lecciones y niveles 0–2 gratis sin cuenta. Lab Pro: niveles 3–8, tu V1.x sobre ocho años, informe PDF. 12 € al mes, 89 € al año o 149 € de por vida.' : 'Lab, lessons and levels 0–2 free without an account. Lab Pro: levels 3–8, your V1.x over eight years, PDF report. 12 € a month, 89 € a year or 149 € lifetime.' };
+  }
+  if (path === '/app' || path.startsWith('/app/')) {
+    const level = LEVELS.find((l) => path === `/app/sim/${l.n}`);
+    if (level) return { title: (es ? `Nivel ${level.n}: ${level.title.es}` : `Level ${level.n}: ${level.title.en}`) + SUFFIX, description: es ? level.summary.es : level.summary.en };
+    return { title: (es ? 'Simulador: de la vela al protocolo, nueve niveles' : 'Simulator: from the candle to the protocol, nine levels') + SUFFIX,
+      description: es ? 'Itinerario guiado sobre resultados reales. Niveles 0–2 gratis sin cuenta: leer una vela, qué es un backtest, una operación de principio a fin.' : 'Guided itinerary on real results. Levels 0–2 free without an account: read a candle, what a backtest is, one trade start to finish.' };
+  }
   if (path === '/method') {
     return { title: (es ? 'Método: cómo investigamos una estrategia (y aviso legal)' : 'Method: how we research a strategy (and legal notice)') + SUFFIX,
       description: es ? 'Hipótesis congelada, motor causal con costes, protocolo de periodos independientes, walk-forward, Monte Carlo, sensibilidad y benchmark aleatorio. Sin señales ni ejecución real.' : 'Frozen hypothesis, causal engine with costs, protocol of independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark. No signals, no live execution.' };
@@ -37,7 +52,7 @@ function setMeta(selector: string, attr: string, value: string) {
   if (el) el.setAttribute(attr, value);
 }
 
-const KNOWN = /^\/(|lab(\/[^/]+)?|lessons(\/[^/]+)?|method|legal\/[^/]+)$/;
+const KNOWN = /^\/(|lab(\/[^/]+)?|lessons(\/[^/]+)?|method|legal\/[^/]+|tour|planes|plans|app|app\/sim\/[0-8])$/;
 
 export function useSeo(path: string, lang: Lang) {
   useEffect(() => {

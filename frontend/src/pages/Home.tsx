@@ -4,8 +4,9 @@ import { KitCard } from '../components/KitCard';
 import { Subscribe } from '../components/Subscribe';
 import { SetupIllustration, Sparkline, StepIcon } from '../components/Visuals';
 import { LESSONS } from '../content/lessons';
+import { LEVELS } from '../content/sim';
 import { useT } from '../i18n';
-import { readProgress } from '../progress';
+import { readProgress, readSim } from '../progress';
 import { Link } from '../router';
 import type { RunRow } from '../types';
 
@@ -28,9 +29,11 @@ export function HomePage() {
   const { t, pick, lang } = useT();
   const [runs, setRuns] = useState<RunRow[]>([]);
   const [progress, setProgress] = useState<Record<string, { completed?: boolean }>>({});
+  const [sim, setSim] = useState<Record<string, { completed?: boolean }>>({});
   useEffect(() => {
     api.runs('backtest').then(setRuns).catch(() => setRuns([]));
     setProgress(readProgress());
+    setSim(readSim());
   }, []);
   // The band tells the lab's main lesson: the same rule, the good year and the year it did not repeat.
   const story = ['eurusd-2024-v1_1', 'eurusd-2022-v1_1'].map((id) => runs.find((run) => run.id === id)).filter(Boolean) as RunRow[];
@@ -43,7 +46,8 @@ export function HomePage() {
           <h1 className="hero-title">{t('home.title')}</h1>
           <p className="lead">{t('home.lead')}</p>
           <div className="row-actions hero-actions">
-            <Link to="/lessons" className="button">{t('home.ctaLessons')}</Link>
+            <Link to="/app" className="button">{t('home.ctaStart')}</Link>
+            <Link to="/tour" className="button ghost">{t('home.ctaTour')}</Link>
             <Link to="/lab" className="button ghost">{t('home.ctaLab')}</Link>
           </div>
         </div>
@@ -121,6 +125,23 @@ export function HomePage() {
           </div>
         </section>
       )}
+
+      <section className="itinerary">
+        <h2 className="section-title">{lang === 'es' ? 'El simulador: nueve niveles, de la vela al protocolo' : 'The simulator: nine levels, from the candle to the protocol'}</h2>
+        <p className="muted lead-small">{lang === 'es' ? 'Un itinerario guiado sobre operaciones reales. Los tres primeros niveles son gratis y no piden cuenta; los seis siguientes llegan con Lab Pro el 23 de noviembre.' : 'A guided itinerary on real trades. The first three levels are free and need no account; the next six arrive with Lab Pro on 23 November.'}</p>
+        <ol className="itin-grid">
+          {LEVELS.map((level) => (
+            <li key={level.n} className={`itin-card ${level.pro ? 'pro' : ''} ${sim[String(level.n)]?.completed ? 'done' : ''}`}>
+              <span className="lesson-no" aria-hidden="true">{level.n}</span>
+              <div className="lesson-meta"><span className={`badge ${level.pro ? '' : 'soft'}`}>{level.pro ? 'Lab Pro' : t('lessons.free')}</span><span className="muted small">{level.minutes} min</span>{sim[String(level.n)]?.completed && <span className="good small">✓</span>}</div>
+              <h3>{pick(level.title)}</h3>
+              <p className="muted small">{pick(level.summary)}</p>
+              {level.ready ? <Link to={`/app/sim/${level.n}`} className="button small-button">{sim[String(level.n)]?.completed ? t('lessons.review') : t('lessons.start')}</Link> : <span className="muted small">{lang === 'es' ? 'Lab Pro · 23 nov' : 'Lab Pro · 23 Nov'}</span>}
+            </li>
+          ))}
+        </ol>
+        <div className="row-actions"><Link to="/app" className="button">{t('home.ctaStart')}</Link><Link to="/planes" className="button ghost">{lang === 'es' ? 'Ver planes' : 'See plans'}</Link></div>
+      </section>
 
       <section>
         <h2 className="section-title">{t('home.lessonsTitle')}</h2>

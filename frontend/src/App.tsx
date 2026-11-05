@@ -1,7 +1,11 @@
 import { Shell } from './components/Shell';
 import { MethodPage } from './components/Method';
 import { LangProvider } from './i18n';
+import { DashboardPage } from './pages/Dashboard';
 import { HomePage } from './pages/Home';
+import { PlansPage } from './pages/Plans';
+import { SimPage } from './pages/Sim';
+import { TourPage } from './pages/Tour';
 import { LabPage } from './pages/Lab';
 import { LegalPage } from './pages/Legal';
 import { LessonPage, LessonsIndex } from './pages/Lessons';
@@ -17,6 +21,7 @@ function Routes() {
   const lab = matchRoute('/lab/:runId', path);
   const lesson = matchRoute('/lessons/:slug', path);
   const legal = matchRoute('/legal/:slug', path);
+  const sim = matchRoute('/app/sim/:n', path);
   // The local research tool opens on the lab; the public site opens on the landing page.
   if (path === '/' && !STATIC_MODE) return <LabPage />;
   if (path === '/') return <HomePage />;
@@ -24,6 +29,10 @@ function Routes() {
   if (lab) return <LabPage runId={lab.runId} />;
   if (path === '/lessons') return <LessonsIndex />;
   if (lesson) return <LessonPage slug={lesson.slug} />;
+  if (path === '/tour') return <TourPage />;
+  if (path === '/planes' || path === '/plans') return <PlansPage />;
+  if (path === '/app') return <DashboardPage />;
+  if (sim) return <SimPage n={sim.n} />;
   if (path === '/method') return <main className="prose"><MethodPage /></main>;
   if (legal) return <LegalPage slug={legal.slug} />;
   return <NotFound />;
@@ -40,6 +49,7 @@ function NotFound() {
       <ul>
         <li><a href="/">{es ? 'Inicio' : 'Home'}</a></li>
         <li><a href="/lab">{es ? 'Laboratorio (27 ejecuciones reales 2019–2026)' : 'Lab (27 real runs 2019–2026)'}</a></li>
+        <li><a href="/app">{es ? 'Simulador (niveles 0–2 gratis)' : 'Simulator (levels 0–2 free)'}</a></li>
         <li><a href="/lessons">{es ? 'Lecciones gratis' : 'Free lessons'}</a></li>
         <li><a href="/method">{es ? 'Método y aviso' : 'Method and notice'}</a></li>
       </ul>

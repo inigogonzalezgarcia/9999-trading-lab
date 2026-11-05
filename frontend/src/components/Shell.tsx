@@ -25,8 +25,11 @@ export function Shell({ children }: { children: ReactNode }) {
         <button type="button" className="ghost menu-toggle" aria-expanded={menu} onClick={() => setMenu(!menu)}>☰</button>
         <nav className={`site-nav ${menu ? 'open' : ''}`} aria-label="main">
           <Link to="/" onClick={() => setMenu(false)}>{t('nav.home')}</Link>
+          <Link to="/tour" onClick={() => setMenu(false)}>{t('nav.tour')}</Link>
+          <Link to="/app" onClick={() => setMenu(false)}>{t('nav.app')}</Link>
           <Link to="/lab" onClick={() => setMenu(false)}>{t('nav.lab')}</Link>
           <Link to="/lessons" onClick={() => setMenu(false)}>{t('nav.lessons')}</Link>
+          <Link to="/planes" onClick={() => setMenu(false)}>{t('nav.plans')}</Link>
           <Link to="/method" onClick={() => setMenu(false)}>{t('nav.method')}</Link>
           <div className="segmented lang">
             <button type="button" className={lang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>
