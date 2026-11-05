@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { KitCard } from '../components/KitCard';
+import { ProBanner } from '../components/ProBanner';
 import { LessonWidget } from '../components/LessonWidgets';
 import { LabNote, Quiz } from '../components/Quiz';
 import { Subscribe } from '../components/Subscribe';
@@ -38,6 +39,7 @@ export function LessonsIndex() {
           </li>
         ))}
       </ol>
+      <ProBanner variant="lesson" compact />
       <KitCard compact />
       <Subscribe />
     </main>
@@ -80,6 +82,7 @@ export function LessonPage({ slug }: { slug: string }) {
         {progress.completed && <span className="good">✓ {t('lessons.done')}</span>}
         {next ? <button type="button" onClick={() => navigate(`/lessons/${next.slug}`)}>{t('lessons.next')}: {pick(next.title)} →</button> : <Link to="/lessons" className="button">{t('lessons.back')}</Link>}
       </div>
+      <ProBanner variant="lesson" compact />
       {!next && <Subscribe />}
     </main>
   );

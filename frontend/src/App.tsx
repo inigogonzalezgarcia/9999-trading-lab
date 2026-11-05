@@ -1,3 +1,5 @@
+import { useEffect, type ReactNode } from 'react';
+import { AuthProvider, useAuth } from './auth';
 import { Shell } from './components/Shell';
 import { MethodPage } from './components/Method';
 import { LangProvider } from './i18n';
@@ -8,6 +10,7 @@ import { SimPage } from './pages/Sim';
 import { TourPage } from './pages/Tour';
 import { LabPage } from './pages/Lab';
 import { LegalPage } from './pages/Legal';
+import { LoginPage } from './pages/Login';
 import { LessonPage, LessonsIndex } from './pages/Lessons';
 import { RouterProvider, matchRoute, useRoute } from './router';
 import { useSeo } from './seo';
@@ -31,11 +34,24 @@ function Routes() {
   if (lesson) return <LessonPage slug={lesson.slug} />;
   if (path === '/tour') return <TourPage />;
   if (path === '/planes' || path === '/plans') return <PlansPage />;
-  if (path === '/app') return <DashboardPage />;
-  if (sim) return <SimPage n={sim.n} />;
+  if (path === '/entrar' || path === '/login') return <LoginPage />;
+  if (path === '/app') return <RequireAccount path={path}><DashboardPage /></RequireAccount>;
+  if (sim) return <RequireAccount path={path}><SimPage n={sim.n} /></RequireAccount>;
   if (path === '/method') return <main className="prose"><MethodPage /></main>;
   if (legal) return <LegalPage slug={legal.slug} />;
   return <NotFound />;
+}
+
+/** The protected area: with an account backend configured, a session is required; without one (local dev) it opens. */
+function RequireAccount({ path, children }: { path: string; children: ReactNode }) {
+  const { ready, configured, user } = useAuth();
+  const { navigate } = useRoute();
+  const { lang } = useT();
+  const mustLogin = ready && configured && !user;
+  useEffect(() => { if (mustLogin) navigate(`/entrar?next=${encodeURIComponent(path)}`); }, [mustLogin, path, navigate]);
+  if (!ready) return <main className="prose"><p className="muted">{lang === 'es' ? 'Comprobando tu sesión…' : 'Checking your session…'}</p></main>;
+  if (mustLogin) return null;
+  return <>{children}</>;
 }
 
 function NotFound() {
@@ -61,9 +77,11 @@ export default function App() {
   return (
     <LangProvider>
       <RouterProvider>
-        <Shell>
-          <Routes />
-        </Shell>
+        <AuthProvider>
+          <Shell>
+            <Routes />
+          </Shell>
+        </AuthProvider>
       </RouterProvider>
     </LangProvider>
   );

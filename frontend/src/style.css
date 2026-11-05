@@ -469,3 +469,18 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
   .level-card { grid-template-columns: 1fr; }
   .plan-table th:not(:first-child), .plan-table td:not(:first-child) { width: 64px; }
 }
+
+/* ---------- accounts: login, pro banner ---------- */
+.login-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 18px 0; }
+.login-card { border: 1px solid var(--line); border-radius: 14px; padding: 20px; background: var(--panel); display: grid; gap: 10px; align-content: start; }
+.login-card h2 { margin: 0; font-size: 1.1rem; }
+.login-card .subscribe-form { display: grid; gap: 8px; }
+.button.google { display: inline-flex; align-items: center; gap: 10px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); justify-self: start; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.nav-account { font-weight: 600; }
+.pro-banner { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin: 26px 0 10px; padding: 18px 20px; border: 1px solid var(--accent); border-radius: 14px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
+.pro-banner .kicker { margin-bottom: 4px; }
+.pro-banner p { margin: 4px 0 0; }
+.pro-banner.compact { padding: 12px 16px; margin: 20px 0 6px; }
+.pro-banner .row-actions { margin: 0; flex-wrap: wrap; }
+@media (max-width: 700px) { .pro-banner { grid-template-columns: 1fr; } }

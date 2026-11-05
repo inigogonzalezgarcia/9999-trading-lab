@@ -33,6 +33,10 @@ export function routeMeta(path: string, lang: Lang): Meta {
     return { title: (es ? 'Planes: gratis y Lab Pro' : 'Plans: free and Lab Pro') + SUFFIX,
       description: es ? 'Laboratorio, lecciones y niveles 0–2 gratis sin cuenta. Lab Pro: niveles 3–8, tu V1.x sobre ocho años, informe PDF. 12 € al mes, 89 € al año o 149 € de por vida.' : 'Lab, lessons and levels 0–2 free without an account. Lab Pro: levels 3–8, your V1.x over eight years, PDF report. 12 € a month, 89 € a year or 149 € lifetime.' };
   }
+  if (path === '/entrar' || path === '/login') {
+    return { title: (es ? 'Entra o crea tu cuenta' : 'Sign in or create your account') + SUFFIX,
+      description: es ? 'Cuenta gratis con Google o con un enlace por correo. Guarda tu progreso en el simulador y activa Lab Pro cuando quieras.' : 'Free account with Google or an email link. Save your simulator progress and activate Lab Pro when you want.' };
+  }
   if (path === '/app' || path.startsWith('/app/')) {
     const level = LEVELS.find((l) => path === `/app/sim/${l.n}`);
     if (level) return { title: (es ? `Nivel ${level.n}: ${level.title.es}` : `Level ${level.n}: ${level.title.en}`) + SUFFIX, description: es ? level.summary.es : level.summary.en };
@@ -52,7 +56,7 @@ function setMeta(selector: string, attr: string, value: string) {
   if (el) el.setAttribute(attr, value);
 }
 
-const KNOWN = /^\/(|lab(\/[^/]+)?|lessons(\/[^/]+)?|method|legal\/[^/]+|tour|planes|plans|app|app\/sim\/[0-8])$/;
+const KNOWN = /^\/(|lab(\/[^/]+)?|lessons(\/[^/]+)?|method|legal\/[^/]+|tour|planes|plans|entrar|login|app|app\/sim\/[0-8])$/;
 
 export function useSeo(path: string, lang: Lang) {
   useEffect(() => {

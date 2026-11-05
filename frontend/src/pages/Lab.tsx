@@ -7,6 +7,7 @@ import { Sparkline } from '../components/Visuals';
 import type { BacktestResult, Job, ResearchReport, RunRow } from '../types';
 import { BacktestView } from '../components/Results';
 import { ResearchView } from '../components/Research';
+import { ProBanner } from '../components/ProBanner';
 
 type Mode = 'backtest' | 'research';
 type Loaded = { kind: 'backtest'; data: BacktestResult; title: string } | { kind: 'research'; data: ResearchReport; title: string };
@@ -212,7 +213,7 @@ export function LabPage({ runId }: { runId?: string }) {
   return (
     <>
       {offline && !STATIC_MODE && <p className="error">{t('lab.offline')} <code>uvicorn backend.app.main:app --reload --port 8000</code> / <code>docker compose up</code>.</p>}
-      <h1 className="visually-hidden">{lang === 'es' ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2019–2026' : 'Backtesting lab: EUR/USD and GBP/USD 2019–2026'}</h1>
+      <h1 className="visually-hidden">{lang === 'es' ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2022–2024' : 'Backtesting lab: EUR/USD and GBP/USD 2022–2024'}</h1>
       <main className={`layout ${loaded ? 'has-result' : ''}`}>
         {STATIC_MODE ? catalogue : form}
         <section className="content">
@@ -239,6 +240,7 @@ export function LabPage({ runId }: { runId?: string }) {
             <>
               <p className="muted small result-title">{loaded.title}</p>
               {loaded.kind === 'backtest' ? <BacktestView result={loaded.data} /> : <ResearchView report={loaded.data} />}
+              {STATIC_MODE && <ProBanner variant="lab" compact />}
             </>
           )}
           {view === 'history' && (

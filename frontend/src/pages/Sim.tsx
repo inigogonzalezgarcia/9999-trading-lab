@@ -1,3 +1,5 @@
+import { isPro, useAuth } from '../auth';
+import { ProBanner } from '../components/ProBanner';
 import { Level0, Level1, Level2 } from '../components/sim/Levels';
 import { LEVELS } from '../content/sim';
 import { useT } from '../i18n';
@@ -6,6 +8,7 @@ import { Link } from '../router';
 /** /app/sim/:n — one simulator level. Levels not implemented yet show their card and the plans link. */
 export function SimPage({ n }: { n: string }) {
   const { lang, pick } = useT();
+  const { user } = useAuth();
   const es = lang === 'es';
   const index = Number(n);
   const level = LEVELS[index];
@@ -20,10 +23,10 @@ export function SimPage({ n }: { n: string }) {
       <p className="kicker">{es ? `Nivel ${index} · Lab Pro · ${level.minutes} min` : `Level ${index} · Lab Pro · ${level.minutes} min`}</p>
       <h1 className="page-title">{pick(level.title)}</h1>
       <p className="lead">{pick(level.summary)}</p>
-      <div className="notice-box">
-        <p><strong>{es ? 'Disponible el 23 de noviembre con Lab Pro.' : 'Available on 23 November with Lab Pro.'}</strong> {es ? 'Mientras tanto, los niveles 0–2 son gratis y las lecciones y el laboratorio completo siguen abiertos sin cuenta.' : 'Meanwhile, levels 0–2 are free and the lessons and the whole lab remain open without an account.'}</p>
-        <div className="row-actions"><Link to="/planes" className="button">{es ? 'Ver planes' : 'See plans'}</Link><Link to="/app" className="button ghost">{es ? '← Panel' : '← Dashboard'}</Link></div>
-      </div>
+      {isPro(user)
+        ? <div className="notice-box"><p><strong>{es ? 'Este nivel se publica el 23 de noviembre.' : 'This level is published on 23 November.'}</strong> {es ? 'Tu plan Lab Pro ya lo incluye; te avisaremos por correo.' : 'Your Lab Pro plan already includes it; we will email you.'}</p></div>
+        : <ProBanner variant="level" />}
+      <p><Link to="/app" className="button ghost">{es ? '← Panel' : '← Dashboard'}</Link></p>
     </main>
   );
 }

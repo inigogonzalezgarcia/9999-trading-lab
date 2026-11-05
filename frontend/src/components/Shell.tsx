@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { api } from '../api';
+import { useAuth } from '../auth';
 import { useT } from '../i18n';
 import { Link, useRoute } from '../router';
 import { AUTHOR_SITE, REPO_URL, SITE_NAME } from '../site';
@@ -8,6 +9,7 @@ import type { Notice } from '../types';
 export function Shell({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useT();
   const { path } = useRoute();
+  const { user, logout } = useAuth();
   const [version, setVersion] = useState<string>('');
   const [notice, setNotice] = useState<Notice | null>(null);
   const [menu, setMenu] = useState(false);
@@ -30,6 +32,9 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link to="/lab" onClick={() => setMenu(false)}>{t('nav.lab')}</Link>
           <Link to="/lessons" onClick={() => setMenu(false)}>{t('nav.lessons')}</Link>
           <Link to="/planes" onClick={() => setMenu(false)}>{t('nav.plans')}</Link>
+          {user
+            ? <button type="button" className="ghost nav-account" title={user.email} onClick={() => { setMenu(false); logout(); }}>{user.plan === 'pro' ? 'Pro · ' : ''}{t('nav.logout')}</button>
+            : <Link to="/entrar" className="nav-account" onClick={() => setMenu(false)}>{t('nav.login')}</Link>}
           <Link to="/method" onClick={() => setMenu(false)}>{t('nav.method')}</Link>
           <div className="segmented lang">
             <button type="button" className={lang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>

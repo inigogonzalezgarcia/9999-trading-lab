@@ -36,6 +36,24 @@ npm run dev:static            # local preview of the static site
 | KV namespace binding | `SUBSCRIBERS` → a KV namespace created for the mailing list |
 | Node version | 20 or 22 |
 
+## Accounts (Lab Pro area)
+
+`frontend/functions/api/auth/*` and `frontend/functions/api/me.ts` implement sign-in with Google (OAuth 2.0, scopes
+email + profile) and by single-use email link (Brevo transactional API), a 30-day signed session cookie, and the
+account copy of the simulator progress. The schema is created on first use in a D1 database. Bindings (Pages project
+→ Settings):
+
+| Binding / variable | Value |
+|---|---|
+| D1 database binding `DB` | the `fxlab-accounts` database |
+| `SESSION_SECRET` (secret) | long random string (`openssl rand -hex 32`); rotating it signs everyone out |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (secret) | OAuth client "Web application" with redirect URI `https://fx-trading-lab.pages.dev/api/auth/google/callback` |
+| `BREVO_API_KEY` (secret), `MAIL_FROM` | Brevo API key and a sender address verified in Brevo |
+
+Without `DB` + `SESSION_SECRET` the `/api/me` endpoint answers `configured: false` and the app area opens without a
+session (local previews). Plans: `users.plan` is `free` or `pro` (`pro_until` for subscriptions); the Gumroad
+membership hook will set it.
+
 `frontend/public/_headers` sets the CSP and security headers; `_redirects` serves the SPA. The Pages Function
 `frontend/functions/api/subscribe.ts` handles the mailing-list opt-in (Turnstile verification + KV).
 

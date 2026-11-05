@@ -6,6 +6,7 @@ import { useT } from '../../i18n';
 import { readSim, writeSim } from '../../progress';
 import { Link } from '../../router';
 import type { BacktestResult, Candle, Trade, TradeExplainer } from '../../types';
+import { useAuth } from '../../auth';
 import { useRun } from '../LessonWidgets';
 import { Quiz } from '../Quiz';
 import { ExplainerChart } from '../TradeExplainer';
@@ -17,7 +18,9 @@ export function LevelFrame({ n, intro, children, questions, noteHint }:
   { n: number; intro: ReactNode; children: ReactNode; questions: Question[]; noteHint: string }) {
   const { lang, pick } = useT();
   const level = LEVELS[n];
-  const [progress, setProgress] = useState(readSim());
+  const { saveProgress } = useAuth();
+  const [progress, setProgressState] = useState(readSim());
+  const setProgress = (all: ReturnType<typeof readSim>) => { setProgressState(all); saveProgress(all); };
   const saved = progress[String(n)] ?? {};
   const [note, setNote] = useState(saved.note ?? '');
   const es = lang === 'es';

@@ -11,6 +11,8 @@ export const STRINGS = {
   'nav.tour': { es: 'Qué vas a ver', en: 'Tour' },
   'nav.app': { es: 'Simulador', en: 'Simulator' },
   'nav.plans': { es: 'Planes', en: 'Plans' },
+  'nav.login': { es: 'Entrar', en: 'Sign in' },
+  'nav.logout': { es: 'Salir', en: 'Sign out' },
   'home.ctaStart': { es: 'Empieza gratis', en: 'Start free' },
   'home.ctaTour': { es: 'Ver qué vas a ver', en: 'Take the tour' },
   'badge.noLive': { es: 'Sin ejecución real', en: 'No live execution' },

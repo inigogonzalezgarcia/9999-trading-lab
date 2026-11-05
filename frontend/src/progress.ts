@@ -60,3 +60,12 @@ export function writeSim(level: number, patch: Partial<LevelProgress>): Record<s
   }
   return all;
 }
+
+/** Replace the whole simulator progress (used when importing the account copy). */
+export function replaceSim(all: Record<string, LevelProgress>): void {
+  try {
+    window.localStorage.setItem(SIM_KEY, JSON.stringify(all));
+  } catch {
+    /* storage unavailable */
+  }
+}
