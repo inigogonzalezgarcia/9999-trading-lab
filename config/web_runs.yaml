@@ -145,3 +145,151 @@ runs:
     description:
       es: "El protocolo completo sobre 2023: ¿se repite lo de 2024 o era ruido?"
       en: "The full protocol on 2023: does 2024 repeat, or was it noise?"
+  - id: eurusd-2019-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2019.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 130
+    label: {es: "EUR/USD 2019 · V1 (línea base)", en: "EUR/USD 2019 · V1 (baseline)"}
+    description:
+      es: "Mismas reglas sobre 2019 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2019 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2019-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2019.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 140
+    label: {es: "EUR/USD 2019 · V1.1 (experimento)", en: "EUR/USD 2019 · V1.1 (experiment)"}
+    description:
+      es: "Mismas reglas sobre 2019 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2019 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2019-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2019.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 150
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2019 · V1.1", en: "Protocol · EUR/USD 2019 · V1.1"}
+    description:
+      es: "El protocolo completo sobre 2019: un año más para la lectura conjunta 2019–2025."
+      en: "The full protocol on 2019: one more year for the pooled 2019–2025 reading."
+  - id: eurusd-2020-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2020.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 160
+    label: {es: "EUR/USD 2020 · V1 (línea base)", en: "EUR/USD 2020 · V1 (baseline)"}
+    description:
+      es: "Mismas reglas sobre 2020 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2020 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2020-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2020.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 170
+    label: {es: "EUR/USD 2020 · V1.1 (experimento)", en: "EUR/USD 2020 · V1.1 (experiment)"}
+    description:
+      es: "Mismas reglas sobre 2020 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2020 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2020-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2020.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 180
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2020 · V1.1", en: "Protocol · EUR/USD 2020 · V1.1"}
+    description:
+      es: "El protocolo completo sobre 2020: un año más para la lectura conjunta 2019–2025."
+      en: "The full protocol on 2020: one more year for the pooled 2019–2025 reading."
+  - id: eurusd-2021-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2021.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 190
+    label: {es: "EUR/USD 2021 · V1 (línea base)", en: "EUR/USD 2021 · V1 (baseline)"}
+    description:
+      es: "Mismas reglas sobre 2021 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2021 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2021-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2021.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 200
+    label: {es: "EUR/USD 2021 · V1.1 (experimento)", en: "EUR/USD 2021 · V1.1 (experiment)"}
+    description:
+      es: "Mismas reglas sobre 2021 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2021 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2021-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2021.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 210
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2021 · V1.1", en: "Protocol · EUR/USD 2021 · V1.1"}
+    description:
+      es: "El protocolo completo sobre 2021: un año más para la lectura conjunta 2019–2025."
+      en: "The full protocol on 2021: one more year for the pooled 2019–2025 reading."
+  - id: eurusd-2025-v1
+    kind: backtest
+    dataset: data/raw/EURUSD_2025.csv
+    symbol: EURUSD
+    strategy: strategy_v1.yaml
+    fixed_spread_pips: 0.3
+    order: 220
+    label: {es: "EUR/USD 2025 · V1 (línea base)", en: "EUR/USD 2025 · V1 (baseline)"}
+    description:
+      es: "Mismas reglas sobre 2025 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2025 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2025-v1_1
+    kind: backtest
+    dataset: data/raw/EURUSD_2025.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 230
+    label: {es: "EUR/USD 2025 · V1.1 (experimento)", en: "EUR/USD 2025 · V1.1 (experiment)"}
+    description:
+      es: "Mismas reglas sobre 2025 (datos HistData, sin columna de spread: 0,3 pips fijos). Periodo que la hipótesis nunca vio."
+      en: "Same rules on 2025 (HistData, no spread column: fixed 0.3 pips). A period the hypothesis never saw."
+  - id: eurusd-2025-v1_1-research
+    kind: research
+    dataset: data/raw/EURUSD_2025.csv
+    symbol: EURUSD
+    strategy: strategy_v1_1.yaml
+    fixed_spread_pips: 0.3
+    order: 240
+    train_days: 120
+    test_days: 30
+    mc_simulations: 1000
+    benchmark_simulations: 200
+    label: {es: "Protocolo · EUR/USD 2025 · V1.1", en: "Protocol · EUR/USD 2025 · V1.1"}
+    description:
+      es: "El protocolo completo sobre 2025: un año más para la lectura conjunta 2019–2025."
+      en: "The full protocol on 2025: one more year for the pooled 2019–2025 reading."

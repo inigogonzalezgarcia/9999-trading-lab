@@ -4,7 +4,9 @@ cd "$(dirname "$0")/.." || exit 1
 if [ -f .venv/bin/activate ]; then . .venv/bin/activate; fi
 python3 scripts/fetch_histdata.py --years ${YEARS:-2022 2023} --symbols ${SYMBOLS:-EURUSD GBPUSD} || { echo "FAILED"; exit 1; }
 for y in ${YEARS:-2022 2023}; do
-  python -m backend.cli merge EURUSD=data/raw/EURUSD_$y.csv GBPUSD=data/raw/GBPUSD_$y.csv --out data/raw/PORTFOLIO_$y.csv
-  python -m backend.cli validate data/raw/EURUSD_$y.csv | head -20
+  if [ -s data/raw/EURUSD_$y.csv ] && [ -s data/raw/GBPUSD_$y.csv ]; then
+    python -m backend.cli merge EURUSD=data/raw/EURUSD_$y.csv GBPUSD=data/raw/GBPUSD_$y.csv --out data/raw/PORTFOLIO_$y.csv
+  fi
+  for s in ${SYMBOLS:-EURUSD GBPUSD}; do python -m backend.cli validate data/raw/${s}_$y.csv | head -20; done
 done
 echo "=== done"
