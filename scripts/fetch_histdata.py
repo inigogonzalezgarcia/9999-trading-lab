@@ -77,7 +77,7 @@ def fetch_year(symbol: str, year: int, out_dir: Path) -> list[Path]:
         if part.exists() and part.stat().st_size > 10_000:
             parts.append(part)
             continue
-        got = _download(f"{page_url(symbol, year)}/{month}", part, f"{symbol} {year}-{month:02d}")
+        got = _download(f"{page_url(symbol, year)}/{month}", part, f"{symbol} {year}-{month:02d}", strict=False)
         if got is None:
             break
         parts.append(got)
