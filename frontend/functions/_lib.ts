@@ -52,8 +52,8 @@ export function ensureSchema(db: D1Database): Promise<void> {
         pro_until TEXT, lang TEXT NOT NULL DEFAULT 'es', created_at TEXT NOT NULL, last_login TEXT NOT NULL)`),
       db.prepare(`CREATE TABLE IF NOT EXISTS magic_tokens (hash TEXT PRIMARY KEY, email TEXT NOT NULL, lang TEXT NOT NULL, expires_at TEXT NOT NULL, used_at TEXT)`),
       db.prepare(`CREATE TABLE IF NOT EXISTS progress (user_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL)`),
-      db.prepare(`CREATE TABLE IF NOT EXISTS licenses (key_hash TEXT PRIMARY KEY, user_id TEXT, product TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, checked_at TEXT)`),
-    ]).then(() => undefined).catch((e) => { schemaReady = null; throw e; });
+      db.prepare(`CREATE TABLE IF NOT EXISTS licenses (key_hash TEXT PRIMARY KEY, user_id TEXT, product TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, checked_at TEXT, key_enc TEXT)`),
+    ]).then(() => db.prepare('ALTER TABLE licenses ADD COLUMN key_enc TEXT').run().then(() => undefined, () => undefined)).catch((e) => { schemaReady = null; throw e; });
   }
   return schemaReady;
 }
@@ -146,18 +146,18 @@ export async function upsertUser(env: Env, email: string, provider: string, name
 export async function sendMagicLink(env: Env, email: string, link: string, lang: string): Promise<boolean> {
   if (!env.BREVO_API_KEY || !env.MAIL_FROM) return false;
   const es = lang !== 'en';
-  const subject = es ? 'Tu enlace para entrar en FX Trading Lab' : 'Your sign-in link for FX Trading Lab';
+  const subject = es ? 'Tu enlace para entrar en FX Research Lab' : 'Your sign-in link for FX Research Lab';
   const text = es
-    ? `Hola,\n\nEntra en FX Trading Lab con este enlace (caduca en 20 minutos y solo sirve una vez):\n\n${link}\n\nSi no has pedido este correo, ignóralo: nadie puede entrar sin él.\n\nFX Trading Lab · material educativo, sin señales ni ejecución real.`
-    : `Hello,\n\nSign in to FX Trading Lab with this link (it expires in 20 minutes and works once):\n\n${link}\n\nIf you did not request this email, ignore it: nobody can sign in without it.\n\nFX Trading Lab · educational material, no signals, no live execution.`;
-  const html = `<p>${es ? 'Hola,' : 'Hello,'}</p><p>${es ? 'Entra en FX Trading Lab con este botón (caduca en 20 minutos y solo sirve una vez):' : 'Sign in to FX Trading Lab with this button (it expires in 20 minutes and works once):'}</p>
+    ? `Hola,\n\nEntra en FX Research Lab con este enlace (caduca en 20 minutos y solo sirve una vez):\n\n${link}\n\nSi no has pedido este correo, ignóralo: nadie puede entrar sin él.\n\nFX Research Lab · material educativo, sin señales ni ejecución real.`
+    : `Hello,\n\nSign in to FX Research Lab with this link (it expires in 20 minutes and works once):\n\n${link}\n\nIf you did not request this email, ignore it: nobody can sign in without it.\n\nFX Research Lab · educational material, no signals, no live execution.`;
+  const html = `<p>${es ? 'Hola,' : 'Hello,'}</p><p>${es ? 'Entra en FX Research Lab con este botón (caduca en 20 minutos y solo sirve una vez):' : 'Sign in to FX Research Lab with this button (it expires in 20 minutes and works once):'}</p>
 <p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#c4672b;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">${es ? 'Entrar' : 'Sign in'}</a></p>
 <p style="color:#5c6670;font-size:13px">${es ? 'O copia este enlace:' : 'Or copy this link:'} <br><a href="${link}">${link}</a></p>
 <p style="color:#5c6670;font-size:13px">${es ? 'Si no has pedido este correo, ignóralo: nadie puede entrar sin él.' : 'If you did not request this email, ignore it: nobody can sign in without it.'}</p>`;
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'FX Trading Lab' }, to: [{ email }], subject, textContent: text, htmlContent: html, tags: ['magic-link'] }),
+    body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'FX Research Lab' }, to: [{ email }], subject, textContent: text, htmlContent: html, tags: ['magic-link'] }),
   });
   return response.ok;
 }
@@ -173,4 +173,85 @@ export async function tooManyRequests(env: Env, scope: string, ip: string | null
   if ((row?.n ?? 0) >= limit) return true;
   await db.prepare('INSERT INTO hits (key, at) VALUES (?, ?)').bind(key, new Date().toISOString()).run();
   return false;
+}
+
+/* ---------- Gumroad licenses (Lab Pro) ---------- */
+/** Public product ids of the two Lab Pro products (membership and lifetime). Not secrets. */
+export const GUMROAD_PRODUCTS: Record<string, { id: string; lifetime: boolean }> = {
+  membership: { id: 'BrBN2fdRI7j3B7_CfHVcjw==', lifetime: false },
+  lifetime: { id: 'nWsKfhyhitrFDaYQK1abaw==', lifetime: true },
+};
+export const LICENSE_RECHECK_DAYS = 7;
+export const MEMBERSHIP_GRACE_DAYS = 40; // a monthly licence stays valid this long after the last successful check
+
+export interface LicenseVerdict { ok: boolean; product?: string; lifetime?: boolean; reason?: string; email?: string }
+
+/** Ask Gumroad whether a licence is valid for one of our products (no usage count increment). */
+export async function verifyLicense(key: string): Promise<LicenseVerdict> {
+  for (const [name, product] of Object.entries(GUMROAD_PRODUCTS)) {
+    const response = await fetch('https://api.gumroad.com/v2/licenses/verify', {
+      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ product_id: product.id, license_key: key, increment_uses_count: 'false' }),
+    });
+    const data = (await response.json().catch(() => ({}))) as { success?: boolean; purchase?: Record<string, unknown> };
+    if (!response.ok || !data.success || !data.purchase) continue;
+    const p = data.purchase;
+    if (p.refunded || p.chargebacked || p.disputed) return { ok: false, reason: 'refunded', product: name };
+    if (!product.lifetime && (p.subscription_ended_at || p.subscription_cancelled_at && new Date(String(p.subscription_cancelled_at)).getTime() < Date.now() || p.subscription_failed_at)) {
+      return { ok: false, reason: 'subscription_ended', product: name };
+    }
+    return { ok: true, product: name, lifetime: product.lifetime, email: typeof p.email === 'string' ? p.email : undefined };
+  }
+  return { ok: false, reason: 'not_found' };
+}
+
+/** Apply a verdict to a user: plan, pro_until and the licence row. */
+export async function applyLicense(env: Env, uid: string, key: string, verdict: LicenseVerdict): Promise<void> {
+  const db = env.DB!;
+  const now = new Date();
+  const keyHash = await sha256(key);
+  if (verdict.ok) {
+    const until = verdict.lifetime ? null : new Date(now.getTime() + MEMBERSHIP_GRACE_DAYS * 86400_000).toISOString();
+    await db.batch([
+      db.prepare("UPDATE users SET plan = 'pro', pro_until = ? WHERE id = ?").bind(until, uid),
+      db.prepare("INSERT INTO licenses (key_hash, user_id, product, status, created_at, checked_at, key_enc) VALUES (?, ?, ?, 'active', ?, ?, ?) ON CONFLICT(key_hash) DO UPDATE SET user_id = excluded.user_id, status = 'active', checked_at = excluded.checked_at, key_enc = excluded.key_enc").bind(keyHash, uid, verdict.product ?? 'unknown', now.toISOString(), now.toISOString(), await seal(env, key)),
+    ]);
+  } else {
+    await db.batch([
+      db.prepare("UPDATE users SET plan = 'free', pro_until = NULL WHERE id = ?").bind(uid),
+      db.prepare("UPDATE licenses SET status = ?, checked_at = ? WHERE key_hash = ?").bind(verdict.reason ?? 'invalid', now.toISOString(), keyHash),
+    ]);
+  }
+}
+
+/** Monthly licences: re-verify with Gumroad when the last check is older than LICENSE_RECHECK_DAYS.
+ *  The key itself is never stored, so the recheck uses the key kept encrypted in `licenses.key_enc` when present. */
+export async function recheckDue(env: Env, uid: string): Promise<void> {
+  const row = await env.DB!.prepare("SELECT key_hash, key_enc, product, checked_at FROM licenses WHERE user_id = ? AND status = 'active' ORDER BY checked_at DESC LIMIT 1").bind(uid).first<{ key_hash: string; key_enc: string | null; product: string; checked_at: string }>();
+  if (!row || !row.key_enc || GUMROAD_PRODUCTS[row.product]?.lifetime) return;
+  if (new Date(row.checked_at).getTime() > Date.now() - LICENSE_RECHECK_DAYS * 86400_000) return;
+  const key = await unseal(env, row.key_enc);
+  if (!key) return;
+  await applyLicense(env, uid, key, await verifyLicense(key));
+}
+
+/* AES-GCM with a key derived from SESSION_SECRET, so a monthly licence can be re-verified without the user. */
+async function aesKey(env: Env): Promise<CryptoKey> {
+  const raw = await crypto.subtle.digest('SHA-256', enc.encode('license:' + sessionSecret(env)));
+  return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+export async function seal(env: Env, text: string): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesKey(env), enc.encode(text));
+  return `${b64url(iv)}.${b64url(data)}`;
+}
+export async function unseal(env: Env, sealed: string): Promise<string | null> {
+  try {
+    const [iv, data] = sealed.split('.');
+    const bytes = (s: string) => Uint8Array.from(b64urlDecode(s), (c) => c.charCodeAt(0));
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes(iv) }, await aesKey(env), bytes(data));
+    return new TextDecoder().decode(plain);
+  } catch {
+    return null;
+  }
 }

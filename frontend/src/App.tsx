@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './auth';
 import { Shell } from './components/Shell';
 import { MethodPage } from './components/Method';
 import { LangProvider } from './i18n';
+import { AccountPage } from './pages/Account';
 import { DashboardPage } from './pages/Dashboard';
 import { HomePage } from './pages/Home';
 import { PlansPage } from './pages/Plans';
@@ -36,6 +37,7 @@ function Routes() {
   if (path === '/planes' || path === '/plans') return <PlansPage />;
   if (path === '/entrar' || path === '/login') return <LoginPage />;
   if (path === '/app') return <RequireAccount path={path}><DashboardPage /></RequireAccount>;
+  if (path === '/app/cuenta' || path === '/app/account') return <RequireAccount path={path}><AccountPage /></RequireAccount>;
   if (sim) return <RequireAccount path={path}><SimPage n={sim.n} /></RequireAccount>;
   if (path === '/method') return <main className="prose"><MethodPage /></main>;
   if (legal) return <LegalPage slug={legal.slug} />;

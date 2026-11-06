@@ -1,11 +1,13 @@
-import { ensureSchema, getUser, json, sessionSecret, sessionUserId, type PagesContext } from '../_lib';
+import { clearSessionCookie, ensureSchema, getUser, json, recheckDue, sessionSecret, sessionUserId, type PagesContext } from '../_lib';
 
 /** GET /api/me → {user, progress} for the session, or {user: null}. PUT /api/me {progress} → saves the simulator progress. */
-export const onRequestGet = async ({ request, env }: PagesContext): Promise<Response> => {
+export const onRequestGet = async ({ request, env, waitUntil }: PagesContext): Promise<Response> => {
   if (!env.DB || !sessionSecret(env)) return json({ user: null, configured: false, missing: [!env.DB && 'DB', !sessionSecret(env) && 'SESSION_SECRET'].filter(Boolean) });
   const uid = await sessionUserId(request, env);
   if (!uid) return json({ user: null, configured: true });
   await ensureSchema(env.DB);
+  const recheck = recheckDue(env, uid).catch(() => undefined);
+  if (waitUntil) waitUntil(recheck); else await recheck;
   const user = await getUser(env, uid);
   if (!user) return json({ user: null, configured: true });
   const row = await env.DB.prepare('SELECT data, updated_at FROM progress WHERE user_id = ?').bind(uid).first<{ data: string; updated_at: string }>();
@@ -26,4 +28,18 @@ export const onRequestPut = async ({ request, env }: PagesContext): Promise<Resp
   const now = new Date().toISOString();
   await env.DB.prepare('INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at').bind(uid, data, now).run();
   return json({ ok: true, updated_at: now });
+};
+
+/** DELETE /api/me → erases the account, its progress and licence rows (right of erasure), and ends the session. */
+export const onRequestDelete = async ({ request, env }: PagesContext): Promise<Response> => {
+  if (!env.DB || !sessionSecret(env)) return json({ error: 'not_configured' }, 503);
+  const uid = await sessionUserId(request, env);
+  if (!uid) return json({ error: 'unauthenticated' }, 401);
+  await ensureSchema(env.DB);
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM progress WHERE user_id = ?').bind(uid),
+    env.DB.prepare('DELETE FROM licenses WHERE user_id = ?').bind(uid),
+    env.DB.prepare('DELETE FROM users WHERE id = ?').bind(uid),
+  ]);
+  return json({ ok: true }, 200, { 'set-cookie': clearSessionCookie() });
 };

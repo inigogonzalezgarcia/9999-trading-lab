@@ -514,3 +514,8 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
 .good-bg { background: var(--good); } .bad-bg { background: var(--bad); }
 .plan-table tr.base td { font-weight: 600; }
 @media (max-width: 640px) { .sens-row { grid-template-columns: 80px 1fr 90px; } }
+.account section { margin-top: 24px; }
+.account .subscribe-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.account .subscribe-form input { flex: 1 1 320px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+button.danger { background: var(--bad); color: #fff; border-color: var(--bad); }
+button.ghost.danger { background: transparent; color: var(--bad); }

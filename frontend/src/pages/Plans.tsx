@@ -1,7 +1,7 @@
 import { Subscribe } from '../components/Subscribe';
 import { useT } from '../i18n';
 import { Link } from '../router';
-import { KIT_PRICE, KIT_URL } from '../site';
+import { KIT_PRICE, KIT_URL, PRO_OPEN, PRO_URLS } from '../site';
 
 export const PRO_PRICES = { month: '12 €', year: '89 €', life: '149 €' };
 export const PRO_LAUNCH = { es: '23 de noviembre de 2026', en: '23 November 2026' };
@@ -44,12 +44,14 @@ export function PlansPage() {
           <Link to="/app" className="button ghost">{es ? 'Empezar el nivel 0' : 'Start level 0'}</Link>
         </section>
         <section className="plan featured">
-          <p className="badge">{es ? 'Abre el 23 de noviembre' : 'Opens 23 November'}</p>
+          <p className="badge">{PRO_OPEN ? (es ? 'Disponible' : 'Available') : (es ? 'Abre el 23 de noviembre' : 'Opens 23 November')}</p>
           <h2>Lab Pro</h2>
           <p className="plan-price">{PRO_PRICES.month}<span className="muted small"> / {es ? 'mes' : 'month'}</span></p>
           <p className="muted small">{es ? `o ${PRO_PRICES.year} al año (dos meses gratis) · o ${PRO_PRICES.life} de por vida` : `or ${PRO_PRICES.year} a year (two months free) · or ${PRO_PRICES.life} lifetime`}</p>
           <p className="muted">{es ? 'Los seis niveles avanzados, tu V1.x sobre ocho años, informe PDF, cuenta y novedades mensuales. Cancela cuando quieras.' : 'The six advanced levels, your V1.x over eight years, PDF report, account and monthly updates. Cancel any time.'}</p>
-          <a href="#avisame" className="button">{es ? 'Avísame cuando abra' : 'Tell me when it opens'}</a>
+          {PRO_OPEN
+            ? <div className="row-actions"><a className="button" href={PRO_URLS.membership} target="_blank" rel="noopener">{es ? 'Suscribirme' : 'Subscribe'}</a><a className="button ghost" href={PRO_URLS.lifetime} target="_blank" rel="noopener">{es ? 'De por vida · 149 €' : 'Lifetime · 149 €'}</a></div>
+            : <a href="#avisame" className="button">{es ? 'Avísame cuando abra' : 'Tell me when it opens'}</a>}
         </section>
         <section className="plan">
           <h2>{es ? 'Kit' : 'Kit'}</h2>

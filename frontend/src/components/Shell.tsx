@@ -9,7 +9,7 @@ import type { Notice } from '../types';
 export function Shell({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useT();
   const { path } = useRoute();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [version, setVersion] = useState<string>('');
   const [notice, setNotice] = useState<Notice | null>(null);
   const [menu, setMenu] = useState(false);
@@ -33,7 +33,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link to="/lessons" onClick={() => setMenu(false)}>{t('nav.lessons')}</Link>
           <Link to="/planes" onClick={() => setMenu(false)}>{t('nav.plans')}</Link>
           {user
-            ? <button type="button" className="ghost nav-account" title={user.email} onClick={() => { setMenu(false); logout(); }}>{user.plan === 'pro' ? 'Pro · ' : ''}{t('nav.logout')}</button>
+            ? <Link to="/app/cuenta" className="nav-account" onClick={() => setMenu(false)}>{user.plan === 'pro' ? 'Pro · ' : ''}{t('nav.account')}</Link>
             : <Link to="/entrar" className="nav-account" onClick={() => setMenu(false)}>{t('nav.login')}</Link>}
           <Link to="/method" onClick={() => setMenu(false)}>{t('nav.method')}</Link>
           <div className="segmented lang">

@@ -7,7 +7,13 @@ export const REPO_URL = 'https://github.com/inigogonzalezgarcia/9999-trading-lab
 export const AUTHOR_SITE = 'https://inigogonzalezgarcia.github.io';
 export const CONTACT_URL = 'https://inigogonzalezgarcia.github.io/about.html#contacto';
 export const LINKEDIN_URL = 'https://www.linkedin.com/in/inigogonzalezgarcia/';
-export const SITE_NAME = 'FX Trading Lab';
+export const SITE_NAME = 'FX Research Lab';
 /** Paid kit (Gumroad handles checkout, VAT and delivery). The site only links to it. */
 export const KIT_URL = 'https://fxresearchlab.gumroad.com/l/kit-backtest';
 export const KIT_PRICE = '19 €';
+
+/** Lab Pro on Gumroad. PRO_OPEN flips the plans page from waitlist to checkout once the products are published. */
+export const PRO_OPEN = false;
+export const PRO_URLS = { membership: 'https://fxresearchlab.gumroad.com/l/lab-pro', lifetime: 'https://fxresearchlab.gumroad.com/l/lab-pro-lifetime' };
+export const GUMROAD_LIBRARY = 'https://app.gumroad.com/library';
+export const GUMROAD_SUBSCRIPTIONS = 'https://app.gumroad.com/subscriptions';
