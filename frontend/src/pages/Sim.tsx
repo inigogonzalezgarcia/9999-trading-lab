@@ -3,6 +3,7 @@ import { ProBanner } from '../components/ProBanner';
 import { Level8 } from '../components/sim/Level8';
 import { Level0, Level1, Level2 } from '../components/sim/Levels';
 import { Level3, Level4 } from '../components/sim/Levels34';
+import { Level5, Level6 } from '../components/sim/Levels56';
 import { LEVELS } from '../content/sim';
 import { useT } from '../i18n';
 import { Link } from '../router';
@@ -23,6 +24,8 @@ export function SimPage({ n }: { n: string }) {
   const pro = isPro(user) || !configured;
   if (index === 3 && pro) return <Level3 />;
   if (index === 4 && pro) return <Level4 />;
+  if (index === 5 && pro) return <Level5 />;
+  if (index === 6 && pro) return <Level6 />;
   if (index === 8 && pro) return <Level8 />;
   return (
     <main className="prose sim">

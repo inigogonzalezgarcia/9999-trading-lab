@@ -504,3 +504,4 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
 .calc-row .row-actions { margin: 0; flex-wrap: wrap; }
 .knob input[type="range"] { width: 100%; accent-color: var(--accent); }
 @media (max-width: 640px) { .calc-row { grid-template-columns: 1fr; } }
+.mc-fan { width: 100%; max-width: 640px; height: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
