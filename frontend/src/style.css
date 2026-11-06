@@ -493,3 +493,14 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
 .grid-years { display: grid; gap: 10px; }
 .plan-table.small { font-size: 0.88rem; margin: 0; }
 .plan-table.small td, .plan-table.small th { padding: 6px 8px; }
+
+/* ---------- levels 3–4 ---------- */
+.r-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.r-list span { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.calc { display: grid; gap: 8px; }
+.calc-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.calc-row input { width: 110px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+.calc-row.ok { border-color: var(--good); }
+.calc-row .row-actions { margin: 0; flex-wrap: wrap; }
+.knob input[type="range"] { width: 100%; accent-color: var(--accent); }
+@media (max-width: 640px) { .calc-row { grid-template-columns: 1fr; } }

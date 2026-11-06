@@ -2,6 +2,7 @@ import { isPro, useAuth } from '../auth';
 import { ProBanner } from '../components/ProBanner';
 import { Level8 } from '../components/sim/Level8';
 import { Level0, Level1, Level2 } from '../components/sim/Levels';
+import { Level3, Level4 } from '../components/sim/Levels34';
 import { LEVELS } from '../content/sim';
 import { useT } from '../i18n';
 import { Link } from '../router';
@@ -19,7 +20,10 @@ export function SimPage({ n }: { n: string }) {
   if (index === 0) return <Level0 />;
   if (index === 1) return <Level1 />;
   if (index === 2) return <Level2 />;
-  if (index === 8 && (isPro(user) || !configured)) return <Level8 />;
+  const pro = isPro(user) || !configured;
+  if (index === 3 && pro) return <Level3 />;
+  if (index === 4 && pro) return <Level4 />;
+  if (index === 8 && pro) return <Level8 />;
   return (
     <main className="prose sim">
       <p className="kicker">{es ? `Nivel ${index} · Lab Pro · ${level.minutes} min` : `Level ${index} · Lab Pro · ${level.minutes} min`}</p>
