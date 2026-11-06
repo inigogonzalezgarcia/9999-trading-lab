@@ -213,6 +213,9 @@ def cmd_protect_web(args) -> int:
     if not data_key:
         print("DATA_KEY missing: export DATA_KEY=... or write it to secrets/data_key.txt", file=sys.stderr)
         return 2
+    if args.rekey_from:
+        names = webprotect.rekey_all(Path(args.out), args.rekey_from, data_key)
+        print(f"re-encrypted {len(names)} files from the previous key")
     infos = webprotect.protect_all(Path(args.out), data_key)
     for info in infos:
         print(f"  {info['id']}: " + ("demo, public" if info.get("demo") else f"encrypted {info.get('private_keys', [])}" + (" + pdf" if info.get("pdf") else "")))
@@ -314,6 +317,7 @@ def build_parser() -> argparse.ArgumentParser:
     protect = sub.add_parser("protect-web", help="encrypt the Lab Pro part of already exported runs (needs DATA_KEY)")
     protect.add_argument("--out", default="frontend/public/data")
     protect.add_argument("--data-root", default=".")
+    protect.add_argument("--rekey-from", help="previous DATA_KEY: re-encrypt existing .enc files with the current key first")
     protect.set_defaults(func=cmd_protect_web)
 
     stress = sub.add_parser("stress", help="generate labelled synthetic data for performance testing")

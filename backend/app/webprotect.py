@@ -34,12 +34,15 @@ def is_demo(run_id: str) -> bool:
 
 def load_data_key(root: Path | None = None) -> str | None:
     key = os.environ.get("DATA_KEY", "").strip()
-    if key:
-        return key
-    path = (root or Path.cwd()) / "secrets" / "data_key.txt"
-    if path.exists():
-        return path.read_text(encoding="utf-8").strip() or None
-    return None
+    if not key:
+        path = (root or Path.cwd()) / "secrets" / "data_key.txt"
+        if path.exists():
+            key = path.read_text(encoding="utf-8").strip()
+    if not key:
+        return None
+    if len(key) < 32 or "PEGA" in key.upper() or "PASTE" in key.upper():
+        raise SystemExit("DATA_KEY looks like a placeholder or is too short: generate one with `openssl rand -hex 32`")
+    return key
 
 
 def run_key(data_key: str, run_id: str) -> bytes:
@@ -124,3 +127,20 @@ def protect_run(out: Path, run_id: str, data_key: str) -> dict[str, Any]:
 
 def protect_all(out: Path, data_key: str) -> list[dict[str, Any]]:
     return [protect_run(out, path.stem, data_key) for path in sorted((out / "runs").glob("*.json")) if not path.name.endswith(".meta.json")]
+
+
+def decrypt(key: bytes, blob: bytes) -> bytes:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    return AESGCM(key).decrypt(blob[:12], blob[12:], None)
+
+
+def rekey_all(out: Path, old_key: str, new_key: str) -> list[str]:
+    """Re-encrypt every ``.enc`` / ``.pdf.enc`` from ``old_key`` to ``new_key`` (after a key mix-up or rotation)."""
+    done: list[str] = []
+    for path in sorted((out / "runs").glob("*.enc")):
+        run_id = path.name[: -len(".pdf.enc")] if path.name.endswith(".pdf.enc") else path.stem
+        plain = decrypt(run_key(old_key, run_id), path.read_bytes())
+        path.write_bytes(encrypt(run_key(new_key, run_id), plain))
+        done.append(path.name)
+    return done
