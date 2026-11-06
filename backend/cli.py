@@ -1,4 +1,4 @@
-"""Command-line interface for the FX Research Lab (educational research only).
+"""Command-line interface for the FX Trading Lab (educational research only).
 
 Examples::
 

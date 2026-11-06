@@ -43,7 +43,7 @@ def cover_svg(lang: str = "es") -> str:
     d, zero = steps_path(values, 760, 170, 440, 300)
     t1, t2 = ("Cómo leer", "un backtest") if es else ("How to read", "a backtest")
     sub = "Guía + plantilla de informe + checklist + datasets" if es else "Guide + report template + checklist + datasets"
-    kicker = "KIT · FX RESEARCH LAB" if es else "KIT · FX RESEARCH LAB"
+    kicker = "KIT · FX TRADING LAB" if es else "KIT · FX TRADING LAB"
     tags = ["Monte Carlo", "benchmark" if es else "benchmark", "sensibilidad" if es else "sensitivity", "walk-forward"]
     foot = "Material educativo · no es asesoramiento de inversión · ES / EN" if es else "Educational material · not investment advice · ES / EN"
     tag_x = 72
@@ -84,7 +84,7 @@ def thumb_svg(lang: str = "es") -> str:
     d, zero = steps_path(values, 70, 300, 460, 200)
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
   <rect width="600" height="600" fill="{PAPER}"/>
-  <text x="50" y="92" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="3" fill="{ACCENT}">KIT · FX RESEARCH LAB</text>
+  <text x="50" y="92" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="3" fill="{ACCENT}">KIT · FX TRADING LAB</text>
   <text x="50" y="170" font-family="{FONT}" font-size="60" font-weight="700" fill="{INK}" letter-spacing="-1.5">{'Cómo leer' if es else 'How to read'}</text>
   <text x="50" y="235" font-family="{FONT}" font-size="60" font-weight="700" fill="{INK}" letter-spacing="-1.5">{'un backtest' if es else 'a backtest'}</text>
   <line x1="60" x2="540" y1="{zero:.1f}" y2="{zero:.1f}" stroke="{MUTED}" stroke-width="1.2" stroke-dasharray="6 5"/>
@@ -108,10 +108,10 @@ def og_svg(lang: str = "es") -> str:
   <path d="{d}" fill="none" stroke="{ACCENT}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
   <text x="1136" y="120" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="15" fill="{MUTED}">V1.1 · EUR/USD 2024 · +2.35R</text>
   <text x="1136" y="470" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="15" fill="{BAD}">{'2022: -8.01R · el año bueno no se repitió' if es else '2022: -8.01R · the good year did not repeat'}</text>
-  <text x="64" y="130" font-family="ui-monospace, Menlo, monospace" font-size="18" letter-spacing="3" fill="{ACCENT}">FX RESEARCH LAB</text>
+  <text x="64" y="130" font-family="ui-monospace, Menlo, monospace" font-size="18" letter-spacing="3" fill="{ACCENT}">FX TRADING LAB</text>
   <text x="64" y="230" font-family="{FONT}" font-size="72" font-weight="700" fill="{INK}" letter-spacing="-2">{'Aprende a leer' if es else 'Learn to read'}</text>
   <text x="64" y="310" font-family="{FONT}" font-size="72" font-weight="700" fill="{INK}" letter-spacing="-2">{'un backtest' if es else 'a backtest'}</text>
-  <text x="64" y="380" font-family="{FONT}" font-size="26" fill="{MUTED}">{'Simulador educativo · resultados reales de tres años' if es else 'Educational simulator · three years of real results'}</text>
+  <text x="64" y="380" font-family="{FONT}" font-size="26" fill="{MUTED}">{'Simulador educativo · resultados reales de ocho años' if es else 'Educational simulator · eight years of real results'}</text>
   <text x="64" y="420" font-family="{FONT}" font-size="26" fill="{MUTED}">{'Sin señales · sin ejecución real · código abierto' if es else 'No signals · no live execution · open source'}</text>
   <line x1="64" x2="1136" y1="530" y2="530" stroke="{LINE}" stroke-width="1.5"/>
   <text x="64" y="572" font-family="{FONT}" font-size="18" fill="{MUTED}">{'Material educativo · no es asesoramiento de inversión' if es else 'Educational material · not investment advice'}</text>

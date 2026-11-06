@@ -32,8 +32,8 @@ export const STRINGS = {
   'home.kicker': { es: 'Aprende a comprobar una idea de trading con método', en: 'Learn to test a trading idea with method' },
   'home.title': { es: 'Un laboratorio real, con resultados reales. Incluidos los que no funcionan.', en: 'A real lab, with real results. Including the ones that do not work.' },
   'home.lead': {
-    es: 'FX Research Lab es un simulador educativo: una hipótesis intradía sobre EUR/USD y GBP/USD, un motor de backtesting sin trampas y un protocolo de investigación que la pone a prueba. No te enseña a ganar; te enseña a saber si algo funciona.',
-    en: 'FX Research Lab is an educational simulator: an intraday hypothesis on EUR/USD and GBP/USD, a backtesting engine with no shortcuts and a research protocol that puts it to the test. It does not teach you to win; it teaches you to know whether something works.',
+    es: 'FX Trading Lab es un simulador educativo: una hipótesis intradía sobre EUR/USD y GBP/USD, un motor de backtesting sin trampas y un protocolo de investigación que la pone a prueba. No te enseña a ganar; te enseña a saber si algo funciona.',
+    en: 'FX Trading Lab is an educational simulator: an intraday hypothesis on EUR/USD and GBP/USD, a backtesting engine with no shortcuts and a research protocol that puts it to the test. It does not teach you to win; it teaches you to know whether something works.',
   },
   'home.ctaLab': { es: 'Explorar el laboratorio', en: 'Explore the lab' },
   'home.ctaLessons': { es: 'Empezar las lecciones gratis', en: 'Start the free lessons' },
@@ -235,7 +235,7 @@ export const STRINGS = {
   // Subscribe
   'sub.email': { es: 'Tu correo', en: 'Your email' },
   'sub.button': { es: 'Avisarme', en: 'Notify me' },
-  'sub.consent': { es: 'Acepto recibir correos sobre FX Research Lab y he leído la política de privacidad. Puedo darme de baja en cualquier momento.', en: 'I agree to receive emails about FX Research Lab and have read the privacy policy. I can unsubscribe at any time.' },
+  'sub.consent': { es: 'Acepto recibir correos sobre FX Trading Lab y he leído la política de privacidad. Puedo darme de baja en cualquier momento.', en: 'I agree to receive emails about FX Trading Lab and have read the privacy policy. I can unsubscribe at any time.' },
   'sub.ok': { es: 'Apuntado. Gracias: te escribo solo cuando haya algo nuevo.', en: 'Signed up. Thanks: I will only write when there is something new.' },
   'sub.error': { es: 'No se pudo guardar el correo. Inténtalo de nuevo en un momento.', en: 'The email could not be saved. Please try again in a moment.' },
   'sub.invalid': { es: 'Escribe un correo válido.', en: 'Enter a valid email.' },

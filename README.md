@@ -1,4 +1,4 @@
-# FX Research Lab
+# FX Trading Lab
 
 Local-first, **educational** research and backtesting platform for a deterministic intraday FX hypothesis
 (EUR/USD and GBP/USD, Madrid-session observation windows). Strategy V1 is fully specified in software and runs

@@ -8,7 +8,7 @@ SYMBOLS="${SYMBOLS:-EURUSD GBPUSD}"
 LOG="data/fetch_history.log"
 mkdir -p data/raw
 if [ -f .venv/bin/activate ]; then . .venv/bin/activate; fi
-echo "FX Research Lab — downloading $SYMBOLS for $YEARS (log: $LOG). Close this window to stop; relaunch to resume."
+echo "FX Trading Lab — downloading $SYMBOLS for $YEARS (log: $LOG). Close this window to stop; relaunch to resume."
 nohup caffeinate -i sh -c "
 for y in $YEARS; do
   for s in $SYMBOLS; do

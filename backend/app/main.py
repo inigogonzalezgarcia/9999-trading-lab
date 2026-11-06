@@ -31,7 +31,7 @@ MAX_UPLOAD_MB = float(os.getenv("FXLAB_MAX_UPLOAD_MB", "250"))
 CORS_ORIGINS = [origin.strip() for origin in os.getenv("FXLAB_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if origin.strip()]
 STATIC_DIR = Path(os.getenv("FXLAB_STATIC_DIR", ROOT / "frontend" / "dist"))
 
-app = FastAPI(title="FX Research Lab", version=service.SOFTWARE_VERSION,
+app = FastAPI(title="FX Trading Lab", version=service.SOFTWARE_VERSION,
               description="Educational historical research and backtesting only; no broker execution.")
 app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
 jobs = JobManager(workers=int(os.getenv("FXLAB_JOB_WORKERS", "2")))

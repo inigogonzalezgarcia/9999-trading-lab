@@ -43,7 +43,7 @@ from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemp
 
 from app.report import MUTED, _bar_chart, _line_chart, _styles, _table  # noqa: E402
 
-KIT_VERSION = "1.3"
+KIT_VERSION = "1.4"
 SITE = "https://fx-trading-lab.pages.dev"
 REPO = "https://github.com/inigogonzalezgarcia/9999-trading-lab"
 DISCLAIMER_URL = f"{SITE}/legal/aviso"
@@ -141,8 +141,8 @@ def guide_content(runs: dict[str, dict[str, Any]], lang: str) -> list[tuple[str,
 
     # ------------------------------------------------------------------ cover
     A(("title", t("Cómo leer un backtest", "How to read a backtest")))
-    A(("subtitle", t(f"Guía práctica con datos reales · FX Research Lab · kit v{KIT_VERSION} · generada {datetime.now(timezone.utc):%Y-%m-%d}",
-                     f"A practical guide on real data · FX Research Lab · kit v{KIT_VERSION} · generated {datetime.now(timezone.utc):%Y-%m-%d}")))
+    A(("subtitle", t(f"Guía práctica con datos reales · FX Trading Lab · kit v{KIT_VERSION} · generada {datetime.now(timezone.utc):%Y-%m-%d}",
+                     f"A practical guide on real data · FX Trading Lab · kit v{KIT_VERSION} · generated {datetime.now(timezone.utc):%Y-%m-%d}")))
     A(("notice", t("Material educativo. No es asesoramiento de inversión ni una recomendación de operar. Todos los números son resultados simulados sobre datos históricos; "
                    "el rendimiento pasado no garantiza resultados futuros. Las hipótesis que aparecen aquí no han demostrado ninguna ventaja; se usan precisamente para enseñar a comprobarlo. "
                    f"Aviso completo: {DISCLAIMER_URL}",
@@ -466,8 +466,8 @@ def glossary(lang: str) -> list[list[str]]:
 
 
 def _footer_factory(lang: str):
-    text = ("FX Research Lab · material educativo · resultados simulados, no es asesoramiento de inversión · el pasado no garantiza el futuro"
-            if lang == "es" else "FX Research Lab · educational material · simulated results, not investment advice · the past does not guarantee the future")
+    text = ("FX Trading Lab · material educativo · resultados simulados, no es asesoramiento de inversión · el pasado no garantiza el futuro"
+            if lang == "es" else "FX Trading Lab · educational material · simulated results, not investment advice · the past does not guarantee the future")
 
     def footer(canvas, doc) -> None:
         canvas.saveState()
@@ -488,7 +488,7 @@ def render_pdf(blocks: list[tuple[str, Any]], title: str, lang: str) -> bytes:
     styles["h2"].fontSize, styles["h2"].leading = 13, 16
     styles["title"].fontSize, styles["title"].leading = 30, 34
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=18 * mm, title=title, author="FX Research Lab")
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=18 * mm, title=title, author="FX Trading Lab")
     story: list[Any] = []
     for kind, payload in blocks:
         if kind == "title":
@@ -873,7 +873,7 @@ python -m backend.cli research data/raw/EURUSD_2022.csv --strategy config/strate
 def readme(lang: str) -> str:
     es = lang == "es"
     if es:
-        return f"""KIT · CÓMO LEER UN BACKTEST · FX Research Lab · v{KIT_VERSION}
+        return f"""KIT · CÓMO LEER UN BACKTEST · FX Trading Lab · v{KIT_VERSION}
 =================================================================
 
 Material educativo. No es asesoramiento de inversión ni una recomendación de operar.
@@ -896,7 +896,7 @@ Licencia
 Soporte y versiones
   {SITE}  ·  Las actualizaciones del kit se entregan por Gumroad sin coste.
 """
-    return f"""KIT · HOW TO READ A BACKTEST · FX Research Lab · v{KIT_VERSION}
+    return f"""KIT · HOW TO READ A BACKTEST · FX Trading Lab · v{KIT_VERSION}
 =================================================================
 
 Educational material. Not investment advice nor a recommendation to trade.

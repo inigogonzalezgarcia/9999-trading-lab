@@ -131,7 +131,7 @@ def _footer(canvas, doc) -> None:
     canvas.saveState()
     canvas.setFont("Helvetica", 7)
     canvas.setFillColor(MUTED)
-    canvas.drawString(18 * mm, 10 * mm, "FX Research Lab · educational tool · simulated historical results, not investment advice · past performance does not guarantee future results")
+    canvas.drawString(18 * mm, 10 * mm, "FX Trading Lab · educational tool · simulated historical results, not investment advice · past performance does not guarantee future results")
     canvas.drawRightString(A4[0] - 18 * mm, 10 * mm, f"page {doc.page}")
     canvas.restoreState()
 
@@ -141,7 +141,7 @@ def build_pdf(result: dict[str, Any], kind: str = "backtest", meta: dict[str, An
     styles = _styles()
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=18 * mm,
-                            title="FX Research Lab report", author="FX Research Lab")
+                            title="FX Trading Lab report", author="FX Trading Lab")
     story: list[Any] = []
     repro = result.get("reproducibility", {}) or {}
     period = repro.get("dataset_date_range_utc", {}) or {}
@@ -149,7 +149,7 @@ def build_pdf(result: dict[str, Any], kind: str = "backtest", meta: dict[str, An
     label = (meta or {}).get("label") or (meta or {}).get("dataset_name") or ""
 
     # ---------------------------------------------------------------- cover
-    story.append(Paragraph("FX Research Lab — " + ("research protocol report" if kind == "research" else "backtest report"), styles["title"]))
+    story.append(Paragraph("FX Trading Lab — " + ("research protocol report" if kind == "research" else "backtest report"), styles["title"]))
     story.append(Paragraph(f"Strategy {repro.get('strategy_version', '?')} ({repro.get('strategy_file', 'strategy_v1.yaml')}) · {symbol} · "
                            f"{str(period.get('start', ''))[:10]} → {str(period.get('end', ''))[:10]} · generated {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC"
                            + (f" · {label}" if label else ""), styles["subtitle"]))
