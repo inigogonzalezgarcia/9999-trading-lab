@@ -1,0 +1,174 @@
+{
+  "total_trades": 11,
+  "winning_trades": 2,
+  "losing_trades": 9,
+  "breakeven_trades": 0,
+  "win_rate": 0.18181818181818182,
+  "expectancy_r": -0.7283085051490836,
+  "average_r": -0.7283085051490836,
+  "median_r": -1.0,
+  "average_win_r": 0.4943032216800396,
+  "average_loss_r": -1.0,
+  "profit_factor": 0.10984516037334213,
+  "payoff_ratio": 0.4943032216800396,
+  "gross_profit": 0.004854499906255632,
+  "gross_loss": -0.04423821339762184,
+  "net_pnl": -0.039383713491366205,
+  "total_r": -8.01139355663992,
+  "max_drawdown_r": 8.090289786721446,
+  "max_consecutive_losses": 5,
+  "sharpe_per_trade": -1.1516963334953363,
+  "average_mfe_r": 0.44093577609252854,
+  "average_mae_r": -0.9772643938512537,
+  "exit_reasons": {
+    "SESSION_EXPIRY": 2,
+    "STOP_LOSS": 9
+  },
+  "by_symbol": {
+    "EURUSD": {
+      "trades": 11,
+      "total_r": -8.01139355663992,
+      "expectancy_r": -0.7283085051490836,
+      "win_rate": 0.18181818181818182
+    }
+  },
+  "by_window": {
+    "0": {
+      "trades": 5,
+      "total_r": -5.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "1": {
+      "trades": 6,
+      "total_r": -3.011393556639921,
+      "expectancy_r": -0.5018989261066534,
+      "win_rate": 0.3333333333333333
+    }
+  },
+  "by_hour": {
+    "09": {
+      "trades": 7,
+      "total_r": -7.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "10": {
+      "trades": 4,
+      "total_r": -1.0113935566399208,
+      "expectancy_r": -0.2528483891599802,
+      "win_rate": 0.5
+    }
+  },
+  "by_weekday": {
+    "Mon": {
+      "trades": 1,
+      "total_r": 0.07889623008152608,
+      "expectancy_r": 0.07889623008152608,
+      "win_rate": 1.0
+    },
+    "Tue": {
+      "trades": 2,
+      "total_r": -2.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "Wed": {
+      "trades": 2,
+      "total_r": -1.9999999999999998,
+      "expectancy_r": -0.9999999999999999,
+      "win_rate": 0.0
+    },
+    "Thu": {
+      "trades": 1,
+      "total_r": -1.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "Fri": {
+      "trades": 5,
+      "total_r": -3.090289786721447,
+      "expectancy_r": -0.6180579573442894,
+      "win_rate": 0.2
+    }
+  },
+  "by_month": {
+    "2022-03": {
+      "trades": 2,
+      "total_r": -0.9211037699184739,
+      "expectancy_r": -0.46055188495923693,
+      "win_rate": 0.5
+    },
+    "2022-06": {
+      "trades": 2,
+      "total_r": -2.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "2022-07": {
+      "trades": 1,
+      "total_r": -1.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "2022-08": {
+      "trades": 1,
+      "total_r": 0.9097102132785531,
+      "expectancy_r": 0.9097102132785531,
+      "win_rate": 1.0
+    },
+    "2022-10": {
+      "trades": 1,
+      "total_r": -1.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "2022-11": {
+      "trades": 3,
+      "total_r": -3.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "2022-12": {
+      "trades": 1,
+      "total_r": -1.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    }
+  },
+  "by_exit_reason": {
+    "SESSION_EXPIRY": {
+      "trades": 2,
+      "total_r": 0.9886064433600792,
+      "expectancy_r": 0.4943032216800396,
+      "win_rate": 1.0
+    },
+    "STOP_LOSS": {
+      "trades": 9,
+      "total_r": -9.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    }
+  },
+  "by_direction": {
+    "LONG": {
+      "trades": 6,
+      "total_r": -6.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "SHORT": {
+      "trades": 5,
+      "total_r": -2.011393556639921,
+      "expectancy_r": -0.40227871132798415,
+      "win_rate": 0.4
+    }
+  },
+  "sharpe": -2.5424055377970345,
+  "sortino": -2.6290594604728064,
+  "methodology": {
+    "per_trade": "unannualised R-multiple statistics",
+    "daily": "sum of R per weekday incl. zero days; annualised with sqrt(252)",
+    "note": "Simulated historical results; not evidence of a profitable edge."
+  }
+}

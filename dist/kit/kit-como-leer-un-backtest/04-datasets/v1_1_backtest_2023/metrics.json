@@ -1,0 +1,139 @@
+{
+  "total_trades": 4,
+  "winning_trades": 1,
+  "losing_trades": 3,
+  "breakeven_trades": 0,
+  "win_rate": 0.25,
+  "expectancy_r": -0.07331220795966287,
+  "average_r": -0.07331220795966287,
+  "median_r": -0.6466244159193257,
+  "average_win_r": 2.0,
+  "average_loss_r": -0.7644162772795505,
+  "profit_factor": 0.8721251580869511,
+  "payoff_ratio": 2.6163754742608534,
+  "gross_profit": 0.009985337558408067,
+  "gross_loss": -0.011526222115850426,
+  "net_pnl": -0.001540884557442358,
+  "total_r": -0.29324883183865147,
+  "max_drawdown_r": 2.0,
+  "max_consecutive_losses": 2,
+  "sharpe_per_trade": -0.05156316467175383,
+  "average_mfe_r": 0.9627542777497322,
+  "average_mae_r": -1.0020576930764487,
+  "exit_reasons": {
+    "SESSION_EXPIRY": 1,
+    "STOP_LOSS": 2,
+    "TAKE_PROFIT": 1
+  },
+  "by_symbol": {
+    "EURUSD": {
+      "trades": 4,
+      "total_r": -0.29324883183865147,
+      "expectancy_r": -0.07331220795966287,
+      "win_rate": 0.25
+    }
+  },
+  "by_window": {
+    "1": {
+      "trades": 4,
+      "total_r": -0.29324883183865147,
+      "expectancy_r": -0.07331220795966287,
+      "win_rate": 0.25
+    }
+  },
+  "by_hour": {
+    "09": {
+      "trades": 3,
+      "total_r": 0.0,
+      "expectancy_r": 0.0,
+      "win_rate": 0.3333333333333333
+    },
+    "10": {
+      "trades": 1,
+      "total_r": -0.2932488318386516,
+      "expectancy_r": -0.2932488318386516,
+      "win_rate": 0.0
+    }
+  },
+  "by_weekday": {
+    "Tue": {
+      "trades": 1,
+      "total_r": -0.2932488318386516,
+      "expectancy_r": -0.2932488318386516,
+      "win_rate": 0.0
+    },
+    "Fri": {
+      "trades": 3,
+      "total_r": 0.0,
+      "expectancy_r": 0.0,
+      "win_rate": 0.3333333333333333
+    }
+  },
+  "by_month": {
+    "2023-01": {
+      "trades": 1,
+      "total_r": -0.2932488318386516,
+      "expectancy_r": -0.2932488318386516,
+      "win_rate": 0.0
+    },
+    "2023-06": {
+      "trades": 1,
+      "total_r": 2.0,
+      "expectancy_r": 2.0,
+      "win_rate": 1.0
+    },
+    "2023-09": {
+      "trades": 1,
+      "total_r": -1.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "2023-10": {
+      "trades": 1,
+      "total_r": -1.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    }
+  },
+  "by_exit_reason": {
+    "SESSION_EXPIRY": {
+      "trades": 1,
+      "total_r": -0.2932488318386516,
+      "expectancy_r": -0.2932488318386516,
+      "win_rate": 0.0
+    },
+    "STOP_LOSS": {
+      "trades": 2,
+      "total_r": -2.0,
+      "expectancy_r": -1.0,
+      "win_rate": 0.0
+    },
+    "TAKE_PROFIT": {
+      "trades": 1,
+      "total_r": 2.0,
+      "expectancy_r": 2.0,
+      "win_rate": 1.0
+    }
+  },
+  "by_direction": {
+    "LONG": {
+      "trades": 2,
+      "total_r": -1.2932488318386515,
+      "expectancy_r": -0.6466244159193257,
+      "win_rate": 0.0
+    },
+    "SHORT": {
+      "trades": 2,
+      "total_r": 1.0,
+      "expectancy_r": 0.5,
+      "win_rate": 0.5
+    }
+  },
+  "sharpe": -0.1168043737840496,
+  "sortino": -0.19989101276559068,
+  "methodology": {
+    "per_trade": "unannualised R-multiple statistics",
+    "daily": "sum of R per weekday incl. zero days; annualised with sqrt(252)",
+    "note": "Simulated historical results; not evidence of a profitable edge."
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "splits": {
+    "train": {
+      "start": "2024-01-01T22:01:00+00:00",
+      "end": "2024-08-07T22:00:24+00:00"
+    },
+    "validation": {
+      "start": "2024-08-07T22:00:24+00:00",
+      "end": "2024-10-19T22:00:12+00:00"
+    },
+    "out_of_sample": {
+      "start": "2024-10-19T22:00:12+00:00",
+      "end": "2024-12-31T22:01:00+00:00"
+    }
+  },
+  "results": {
+    "train": {
+      "period": {
+        "start": "2024-01-01T22:01:00+00:00",
+        "end": "2024-08-07T22:00:24+00:00",
+        "warmup_days": 15
+      },
+      "trades": 4,
+      "candidates": 1859,
+      "expectancy_r": -0.8622103141889416,
+      "total_r": -3.4488412567557662,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "max_drawdown_r": 3.4488412567557662,
+      "annualized_sharpe": -2.4556103068611033,
+      "trading_days": 158
+    },
+    "validation": {
+      "period": {
+        "start": "2024-08-07T22:00:24+00:00",
+        "end": "2024-10-19T22:00:12+00:00",
+        "warmup_days": 15
+      },
+      "trades": 1,
+      "candidates": 508,
+      "expectancy_r": 0.8385066013812723,
+      "total_r": 0.8385066013812723,
+      "win_rate": 1.0,
+      "profit_factor": null,
+      "max_drawdown_r": 0.0,
+      "annualized_sharpe": 2.180531352934894,
+      "trading_days": 53
+    },
+    "out_of_sample": {
+      "period": {
+        "start": "2024-10-19T22:00:12+00:00",
+        "end": "2024-12-31T22:01:00+00:00",
+        "warmup_days": 15
+      },
+      "trades": 0,
+      "candidates": 483,
+      "expectancy_r": 0.0,
+      "total_r": 0.0,
+      "win_rate": 0.0,
+      "profit_factor": null,
+      "max_drawdown_r": 0.0,
+      "annualized_sharpe": null,
+      "trading_days": 52
+    }
+  },
+  "note": "Out-of-sample metrics are the only ones that may be quoted as evidence; the baseline has no fitted parameters, so train/validation serve as independent replications."
+}

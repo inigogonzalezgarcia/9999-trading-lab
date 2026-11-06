@@ -1,0 +1,24 @@
+{
+  "simulations": 200,
+  "seed": 7,
+  "trades_per_simulation": 11,
+  "baseline_expectancy_r": -0.7283085051490836,
+  "baseline_total_r": -8.01139355663992,
+  "random_expectancy_percentiles": {
+    "5": -0.5736742508199899,
+    "25": -0.2663523557541677,
+    "50": -0.013782900031978493,
+    "75": 0.256347868020052,
+    "95": 0.5584956017330395
+  },
+  "random_total_r_percentiles": {
+    "5": -6.310416759019889,
+    "25": -2.9298759132958443,
+    "50": -0.15161190035176342,
+    "75": 2.819826548220572,
+    "95": 6.143451619063433
+  },
+  "baseline_percentile_vs_random": 0.01,
+  "empirical_p_value_one_sided": 0.99,
+  "note": "Random entries inside the observation windows with identical stop distance, target, costs and session expiry."
+}

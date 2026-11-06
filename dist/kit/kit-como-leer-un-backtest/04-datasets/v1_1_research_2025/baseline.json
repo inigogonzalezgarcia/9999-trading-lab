@@ -1,0 +1,16 @@
+{
+  "period": {
+    "start": "2025-01-01T22:01:00+00:00",
+    "end": "2025-12-31T21:58:00+00:00",
+    "warmup_days": 0
+  },
+  "trades": 10,
+  "candidates": 2578,
+  "expectancy_r": -0.09554625436035571,
+  "total_r": -0.9554625436035571,
+  "win_rate": 0.5,
+  "profit_factor": 0.7837810231084423,
+  "max_drawdown_r": 1.8923078561926607,
+  "annualized_sharpe": -0.3526793571515695,
+  "trading_days": 261
+}

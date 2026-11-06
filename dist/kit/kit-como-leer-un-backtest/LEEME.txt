@@ -1,0 +1,22 @@
+KIT · CÓMO LEER UN BACKTEST · FX Trading Lab · v1.4
+=================================================================
+
+Material educativo. No es asesoramiento de inversión ni una recomendación de operar.
+Todos los números son resultados simulados sobre datos históricos; el rendimiento pasado
+no garantiza resultados futuros. Aviso completo: https://fx-trading-lab.pages.dev/legal/aviso
+
+Contenido
+  01-guia/        La guía (PDF, ES y EN). Empieza por aquí.
+  02-plantilla/   Plantilla de informe de backtest (Markdown y PDF).
+  03-checklist/   Checklist de decisión (Markdown).
+  04-datasets/    Operaciones, curva, métricas, sensibilidad, Monte Carlo, benchmark,
+                  walk-forward y reproducibilidad de cada ejecución (2022, 2023 y 2024), con SHA256SUMS.txt
+                  y las instrucciones para descargar las velas originales.
+
+Licencia
+  Guía, plantilla y checklist: uso personal; no redistribuir ni revender.
+  Datasets derivados: puedes usarlos y citarlos; las velas originales son del proveedor.
+  Código del laboratorio: MIT, en https://github.com/inigogonzalezgarcia/9999-trading-lab
+
+Soporte y versiones
+  https://fx-trading-lab.pages.dev  ·  Las actualizaciones del kit se entregan por Gumroad sin coste.

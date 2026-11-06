@@ -1,0 +1,67 @@
+{
+  "splits": {
+    "train": {
+      "start": "2025-01-01T22:01:00+00:00",
+      "end": "2025-08-08T07:35:12+00:00"
+    },
+    "validation": {
+      "start": "2025-08-08T07:35:12+00:00",
+      "end": "2025-10-20T02:46:36+00:00"
+    },
+    "out_of_sample": {
+      "start": "2025-10-20T02:46:36+00:00",
+      "end": "2025-12-31T21:59:00+00:00"
+    }
+  },
+  "results": {
+    "train": {
+      "period": {
+        "start": "2025-01-01T22:01:00+00:00",
+        "end": "2025-08-08T07:35:12+00:00",
+        "warmup_days": 15
+      },
+      "trades": 3,
+      "candidates": 1394,
+      "expectancy_r": -0.5725153941534272,
+      "total_r": -1.7175461824602816,
+      "win_rate": 0.3333333333333333,
+      "profit_factor": 0.14122690876985924,
+      "max_drawdown_r": 1.7175461824602816,
+      "annualized_sharpe": -1.5060899173196522,
+      "trading_days": 158
+    },
+    "validation": {
+      "period": {
+        "start": "2025-08-08T07:35:12+00:00",
+        "end": "2025-10-20T02:46:36+00:00",
+        "warmup_days": 15
+      },
+      "trades": 2,
+      "candidates": 599,
+      "expectancy_r": 0.6220980843174005,
+      "total_r": 1.244196168634801,
+      "win_rate": 1.0,
+      "profit_factor": null,
+      "max_drawdown_r": 0.0,
+      "annualized_sharpe": 2.920054880392864,
+      "trading_days": 52
+    },
+    "out_of_sample": {
+      "period": {
+        "start": "2025-10-20T02:46:36+00:00",
+        "end": "2025-12-31T21:59:00+00:00",
+        "warmup_days": 15
+      },
+      "trades": 5,
+      "candidates": 553,
+      "expectancy_r": -0.09642250595561523,
+      "total_r": -0.48211252977807617,
+      "win_rate": 0.4,
+      "profit_factor": 0.8006941165595993,
+      "max_drawdown_r": 1.4189578423671798,
+      "annualized_sharpe": -0.5151438723191908,
+      "trading_days": 53
+    }
+  },
+  "note": "Out-of-sample metrics are the only ones that may be quoted as evidence; the baseline has no fitted parameters, so train/validation serve as independent replications."
+}

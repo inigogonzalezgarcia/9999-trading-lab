@@ -1,0 +1,16 @@
+{
+  "period": {
+    "start": "2026-01-01T22:05:00+00:00",
+    "end": "2026-10-30T20:59:00+00:00",
+    "warmup_days": 0
+  },
+  "trades": 3,
+  "candidates": 1886,
+  "expectancy_r": 0.6472346786246957,
+  "total_r": 1.9417040358740874,
+  "win_rate": 0.6666666666666666,
+  "profit_factor": 2.9417040358740874,
+  "max_drawdown_r": 1.0,
+  "annualized_sharpe": 0.8616926710319528,
+  "trading_days": 217
+}

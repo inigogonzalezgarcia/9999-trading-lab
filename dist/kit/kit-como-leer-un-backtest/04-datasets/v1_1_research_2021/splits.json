@@ -1,0 +1,67 @@
+{
+  "splits": {
+    "train": {
+      "start": "2021-01-03T22:01:00+00:00",
+      "end": "2021-08-09T02:47:48+00:00"
+    },
+    "validation": {
+      "start": "2021-08-09T02:47:48+00:00",
+      "end": "2021-10-20T12:23:24+00:00"
+    },
+    "out_of_sample": {
+      "start": "2021-10-20T12:23:24+00:00",
+      "end": "2021-12-31T22:00:00+00:00"
+    }
+  },
+  "results": {
+    "train": {
+      "period": {
+        "start": "2021-01-03T22:01:00+00:00",
+        "end": "2021-08-09T02:47:48+00:00",
+        "warmup_days": 15
+      },
+      "trades": 5,
+      "candidates": 1165,
+      "expectancy_r": 0.8211691310387845,
+      "total_r": 4.105845655193923,
+      "win_rate": 0.8,
+      "profit_factor": 5.105845655193923,
+      "max_drawdown_r": 1.0,
+      "annualized_sharpe": 1.6727894038661926,
+      "trading_days": 156
+    },
+    "validation": {
+      "period": {
+        "start": "2021-08-09T02:47:48+00:00",
+        "end": "2021-10-20T12:23:24+00:00",
+        "warmup_days": 15
+      },
+      "trades": 1,
+      "candidates": 427,
+      "expectancy_r": -1.0,
+      "total_r": -1.0,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "max_drawdown_r": 1.0,
+      "annualized_sharpe": -2.180531352934893,
+      "trading_days": 53
+    },
+    "out_of_sample": {
+      "period": {
+        "start": "2021-10-20T12:23:24+00:00",
+        "end": "2021-12-31T22:00:00+00:00",
+        "warmup_days": 15
+      },
+      "trades": 1,
+      "candidates": 516,
+      "expectancy_r": 0.7589158345219953,
+      "total_r": 0.7589158345219953,
+      "win_rate": 1.0,
+      "profit_factor": null,
+      "max_drawdown_r": 0.0,
+      "annualized_sharpe": 2.180531352934894,
+      "trading_days": 53
+    }
+  },
+  "note": "Out-of-sample metrics are the only ones that may be quoted as evidence; the baseline has no fitted parameters, so train/validation serve as independent replications."
+}

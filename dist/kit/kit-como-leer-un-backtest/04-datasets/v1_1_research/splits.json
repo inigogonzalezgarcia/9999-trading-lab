@@ -1,0 +1,67 @@
+{
+  "splits": {
+    "train": {
+      "start": "2024-01-01T22:01:00+00:00",
+      "end": "2024-08-07T22:00:24+00:00"
+    },
+    "validation": {
+      "start": "2024-08-07T22:00:24+00:00",
+      "end": "2024-10-19T22:00:12+00:00"
+    },
+    "out_of_sample": {
+      "start": "2024-10-19T22:00:12+00:00",
+      "end": "2024-12-31T22:01:00+00:00"
+    }
+  },
+  "results": {
+    "train": {
+      "period": {
+        "start": "2024-01-01T22:01:00+00:00",
+        "end": "2024-08-07T22:00:24+00:00",
+        "warmup_days": 15
+      },
+      "trades": 8,
+      "candidates": 1177,
+      "expectancy_r": 0.1338291834761155,
+      "total_r": 1.070633467808924,
+      "win_rate": 0.375,
+      "profit_factor": 1.3252153653292427,
+      "max_drawdown_r": 3.006628003314007,
+      "annualized_sharpe": 0.40239738094140026,
+      "trading_days": 158
+    },
+    "validation": {
+      "period": {
+        "start": "2024-08-07T22:00:24+00:00",
+        "end": "2024-10-19T22:00:12+00:00",
+        "warmup_days": 15
+      },
+      "trades": 3,
+      "candidates": 391,
+      "expectancy_r": 0.43806720627905227,
+      "total_r": 1.3142016188371568,
+      "win_rate": 0.6666666666666666,
+      "profit_factor": 2.314201618837157,
+      "max_drawdown_r": 1.0,
+      "annualized_sharpe": 1.2611004337337213,
+      "trading_days": 53
+    },
+    "out_of_sample": {
+      "period": {
+        "start": "2024-10-19T22:00:12+00:00",
+        "end": "2024-12-31T22:01:00+00:00",
+        "warmup_days": 15
+      },
+      "trades": 1,
+      "candidates": 458,
+      "expectancy_r": -0.0322853409182704,
+      "total_r": -0.0322853409182704,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "max_drawdown_r": 0.0322853409182704,
+      "annualized_sharpe": -2.201398157116029,
+      "trading_days": 52
+    }
+  },
+  "note": "Out-of-sample metrics are the only ones that may be quoted as evidence; the baseline has no fitted parameters, so train/validation serve as independent replications."
+}

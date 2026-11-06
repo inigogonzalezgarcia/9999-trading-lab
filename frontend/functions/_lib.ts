@@ -26,6 +26,8 @@ export interface Env {
   BREVO_API_KEY?: string;
   MAIL_FROM?: string;
   SITE_URL?: string;
+  /** Derives the per-run keys that unlock the encrypted Lab Pro part of the static run files. */
+  DATA_KEY?: string;
 }
 export interface PagesContext { request: Request; env: Env; waitUntil?: (p: Promise<unknown>) => void }
 

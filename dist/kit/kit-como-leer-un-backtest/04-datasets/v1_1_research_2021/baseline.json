@@ -1,0 +1,16 @@
+{
+  "period": {
+    "start": "2021-01-03T22:01:00+00:00",
+    "end": "2021-12-31T21:59:00+00:00",
+    "warmup_days": 0
+  },
+  "trades": 7,
+  "candidates": 2114,
+  "expectancy_r": 0.5521087842451311,
+  "total_r": 3.8647614897159177,
+  "win_rate": 0.7142857142857143,
+  "profit_factor": 2.932380744857959,
+  "max_drawdown_r": 1.0,
+  "annualized_sharpe": 1.1298871886461312,
+  "trading_days": 260
+}

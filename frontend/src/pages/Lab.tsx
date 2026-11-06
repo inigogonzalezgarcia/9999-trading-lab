@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, formatR, shortTime, type RunOptions } from '../api';
+import { api, formatR, protectedPdfUrl, shortTime, type RunOptions } from '../api';
 import { useT } from '../i18n';
 import { Link, useRoute } from '../router';
 import { STATIC_MODE } from '../site';
@@ -222,7 +222,10 @@ export function LabPage({ runId }: { runId?: string }) {
               <span className="tab-actions">
                 <button type="button" className="ghost" onClick={() => window.print()}>{t('lab.print')}</button>
                 {currentId && <a className="ghost button" href={api.resultJsonUrl(currentId)}>JSON</a>}
-                {currentId && (pro || isDemo(currentId)) && (!STATIC_MODE || runs.find((r) => r.id === currentId)?.pdf) && <a className="ghost button" href={api.reportPdfUrl(currentId)} target="_blank" rel="noreferrer">{t('lab.pdf')}</a>}
+                {currentId && (pro || isDemo(currentId)) && (!STATIC_MODE || runs.find((r) => r.id === currentId)?.pdf) && (
+                  runs.find((r) => r.id === currentId)?.pdf?.endsWith('.enc')
+                    ? <button type="button" className="ghost" onClick={async () => { const url = await protectedPdfUrl(currentId); if (url) window.open(url, '_blank', 'noopener'); }}>{t('lab.pdf')}</button>
+                    : <a className="ghost button" href={api.reportPdfUrl(currentId)} target="_blank" rel="noreferrer">{t('lab.pdf')}</a>)}
               </span>
             )}
           </div>

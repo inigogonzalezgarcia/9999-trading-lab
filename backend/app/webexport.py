@@ -158,3 +158,11 @@ def _export_one(entry: dict[str, Any], out: Path, data_root: Path, datasets: dic
             say(f"[{run_id}] PDF skipped: {exc}")
     (out / "runs" / f"{run_id}.meta.json").write_text(json.dumps(meta, indent=1, default=str), encoding="utf-8")
     say(f"[{run_id}] written ({meta['size_bytes'] / 1e6:.1f} MB)")
+    from . import webprotect
+
+    data_key = webprotect.load_data_key(data_root)
+    if data_key:
+        info = webprotect.protect_run(out, run_id, data_key)
+        say(f"[{run_id}] " + ("demo: public" if info.get("demo") else f"Lab Pro part encrypted ({', '.join(info.get('private_keys', []))})"))
+    elif not webprotect.is_demo(run_id):
+        say(f"[{run_id}] WARNING: DATA_KEY not set, Lab Pro content left public (run protect-web later)")

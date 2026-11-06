@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { resetRunKeys } from './api';
 import { readSim, replaceSim, type LevelProgress } from './progress';
 import { BASE_URL } from './site';
 
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
       setState({ ready: true, configured: data.configured, user: data.user });
+      resetRunKeys();
     } catch {
       setState({ ready: true, configured: false, user: null });
     }

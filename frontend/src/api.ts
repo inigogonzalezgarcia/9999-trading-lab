@@ -1,5 +1,5 @@
 import type { BacktestResult, Job, Notice, ResearchReport, RunRow, SiteIndex } from './types';
-import { DATA_BASE, STATIC_MODE } from './site';
+import { BASE_URL, DATA_BASE, STATIC_MODE } from './site';
 
 // Empty base means same origin (production image); dev defaults to the local API port.
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:8000' : '');
@@ -111,13 +111,68 @@ const staticApi: Api = {
     const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.json`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = (await response.json()) as BacktestResult | ResearchReport;
-    return { meta, result };
+    const unlocked = await unlockRun(id, result);
+    return { meta, result: unlocked };
   },
   deleteRun: async () => ({ deleted: false }),
   tradesCsvUrl: () => '',
   resultJsonUrl: (id: string) => `${DATA_BASE}runs/${encodeURIComponent(id)}.json`,
   reportPdfUrl: (id: string) => `${DATA_BASE}runs/${encodeURIComponent(id)}.pdf`,
 };
+
+/* ---------- Lab Pro part of the static files: encrypted at export, unlocked with a per-run key from /api/runs/:id/key */
+const keyCache = new Map<string, Promise<string | null>>();
+
+export function runKey(id: string): Promise<string | null> {
+  let pending = keyCache.get(id);
+  if (!pending) {
+    pending = fetch(`${BASE_URL}api/runs/${encodeURIComponent(id)}/key`, { credentials: 'same-origin', cache: 'no-store' })
+      .then(async (r) => (r.ok ? ((await r.json()) as { key: string }).key : null))
+      .catch(() => null);
+    keyCache.set(id, pending);
+    pending.then((k) => { if (k == null) keyCache.delete(id); });
+  }
+  return pending;
+}
+
+/** Forget cached keys (after sign-in or licence activation) so protected runs are re-tried. */
+export function resetRunKeys(): void { keyCache.clear(); }
+
+async function decrypt(hexKey: string, blob: ArrayBuffer): Promise<ArrayBuffer> {
+  const raw = Uint8Array.from(hexKey.match(/.{2}/g)!.map((h) => parseInt(h, 16)));
+  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+  return crypto.subtle.decrypt({ name: 'AES-GCM', iv: blob.slice(0, 12) }, key, blob.slice(12));
+}
+
+async function unlockRun<T extends BacktestResult | ResearchReport>(id: string, result: T): Promise<T> {
+  const web = (result as { web_export?: { protected?: boolean } }).web_export;
+  if (!web?.protected || typeof crypto === 'undefined' || !crypto.subtle) return result;
+  const key = await runKey(id);
+  if (!key) return result;
+  try {
+    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.enc`);
+    if (!response.ok) return result;
+    const plain = await decrypt(key, await response.arrayBuffer());
+    const extra = JSON.parse(new TextDecoder().decode(plain)) as Partial<T>;
+    return { ...result, ...extra, web_export: { ...web, unlocked: true } } as T;
+  } catch {
+    return result;
+  }
+}
+
+/** The PDF of a protected run: fetch the encrypted file, decrypt and hand back an object URL (null when not allowed). */
+export async function protectedPdfUrl(id: string): Promise<string | null> {
+  const key = await runKey(id);
+  if (!key) return null;
+  try {
+    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.pdf.enc`);
+    if (!response.ok) return null;
+    const plain = await decrypt(key, await response.arrayBuffer());
+    return URL.createObjectURL(new Blob([plain], { type: 'application/pdf' }));
+  } catch {
+    return null;
+  }
+}
 
 export const api: Api = STATIC_MODE ? staticApi : serverApi;
 

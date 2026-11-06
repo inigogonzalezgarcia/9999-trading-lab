@@ -205,6 +205,24 @@ def cmd_export_web(args) -> int:
     return 0
 
 
+def cmd_protect_web(args) -> int:
+    """Split already exported runs into public JSON + encrypted Lab Pro part (idempotent)."""
+    from backend.app import webprotect
+
+    data_key = webprotect.load_data_key(Path(args.data_root))
+    if not data_key:
+        print("DATA_KEY missing: export DATA_KEY=... or write it to secrets/data_key.txt", file=sys.stderr)
+        return 2
+    infos = webprotect.protect_all(Path(args.out), data_key)
+    for info in infos:
+        print(f"  {info['id']}: " + ("demo, public" if info.get("demo") else f"encrypted {info.get('private_keys', [])}" + (" + pdf" if info.get("pdf") else "")))
+    from backend.app import webexport
+
+    webexport.write_index(Path(args.out))
+    print(f"{len(infos)} runs processed; runs.json rebuilt")
+    return 0
+
+
 def cmd_stress(args) -> int:
     frame = make_stress_bars(args.start, args.months, args.seed, 1.10 if args.symbol == "EURUSD" else 1.27)
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -293,6 +311,10 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--only", nargs="*", help="run ids to (re)build; others are kept from the existing index")
     export.add_argument("--no-pdf", action="store_true")
     export.set_defaults(func=cmd_export_web)
+    protect = sub.add_parser("protect-web", help="encrypt the Lab Pro part of already exported runs (needs DATA_KEY)")
+    protect.add_argument("--out", default="frontend/public/data")
+    protect.add_argument("--data-root", default=".")
+    protect.set_defaults(func=cmd_protect_web)
 
     stress = sub.add_parser("stress", help="generate labelled synthetic data for performance testing")
     stress.add_argument("--months", type=int, default=3)

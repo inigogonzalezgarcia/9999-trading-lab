@@ -24,4 +24,5 @@ venv/
 
 # Large per-run outputs (keep the small research reports)
 results/*_backtest.json
-/dist/
+# local secrets (never committed)
+secrets/

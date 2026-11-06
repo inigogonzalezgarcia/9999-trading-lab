@@ -49,10 +49,20 @@ account copy of the simulator progress. The schema is created on first use in a 
 | `SESSION_SECRET` (secret) | long random string (`openssl rand -hex 32`); rotating it signs everyone out |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (secret) | OAuth client "Web application" with redirect URI `https://fx-trading-lab.pages.dev/api/auth/google/callback` |
 | `BREVO_API_KEY` (secret), `MAIL_FROM` | Brevo API key and a sender address verified in Brevo |
+| `DATA_KEY` (secret) | derives the per-run keys that unlock the encrypted Lab Pro part of the static run files; the same value goes in `secrets/data_key.txt` on the machine that runs `export-web` / `protect-web` |
 
 Without `DB` + `SESSION_SECRET` the `/api/me` endpoint answers `configured: false` and the app area opens without a
 session (local previews). Plans: `users.plan` is `free` or `pro` (`pro_until` for subscriptions); the Gumroad
 membership hook will set it.
+
+## Lab Pro content in static files
+
+`backend/app/webprotect.py` splits every exported run (except the 2024 demo runs) into the public JSON and an
+encrypted part (`runs/<id>.enc`: trade explainers; for research reports the splits, walk-forward folds, Monte Carlo,
+benchmark detail and sensitivity) plus `runs/<id>.pdf.enc`. AES-256-GCM, per-run key = SHA-256(DATA_KEY + ":" + id).
+`GET /api/runs/:id/key` returns that key to Pro sessions (and to everyone for 2024); `src/api.ts` decrypts in the
+browser with WebCrypto and merges. `python -m backend.cli protect-web` processes already exported runs; `export-web`
+does it after each run when the key is available.
 
 `frontend/public/_headers` sets the CSP and security headers; `_redirects` serves the SPA. The Pages Function
 `frontend/functions/api/subscribe.ts` handles the mailing-list opt-in (Turnstile verification + KV).

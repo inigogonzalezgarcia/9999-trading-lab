@@ -1,0 +1,57 @@
+{
+  "total_trades": 12,
+  "winning_trades": 5,
+  "losing_trades": 7,
+  "breakeven_trades": 0,
+  "win_rate": 0.4166666666666667,
+  "expectancy_r": 0.1960458121439842,
+  "average_r": 0.1960458121439842,
+  "median_r": -0.016142670459258445,
+  "average_win_r": 1.3353820751325474,
+  "average_loss_r": -0.6177658042764181,
+  "profit_factor": 1.5440225612643252,
+  "payoff_ratio": 2.1616315857700554,
+  "gross_profit": 0.03325472600323169,
+  "gross_loss": -0.02162815763650619,
+  "net_pnl": 0.011626568366725501,
+  "total_r": 2.3525497457278104,
+  "max_drawdown_r": 3.006628003314007,
+  "max_consecutive_losses": 3,
+  "sharpe_per_trade": 0.16324327843755446,
+  "average_mfe_r": 1.2839155657099468,
+  "average_mae_r": -0.5999834706655071,
+  "exit_reasons": {
+    "SESSION_EXPIRY": 5,
+    "STOP_LOSS": 4,
+    "TAKE_PROFIT": 3
+  },
+  "by_symbol": {
+    "EURUSD": {
+      "trades": 12,
+      "total_r": 2.3525497457278104,
+      "expectancy_r": 0.1960458121439842,
+      "win_rate": 0.4166666666666667
+    }
+  },
+  "by_window": {
+    "0": {
+      "trades": 3,
+      "total_r": 3.0,
+      "expectancy_r": 1.0,
+      "win_rate": 0.6666666666666666
+    },
+    "1": {
+      "trades": 9,
+      "total_r": -0.6474502542721896,
+      "expectancy_r": -0.0719389171413544,
+      "win_rate": 0.3333333333333333
+    }
+  },
+  "sharpe": 0.5702928544409014,
+  "sortino": 1.1400342003496022,
+  "methodology": {
+    "per_trade": "unannualised R-multiple statistics",
+    "daily": "sum of R per weekday incl. zero days; annualised with sqrt(252)",
+    "note": "Simulated historical results; not evidence of a profitable edge."
+  }
+}

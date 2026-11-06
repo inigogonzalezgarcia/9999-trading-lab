@@ -1,0 +1,364 @@
+{
+  "parameters": {
+    "train_days": 120,
+    "test_days": 30,
+    "step_days": 30,
+    "anchored": false,
+    "warmup_days": 15
+  },
+  "folds": [
+    {
+      "fold": 1,
+      "in_sample": {
+        "period": {
+          "start": "2023-01-01T22:05:00+00:00",
+          "end": "2023-05-01T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 1,
+        "candidates": 514,
+        "expectancy_r": -0.2932488318386516,
+        "total_r": -0.2932488318386516,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_r": 0.2932488318386516,
+        "annualized_sharpe": -1.7117922064723665,
+        "trading_days": 86
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-05-01T22:05:00+00:00",
+          "end": "2023-05-31T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 85,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 23
+      },
+      "out_of_sample_trades": []
+    },
+    {
+      "fold": 2,
+      "in_sample": {
+        "period": {
+          "start": "2023-01-31T22:05:00+00:00",
+          "end": "2023-05-31T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 452,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 87
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-05-31T22:05:00+00:00",
+          "end": "2023-06-30T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 1,
+        "candidates": 107,
+        "expectancy_r": 2.0,
+        "total_r": 2.0,
+        "win_rate": 1.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": 3.3100637062042226,
+        "trading_days": 23
+      },
+      "out_of_sample_trades": [
+        {
+          "trade_id": "7329cb6c-0515-572e-9685-f915d3e2d67a",
+          "symbol": "EURUSD",
+          "entry_timestamp": "2023-06-30T07:45:00+00:00",
+          "r_multiple": 2.0
+        }
+      ]
+    },
+    {
+      "fold": 3,
+      "in_sample": {
+        "period": {
+          "start": "2023-03-02T22:05:00+00:00",
+          "end": "2023-06-30T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 1,
+        "candidates": 409,
+        "expectancy_r": 2.0,
+        "total_r": 2.0,
+        "win_rate": 1.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": 1.7019258867935263,
+        "trading_days": 87
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-06-30T22:05:00+00:00",
+          "end": "2023-07-30T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 60,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 21
+      },
+      "out_of_sample_trades": []
+    },
+    {
+      "fold": 4,
+      "in_sample": {
+        "period": {
+          "start": "2023-04-01T22:05:00+00:00",
+          "end": "2023-07-30T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 1,
+        "candidates": 386,
+        "expectancy_r": 2.0,
+        "total_r": 2.0,
+        "win_rate": 1.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": 1.721832129550654,
+        "trading_days": 85
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-07-30T22:05:00+00:00",
+          "end": "2023-08-29T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 144,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 22
+      },
+      "out_of_sample_trades": []
+    },
+    {
+      "fold": 5,
+      "in_sample": {
+        "period": {
+          "start": "2023-05-01T22:05:00+00:00",
+          "end": "2023-08-29T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 1,
+        "candidates": 407,
+        "expectancy_r": 2.0,
+        "total_r": 2.0,
+        "win_rate": 1.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": 1.7019258867935267,
+        "trading_days": 87
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-08-29T22:05:00+00:00",
+          "end": "2023-09-28T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 99,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 23
+      },
+      "out_of_sample_trades": []
+    },
+    {
+      "fold": 6,
+      "in_sample": {
+        "period": {
+          "start": "2023-05-31T22:05:00+00:00",
+          "end": "2023-09-28T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 1,
+        "candidates": 420,
+        "expectancy_r": 2.0,
+        "total_r": 2.0,
+        "win_rate": 1.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": 1.7019258867935267,
+        "trading_days": 87
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-09-28T22:05:00+00:00",
+          "end": "2023-10-28T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 2,
+        "candidates": 179,
+        "expectancy_r": -1.0,
+        "total_r": -2.0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_r": 2.0,
+        "annualized_sharpe": -4.9045433482175955,
+        "trading_days": 22
+      },
+      "out_of_sample_trades": [
+        {
+          "trade_id": "817c578d-90b5-5c63-8ed8-6340c43edcc2",
+          "symbol": "EURUSD",
+          "entry_timestamp": "2023-09-29T07:45:00+00:00",
+          "r_multiple": -1.0
+        },
+        {
+          "trade_id": "1e786bef-3591-5985-a72a-be82cc5501b1",
+          "symbol": "EURUSD",
+          "entry_timestamp": "2023-10-13T07:45:00+00:00",
+          "r_multiple": -1.0
+        }
+      ]
+    },
+    {
+      "fold": 7,
+      "in_sample": {
+        "period": {
+          "start": "2023-06-30T22:05:00+00:00",
+          "end": "2023-10-28T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 2,
+        "candidates": 491,
+        "expectancy_r": -1.0,
+        "total_r": -2.0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_r": 2.0,
+        "annualized_sharpe": -2.4352068819998713,
+        "trading_days": 86
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-10-28T22:05:00+00:00",
+          "end": "2023-11-27T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 140,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 21
+      },
+      "out_of_sample_trades": []
+    },
+    {
+      "fold": 8,
+      "in_sample": {
+        "period": {
+          "start": "2023-07-30T22:05:00+00:00",
+          "end": "2023-11-27T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 2,
+        "candidates": 575,
+        "expectancy_r": -1.0,
+        "total_r": -2.0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_r": 2.0,
+        "annualized_sharpe": -2.435206881999871,
+        "trading_days": 86
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-11-27T22:05:00+00:00",
+          "end": "2023-12-27T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 199,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 23
+      },
+      "out_of_sample_trades": []
+    },
+    {
+      "fold": 9,
+      "in_sample": {
+        "period": {
+          "start": "2023-08-29T22:05:00+00:00",
+          "end": "2023-12-27T22:05:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 2,
+        "candidates": 636,
+        "expectancy_r": -1.0,
+        "total_r": -2.0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_r": 2.0,
+        "annualized_sharpe": -2.421003429673504,
+        "trading_days": 87
+      },
+      "out_of_sample": {
+        "period": {
+          "start": "2023-12-27T22:05:00+00:00",
+          "end": "2023-12-29T22:00:00+00:00",
+          "warmup_days": 15
+        },
+        "trades": 0,
+        "candidates": 20,
+        "expectancy_r": 0.0,
+        "total_r": 0.0,
+        "win_rate": 0.0,
+        "profit_factor": null,
+        "max_drawdown_r": 0.0,
+        "annualized_sharpe": null,
+        "trading_days": 3
+      },
+      "out_of_sample_trades": []
+    }
+  ],
+  "fold_count": 9,
+  "out_of_sample_concatenated": {
+    "trades": 3,
+    "total_r": 0.0,
+    "expectancy_r": 0.0,
+    "folds_with_trades": 2,
+    "folds_positive": 1,
+    "consistency": 0.5
+  }
+}
