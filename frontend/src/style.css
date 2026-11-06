@@ -624,3 +624,25 @@ button:active:not(:disabled), .button:active { transform: scale(0.97); }
   .result-card, .itin-card, .lesson-card, .level-card, .plan, .site-nav > a { transition: none; }
   .result-card:hover, .itin-card:hover, .lesson-card:hover, .level-card:hover { transform: none; }
 }
+
+/* v0.6 fixes after the three-width review */
+.hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); }
+.hero-title { font-size: clamp(2.1rem, 4.2vw, 3.3rem); max-width: 20ch; }
+.hero .kicker { max-width: none; }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; gap: 24px; padding-top: 20px; }
+  .hero-title { font-size: clamp(1.9rem, 8vw, 2.4rem); max-width: none; }
+  .hero .lead { font-size: 1.05rem; }
+  .home { gap: 56px; }
+  .evidence { padding: 6px 18px; }
+}
+/* nav: hamburger up to 1000px (eight items no longer fit on a tablet), nowrap links above */
+.site-nav > a { white-space: nowrap; }
+@media (max-width: 1000px) {
+  .menu-toggle { display: inline-block; margin-left: auto; }
+  .site-nav { display: none; width: 100%; flex-direction: column; align-items: stretch; order: 3; padding-top: 8px; }
+  .site-nav.open { display: flex; }
+  .site-nav > a { padding: 12px 10px; min-height: 44px; }
+  .segmented.lang { margin: 8px 0 4px; align-self: flex-start; }
+}
+@media (max-width: 1100px) { .site-nav > a { padding: 8px 7px; font-size: 0.92rem; } }

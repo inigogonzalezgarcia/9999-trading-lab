@@ -35,13 +35,13 @@ export function PlansPage() {
     <main className="prose plans">
       <p className="kicker">{es ? 'Planes' : 'Plans'}</p>
       <h1 className="page-title">{es ? 'Gratis lo que ya hay. Lab Pro para recorrer el itinerario entero.' : 'Free what is already here. Lab Pro to walk the whole itinerary.'}</h1>
-      <p className="lead">{es ? 'El laboratorio, las lecciones y los tres primeros niveles del simulador son gratis y no piden cuenta. Lab Pro añade los seis niveles que convierten un resultado en una decisión, y un informe de tu recorrido.' : 'The lab, the lessons and the first three simulator levels are free and need no account. Lab Pro adds the six levels that turn a result into a decision, and a report of your path.'}</p>
+      <p className="lead">{es ? 'El laboratorio y las lecciones no piden cuenta; los tres primeros niveles del simulador son gratis con una cuenta. Lab Pro añade los seis niveles que convierten un resultado en una decisión, y un informe de tu recorrido.' : 'The lab and the lessons need no account; the first three simulator levels are free with an account. Lab Pro adds the six levels that turn a result into a decision, and a report of your path.'}</p>
 
       <div className="plan-grid">
         <section className="plan">
           <h2>{es ? 'Gratis' : 'Free'}</h2>
           <p className="plan-price">0 €</p>
-          <p className="muted">{es ? 'Sin cuenta. Progreso en tu navegador.' : 'No account. Progress in your browser.'}</p>
+          <p className="muted">{es ? 'Cuenta gratis con Google o correo. Progreso guardado.' : 'Free account with Google or email. Progress saved.'}</p>
           <Link to="/app" className="button ghost">{es ? 'Empezar el nivel 0' : 'Start level 0'}</Link>
         </section>
         <section className="plan featured">

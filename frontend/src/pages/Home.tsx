@@ -85,7 +85,7 @@ export function HomePage() {
       <section className="itinerary" data-reveal>
         <p className="kicker section-kicker">01 · {lang === 'es' ? 'El producto' : 'The product'}</p>
         <h2 className="section-title">{lang === 'es' ? 'El simulador: nueve niveles, de la vela al protocolo' : 'The simulator: nine levels, from the candle to the protocol'}</h2>
-        <p className="muted lead-small">{lang === 'es' ? 'Un itinerario guiado sobre operaciones reales. Los tres primeros niveles son gratis y no piden cuenta; los seis siguientes son de Lab Pro.' : 'A guided itinerary on real trades. The first three levels are free and need no account; the next six belong to Lab Pro.'}</p>
+        <p className="muted lead-small">{lang === 'es' ? 'Un itinerario guiado sobre operaciones reales. Los tres primeros niveles son gratis con una cuenta; los seis siguientes son de Lab Pro.' : 'A guided itinerary on real trades. The first three levels are free with an account; the next six belong to Lab Pro.'}</p>
         <ol className="itin-grid">
           {LEVELS.map((level) => (
             <li key={level.n} className={`itin-card ${level.pro ? 'pro' : ''} ${sim[String(level.n)]?.completed ? 'done' : ''}`}>
