@@ -136,7 +136,7 @@ export function Level6() {
             {[50, 75, 90, 99].map((g) => <button key={g} type="button" className="ghost" onClick={() => setGuess(g)}>{es ? `Percentil ${g}` : `Percentile ${g}`}</button>)}
           </div>
         ) : (
-          <p className={guess === 75 ? 'good' : 'muted'}>{es ? `Tu apuesta: percentil ${guess}. Real: ${pctl(r24?.baseline_percentile_vs_random) ?? '…'}.` : `Your guess: percentile ${guess}. Actual: ${pctl(r24?.baseline_percentile_vs_random) ?? '…'}.`} {es ? 'Un 75 significa que 50 de las 200 entradas aleatorias hicieron igual o mejor.' : '75 means 50 of the 200 random entries did as well or better.'}</p>
+          <p className={guess === 75 ? 'good' : 'muted'}>{es ? `Tu apuesta: percentil ${guess}. Real: ${pctl(r24?.baseline_percentile_vs_random) ?? '…'}.` : `Your guess: percentile ${guess}. Actual: ${pctl(r24?.baseline_percentile_vs_random) ?? '…'}.`} {r24?.baseline_percentile_vs_random != null && (es ? `Un ${pctl(r24.baseline_percentile_vs_random)} significa que ${Math.round((1 - r24.baseline_percentile_vs_random) * (r24.simulations ?? 200))} de las ${r24.simulations ?? 200} entradas aleatorias hicieron igual o mejor.` : `${pctl(r24.baseline_percentile_vs_random)} means ${Math.round((1 - r24.baseline_percentile_vs_random) * (r24.simulations ?? 200))} of the ${r24.simulations ?? 200} random entries did as well or better.`)}</p>
         )}
         {r24?.random_expectancy_percentiles && guess != null && (
           <PercentileBar lang={lang} percentiles={r24.random_expectancy_percentiles} baseline={r24.baseline_expectancy_r ?? 0} />

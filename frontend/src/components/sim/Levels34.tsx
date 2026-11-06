@@ -80,7 +80,7 @@ export function Level3() {
       noteHint={es ? '¿Cuál de las cinco cifras mirarías primero en un backtest ajeno y por qué? ¿Cuál es la más fácil de maquillar?' : 'Which of the five would you look at first in someone else\'s backtest and why? Which is easiest to dress up?'}>
       <section className="sim-block">
         <div className="r-list mono">
-          {rs.map((r, i) => <span key={i} className={r > 0 ? 'good' : 'bad'}>{r >= 0 ? '+' : ''}{r.toFixed(2)}</span>)}
+          {rs.map((r, i) => <span key={i} className={r > 0 ? 'good' : 'bad'}>{formatR(r)}</span>)}
         </div>
         <Sparkline values={curve} width={320} height={60} />
         <div className="calc">
@@ -132,7 +132,7 @@ export function Level4() {
   const questions: Question[] = [
     { id: 'l4q1', prompt: { es: `Sin ningún coste, 2024 habría dado ${formatR(noCost.total)}; con los costes reales dio ${formatR(actual.total)}. ¿Qué parte del resultado bruto se llevaron los costes?`, en: `With no costs, 2024 would have given ${formatR(noCost.total)}; with real costs it gave ${formatR(actual.total)}. What share of the gross result did costs take?` },
       options: { es: [`${Math.round((1 - actual.total / noCost.total) * 100)} %`, 'Menos del 5 %', 'Nada: el spread solo afecta a scalping'], en: [`${Math.round((1 - actual.total / noCost.total) * 100)} %`, 'Under 5 %', 'None: spread only matters for scalping'] }, answer: 0,
-      explanation: { es: `Con stops de ${paid.risk.toFixed(0)} pips de media, cada pip de coste es ${(1 / paid.risk).toFixed(3)}R por operación. Parece poco; multiplicado por doce operaciones y restado a un total pequeño, es la mitad del resultado.`, en: `With stops of ${paid.risk.toFixed(0)} pips on average, every pip of cost is ${(1 / paid.risk).toFixed(3)}R per trade. Sounds small; times twelve trades and taken from a small total, it is half the result.` } },
+      explanation: { es: `Con stops de ${paid.risk.toFixed(0)} pips de media, cada pip de coste es ${(1 / paid.risk).toFixed(3)}R por operación. Parece poco; multiplicado por ${trades.length} operaciones es ${formatR(noCost.total - actual.total)}: el ${Math.round((1 - actual.total / noCost.total) * 100)} % del resultado bruto.`, en: `With stops of ${paid.risk.toFixed(0)} pips on average, every pip of cost is ${(1 / paid.risk).toFixed(3)}R per trade. Sounds small; times ${trades.length} trades it is ${formatR(noCost.total - actual.total)}: ${Math.round((1 - actual.total / noCost.total) * 100)} % of the gross result.` } },
     { id: 'l4q2', prompt: { es: `¿Con qué spread medio el año 2024 pasa a cero (deslizamiento como el pagado)?`, en: `At what average spread does 2024 go to zero (slippage as paid)?` },
       options: { es: [`Alrededor de ${breakEvenSpread.toFixed(1)} pips`, 'Nunca: la regla es rentable con cualquier spread', '10 pips'], en: [`Around ${breakEvenSpread.toFixed(1)} pips`, 'Never: the rule is profitable at any spread', '10 pips'] }, answer: 0,
       explanation: { es: 'Mueve el control y compruébalo. Un bróker minorista en horas de poca liquidez puede dar más que eso: un backtest sin la cifra de spread usada no es evaluable.', en: 'Move the control and check it. A retail broker in thin hours can be worse than that: a backtest that does not state the spread used cannot be evaluated.' } },
