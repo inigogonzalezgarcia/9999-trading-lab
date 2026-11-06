@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-11-06T14:16:16+00:00",
+ "generated_at": "2026-11-06T14:25:20+00:00",
  "software_version": "0.5.0",
- "software_revision": "source-sha256:064873560ad3753e503c0951fe7edf3f2f961d382e63fb53e81cb624a0773a87",
+ "software_revision": "source-sha256:c8b6861df5939009f2ca47e6ac95e392588d2d531e98e9dc585773eff4af6865",
  "notice": {
   "title": "Educational research tool",
   "lines": [
