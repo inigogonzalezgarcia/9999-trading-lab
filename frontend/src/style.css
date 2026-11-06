@@ -505,3 +505,12 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
 .knob input[type="range"] { width: 100%; accent-color: var(--accent); }
 @media (max-width: 640px) { .calc-row { grid-template-columns: 1fr; } }
 .mc-fan { width: 100%; max-width: 640px; height: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.sens { display: grid; gap: 6px; }
+.sens-row { display: grid; grid-template-columns: 110px 1fr 120px; gap: 10px; align-items: center; }
+.sens-row.base { font-weight: 600; }
+.sens-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sens-bar { position: relative; height: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; }
+.sens-bar span { position: absolute; top: 0; bottom: 0; display: block; }
+.good-bg { background: var(--good); } .bad-bg { background: var(--bad); }
+.plan-table tr.base td { font-weight: 600; }
+@media (max-width: 640px) { .sens-row { grid-template-columns: 80px 1fr 90px; } }

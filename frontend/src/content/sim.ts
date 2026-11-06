@@ -35,7 +35,7 @@ export const LEVELS: Level[] = [
   { n: 6, slug: 'azar', minutes: 10, pro: true, ready: true,
     title: { es: '¿Lo haría igual el azar?', en: 'Would chance do the same?' },
     summary: { es: 'Doscientas entradas aleatorias con las mismas salidas y costes. Sitúa la regla en su percentil.', en: 'Two hundred random entries with the same exits and costs. Place the rule at its percentile.' } },
-  { n: 7, slug: 'fragilidad', minutes: 12, pro: true, ready: false,
+  { n: 7, slug: 'fragilidad', minutes: 12, pro: true, ready: true,
     title: { es: 'Fragilidad y fuera de muestra', en: 'Fragility and out of sample' },
     summary: { es: 'Un parámetro cada vez sobre ocho años. Walk-forward con ventanas rodantes.', en: 'One parameter at a time over eight years. Walk-forward with rolling windows.' } },
   { n: 8, slug: 'tu-version', minutes: 15, pro: true, ready: true,
