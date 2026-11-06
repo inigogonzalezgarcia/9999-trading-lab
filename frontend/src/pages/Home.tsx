@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useReveal } from '../reveal';
 import { api, formatPercent, formatR } from '../api';
 import { KitCard } from '../components/KitCard';
 import { Subscribe } from '../components/Subscribe';
@@ -36,8 +37,11 @@ export function HomePage() {
     setSim(readSim());
   }, []);
   // The band tells the lab's main lesson: the same rule, the good year and the year it did not repeat.
+  useReveal();
   const story = ['eurusd-2024-v1_1', 'eurusd-2022-v1_1'].map((id) => runs.find((run) => run.id === id)).filter(Boolean) as RunRow[];
   const featured = story.length === 2 ? story : runs.slice(0, 2);
+  const showcase = ['eurusd-2019-v1_1', 'eurusd-2021-v1_1', 'eurusd-2022-v1_1', 'eurusd-2024-v1_1', 'eurusd-2025-v1_1', 'eurusd-2026-v1_1'].map((id) => runs.find((run) => run.id === id)).filter(Boolean) as RunRow[];
+  const resultCards = showcase.length >= 4 ? showcase : runs.slice(0, 6);
   return (
     <main className="home">
       <section className="hero">
@@ -78,12 +82,26 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="two-col is-isnt">
-        <div className="card is"><h2>{t('home.isTitle')}</h2><ul className="checklist">{IS[lang].map((line) => <li key={line}>{line}</li>)}</ul></div>
-        <div className="card isnt"><h2>{t('home.isntTitle')}</h2><ul className="checklist no">{ISNT[lang].map((line) => <li key={line}>{line}</li>)}</ul></div>
+      <section className="itinerary" data-reveal>
+        <p className="kicker section-kicker">01 · {lang === 'es' ? 'El producto' : 'The product'}</p>
+        <h2 className="section-title">{lang === 'es' ? 'El simulador: nueve niveles, de la vela al protocolo' : 'The simulator: nine levels, from the candle to the protocol'}</h2>
+        <p className="muted lead-small">{lang === 'es' ? 'Un itinerario guiado sobre operaciones reales. Los tres primeros niveles son gratis y no piden cuenta; los seis siguientes son de Lab Pro.' : 'A guided itinerary on real trades. The first three levels are free and need no account; the next six belong to Lab Pro.'}</p>
+        <ol className="itin-grid">
+          {LEVELS.map((level) => (
+            <li key={level.n} className={`itin-card ${level.pro ? 'pro' : ''} ${sim[String(level.n)]?.completed ? 'done' : ''}`}>
+              <span className="lesson-no" aria-hidden="true">{level.n}</span>
+              <div className="lesson-meta"><span className={`badge ${level.pro ? '' : 'soft'}`}>{level.pro ? 'Lab Pro' : t('lessons.free')}</span><span className="muted small">{level.minutes} min</span>{sim[String(level.n)]?.completed && <span className="good small">✓</span>}</div>
+              <h3>{pick(level.title)}</h3>
+              <p className="muted small">{pick(level.summary)}</p>
+              {level.ready ? <Link to={`/app/sim/${level.n}`} className="button small-button">{sim[String(level.n)]?.completed ? t('lessons.review') : t('lessons.start')}</Link> : <span className="muted small">{'Lab Pro'}</span>}
+            </li>
+          ))}
+        </ol>
+        <div className="row-actions"><Link to="/app" className="button">{t('home.ctaStart')}</Link><Link to="/planes" className="button ghost">{lang === 'es' ? 'Ver planes' : 'See plans'}</Link></div>
       </section>
 
-      <section className="how">
+      <section className="how" data-reveal>
+        <p className="kicker section-kicker">02 · {lang === 'es' ? 'Método' : 'Method'}</p>
         <h2 className="section-title">{t('home.howTitle')}</h2>
         <ol className="steps-grid">
           {HOW.map((step, index) => {
@@ -99,12 +117,21 @@ export function HomePage() {
         </ol>
       </section>
 
+      <section className="is-isnt" data-reveal>
+        <p className="kicker section-kicker">03 · {lang === 'es' ? 'Qué es y qué no' : 'What it is and is not'}</p>
+        <div className="two-col is-isnt-cols">
+        <div className="is"><h2>{t('home.isTitle')}</h2><ul className="checklist">{IS[lang].map((line) => <li key={line}>{line}</li>)}</ul></div>
+        <div className="isnt"><h2>{t('home.isntTitle')}</h2><ul className="checklist no">{ISNT[lang].map((line) => <li key={line}>{line}</li>)}</ul></div>
+        </div>
+      </section>
+
       {runs.length > 0 && (
-        <section>
+        <section data-reveal>
+          <p className="kicker section-kicker">04 · {lang === 'es' ? 'Resultados' : 'Results'}</p>
           <h2 className="section-title">{t('home.resultsTitle')}</h2>
-          <p className="muted lead-small">{t('home.resultsLead')}</p>
+          <p className="muted lead-small">{lang === 'es' ? 'La misma regla (V1.1), año a año, sobre velas de un minuto reales. Seis de las 27 ejecuciones publicadas.' : 'The same rule (V1.1), year by year, on real one-minute candles. Six of the 27 published runs.'}</p>
           <div className="result-cards">
-            {runs.map((run) => {
+            {resultCards.map((run) => {
               const total = run.summary.total_r as number;
               return (
                 <Link key={run.id} to={`/lab/${run.id}`} className="card result-card">
@@ -123,27 +150,12 @@ export function HomePage() {
               );
             })}
           </div>
+          <p className="row-actions"><Link to="/lab" className="button ghost">{lang === 'es' ? 'Ver las 27 ejecuciones en el laboratorio →' : 'See all 27 runs in the lab →'}</Link></p>
         </section>
       )}
 
-      <section className="itinerary">
-        <h2 className="section-title">{lang === 'es' ? 'El simulador: nueve niveles, de la vela al protocolo' : 'The simulator: nine levels, from the candle to the protocol'}</h2>
-        <p className="muted lead-small">{lang === 'es' ? 'Un itinerario guiado sobre operaciones reales. Los tres primeros niveles son gratis y no piden cuenta; los seis siguientes son de Lab Pro.' : 'A guided itinerary on real trades. The first three levels are free and need no account; the next six belong to Lab Pro.'}</p>
-        <ol className="itin-grid">
-          {LEVELS.map((level) => (
-            <li key={level.n} className={`itin-card ${level.pro ? 'pro' : ''} ${sim[String(level.n)]?.completed ? 'done' : ''}`}>
-              <span className="lesson-no" aria-hidden="true">{level.n}</span>
-              <div className="lesson-meta"><span className={`badge ${level.pro ? '' : 'soft'}`}>{level.pro ? 'Lab Pro' : t('lessons.free')}</span><span className="muted small">{level.minutes} min</span>{sim[String(level.n)]?.completed && <span className="good small">✓</span>}</div>
-              <h3>{pick(level.title)}</h3>
-              <p className="muted small">{pick(level.summary)}</p>
-              {level.ready ? <Link to={`/app/sim/${level.n}`} className="button small-button">{sim[String(level.n)]?.completed ? t('lessons.review') : t('lessons.start')}</Link> : <span className="muted small">{'Lab Pro'}</span>}
-            </li>
-          ))}
-        </ol>
-        <div className="row-actions"><Link to="/app" className="button">{t('home.ctaStart')}</Link><Link to="/planes" className="button ghost">{lang === 'es' ? 'Ver planes' : 'See plans'}</Link></div>
-      </section>
-
-      <section>
+      <section data-reveal>
+        <p className="kicker section-kicker">05 · {lang === 'es' ? 'Gratis' : 'Free'}</p>
         <h2 className="section-title">{t('home.lessonsTitle')}</h2>
         <p className="muted lead-small">{t('home.lessonsLead')}</p>
         <ol className="lesson-cards">

@@ -41,23 +41,35 @@ export function Shell({ children }: { children: ReactNode }) {
             <button type="button" className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
         </nav>
-        <div className="masthead-right">
-          <span className="badge">{t('badge.noLive')}</span>
-          <span className="badge soft">{t('badge.edu')}</span>
-          {version && <span className="muted small">v{version}</span>}
-        </div>
       </header>
-      <aside className="notice" role="note">
-        <strong>{t('notice.title')}.</strong> {t('notice.short')}
+      <aside className="notice-strip" role="note">
+        <span className="notice-dot" aria-hidden="true" />
+        <span><strong>{t('notice.title')}.</strong> {t('notice.short')}</span>
+        <Link to="/legal/aviso" className="notice-more">{lang === 'es' ? 'Más' : 'More'}</Link>
       </aside>
       <div className="page" key={path.split('/')[1] ?? ''}>{children}</div>
-      <footer className="site-footer muted small">
-        <div>
-          <Link to="/legal/aviso">{lang === 'es' ? 'Aviso legal' : 'Legal notice'}</Link> · <Link to="/legal/privacidad">{lang === 'es' ? 'Privacidad' : 'Privacy'}</Link> · <Link to="/legal/cookies">Cookies</Link> · <Link to="/legal/condiciones">{lang === 'es' ? 'Condiciones' : 'Terms'}</Link>
-          {' · '}<a href={REPO_URL} target="_blank" rel="noreferrer">{t('footer.source')}</a>
-          {' · '}<a href={AUTHOR_SITE} target="_blank" rel="noreferrer">{t('footer.author')}</a>
+      <footer className="site-footer small">
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <Link to="/" className="brand"><span className="brand-mark" aria-hidden="true" />{SITE_NAME}</Link>
+            <p className="muted">{t('shell.tagline').toLowerCase()}</p>
+            <div className="footer-badges"><span className="badge">{t('badge.noLive')}</span><span className="badge soft">{t('badge.edu')}</span>{version && <span className="muted mono">v{version}</span>}</div>
+          </div>
+          <nav className="footer-col" aria-label="site">
+            <span className="footer-head">{lang === 'es' ? 'Explorar' : 'Explore'}</span>
+            <Link to="/tour">{t('nav.tour')}</Link><Link to="/app">{t('nav.app')}</Link><Link to="/lab">{t('nav.lab')}</Link><Link to="/lessons">{t('nav.lessons')}</Link><Link to="/planes">{t('nav.plans')}</Link><Link to="/method">{t('nav.method')}</Link>
+          </nav>
+          <nav className="footer-col" aria-label="legal">
+            <span className="footer-head">Legal</span>
+            <Link to="/legal/aviso">{lang === 'es' ? 'Aviso legal' : 'Legal notice'}</Link><Link to="/legal/privacidad">{lang === 'es' ? 'Privacidad' : 'Privacy'}</Link><Link to="/legal/cookies">Cookies</Link><Link to="/legal/condiciones">{lang === 'es' ? 'Condiciones' : 'Terms'}</Link>
+          </nav>
+          <div className="footer-col">
+            <span className="footer-head">{lang === 'es' ? 'Proyecto' : 'Project'}</span>
+            <a href={REPO_URL} target="_blank" rel="noreferrer">{t('footer.source')}</a>
+            <a href={AUTHOR_SITE} target="_blank" rel="noreferrer">{t('footer.author')}</a>
+          </div>
         </div>
-        <div>{notice ? notice.lines[notice.lines.length - 1] : t('notice.short')} {t('footer.hash')}</div>
+        <p className="muted footer-note">{notice ? notice.lines[notice.lines.length - 1] : t('notice.short')} {t('footer.hash')}</p>
       </footer>
     </div>
   );
