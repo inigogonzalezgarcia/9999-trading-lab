@@ -14,7 +14,7 @@
   "en": "Independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark on the baseline."
  },
  "order": 50,
- "created_at": "2026-10-28T17:53:25+00:00",
+ "created_at": "2026-11-06T08:06:40+00:00",
  "summary": {
   "trades": 5,
   "expectancy_r": -0.5220669310748988,
