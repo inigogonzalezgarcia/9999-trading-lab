@@ -150,7 +150,7 @@ async function unlockRun<T extends BacktestResult | ResearchReport>(id: string, 
   const key = await runKey(id);
   if (!key) return result;
   try {
-    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.enc`);
+    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.enc`, { cache: 'no-cache' });
     if (!response.ok) return result;
     const plain = await decrypt(key, await response.arrayBuffer());
     const extra = JSON.parse(new TextDecoder().decode(plain)) as Partial<T>;
@@ -165,7 +165,7 @@ export async function protectedPdfUrl(id: string): Promise<string | null> {
   const key = await runKey(id);
   if (!key) return null;
   try {
-    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.pdf.enc`);
+    const response = await fetch(`${DATA_BASE}runs/${encodeURIComponent(id)}.pdf.enc`, { cache: 'no-cache' });
     if (!response.ok) return null;
     const plain = await decrypt(key, await response.arrayBuffer());
     return URL.createObjectURL(new Blob([plain], { type: 'application/pdf' }));
