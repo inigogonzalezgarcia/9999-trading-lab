@@ -1,5 +1,6 @@
 import { isPro, useAuth } from '../auth';
 import { ProBanner } from '../components/ProBanner';
+import { Level8 } from '../components/sim/Level8';
 import { Level0, Level1, Level2 } from '../components/sim/Levels';
 import { LEVELS } from '../content/sim';
 import { useT } from '../i18n';
@@ -8,7 +9,7 @@ import { Link } from '../router';
 /** /app/sim/:n — one simulator level. Levels not implemented yet show their card and the plans link. */
 export function SimPage({ n }: { n: string }) {
   const { lang, pick } = useT();
-  const { user } = useAuth();
+  const { user, configured } = useAuth();
   const es = lang === 'es';
   const index = Number(n);
   const level = LEVELS[index];
@@ -18,6 +19,7 @@ export function SimPage({ n }: { n: string }) {
   if (index === 0) return <Level0 />;
   if (index === 1) return <Level1 />;
   if (index === 2) return <Level2 />;
+  if (index === 8 && (isPro(user) || !configured)) return <Level8 />;
   return (
     <main className="prose sim">
       <p className="kicker">{es ? `Nivel ${index} · Lab Pro · ${level.minutes} min` : `Level ${index} · Lab Pro · ${level.minutes} min`}</p>

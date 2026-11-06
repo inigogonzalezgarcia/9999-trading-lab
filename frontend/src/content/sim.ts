@@ -38,7 +38,7 @@ export const LEVELS: Level[] = [
   { n: 7, slug: 'fragilidad', minutes: 12, pro: true, ready: false,
     title: { es: 'Fragilidad y fuera de muestra', en: 'Fragility and out of sample' },
     summary: { es: 'Un parámetro cada vez sobre ocho años. Walk-forward con ventanas rodantes.', en: 'One parameter at a time over eight years. Walk-forward with rolling windows.' } },
-  { n: 8, slug: 'tu-version', minutes: 15, pro: true, ready: false,
+  { n: 8, slug: 'tu-version', minutes: 15, pro: true, ready: true,
     title: { es: 'Diseña tu versión', en: 'Design your version' },
     summary: { es: 'Elige stop, objetivo, vida del setup y sesión. Backtest y protocolo de tu V1.x al instante sobre 2019–2026, y una decisión escrita en el log.', en: 'Pick stop, target, setup lifetime and session. Backtest and protocol of your V1.x instantly over 2019–2026, and a decision written in the log.' } },
 ];

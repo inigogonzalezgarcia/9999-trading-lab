@@ -484,3 +484,12 @@ code.block { background: color-mix(in srgb, var(--ink) 6%, transparent); border-
 .pro-banner.compact { padding: 12px 16px; margin: 20px 0 6px; }
 .pro-banner .row-actions { margin: 0; flex-wrap: wrap; }
 @media (max-width: 700px) { .pro-banner { grid-template-columns: 1fr; } }
+
+/* ---------- level 8: knobs ---------- */
+.knobs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end; }
+.knob { display: grid; gap: 4px; }
+.knob select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+.link-button { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+.grid-years { display: grid; gap: 10px; }
+.plan-table.small { font-size: 0.88rem; margin: 0; }
+.plan-table.small td, .plan-table.small th { padding: 6px 8px; }
