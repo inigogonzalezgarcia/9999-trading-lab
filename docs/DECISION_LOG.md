@@ -203,3 +203,7 @@
   available and concatenates them (307,869 rows, 2026-01-01 → 2026-10-30). Re-run monthly to extend.
 - **Result:** V1 3 trades −1.07R · V1.1 3 trades +1.94R (percentile 86 % vs random, MC P(losing) 14 %).
   Eight years pooled, V1.1: 67 trades, −2.04R; V1: 36 trades, −4.69R. Three trades do not move the verdict.
+
+## 2026-11-06 — Parameter grid for simulator level 8: 162 combinations, none positive over 2019–2026
+
+`scripts/export_grid.py` ran every combination of stop reference (3) × max stop distance (3) × setup lifetime (3) × target (3) × session (2) of V1.1 on EUR/USD 2019–2026 with all costs (90 min on the Mac). Baseline cell = the published eight-year result (67 trades, −2.04R), which confirms the grid and the lab share one engine. Best cell: −1.14R (target 3.0R); worst: −20.50R; median −9.18R; **0 of 162 cells positive**. Decision: level 8 presents the grid as a demonstration that moving the knobs does not create an edge, and that picking the best cell after the fact (still negative) would be overfitting. Output committed under `frontend/public/data/grid/` (1.4 MB, served with the `/data/*` cache rule).
