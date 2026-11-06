@@ -2,6 +2,7 @@ import { formatNumber, formatPercent, formatR } from '../api';
 import type { PeriodSummary, ResearchReport } from '../types';
 import { Tile } from './Results';
 import { useT } from '../i18n';
+import { ProBanner } from './ProBanner';
 
 function PeriodRow({ name, summary }: { name: string; summary: PeriodSummary }) {
   return (
@@ -46,7 +47,7 @@ function Percentiles({ title, values, unit = 'R' }: { title: string; values: Rec
   );
 }
 
-export function ResearchView({ report }: { report: ResearchReport }) {
+export function ResearchView({ report, gated = false }: { report: ResearchReport; gated?: boolean }) {
   const { t } = useT();
   const wf = report.walk_forward;
   const mc = report.monte_carlo;
@@ -68,6 +69,7 @@ export function ResearchView({ report }: { report: ResearchReport }) {
           )}
         </div>
       </section>
+      {gated ? <ProBanner variant="report" /> : (<>
       {report.splits && (
         <section>
           <h2>{t('rs.splits')}</h2>
@@ -125,6 +127,7 @@ export function ResearchView({ report }: { report: ResearchReport }) {
           </div>
         </section>
       )}
+      </>)}
       <section>
         <h2>{t('rs.limits')}</h2>
         <ul className="small">{report.limitations.map((l) => <li key={l}>{l}</li>)}</ul>

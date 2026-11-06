@@ -6,6 +6,7 @@ import { useT } from '../i18n';
 import { STATIC_MODE } from '../site';
 import { PerformanceBreakdowns } from './Breakdowns';
 import { TradeExplainerPanel } from './TradeExplainer';
+import { ProBanner } from './ProBanner';
 
 export function Tile({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: 'good' | 'bad' | 'neutral' }) {
   return (
@@ -200,7 +201,7 @@ export function Reproducibility({ result }: { result: BacktestResult }) {
   );
 }
 
-export function BacktestView({ result }: { result: BacktestResult }) {
+export function BacktestView({ result, gated = false }: { result: BacktestResult; gated?: boolean }) {
   const { t } = useT();
   const symbols = result.chart ? Object.keys(result.chart.series) : [];
   const [symbol, setSymbol] = useState(symbols[0] ?? '');
@@ -260,7 +261,7 @@ export function BacktestView({ result }: { result: BacktestResult }) {
         <h2>{t('res.trades')}</h2>
         <TradesTable trades={result.trades} runId={result.run_id} selected={selected?.trade_id} onSelect={(t) => setSelected(selected?.trade_id === t.trade_id ? null : t)} />
       </section>
-      {selected && <TradeExplainerPanel trade={selected} explainer={explainers[selected.trade_id]} onClose={() => setSelected(null)} />}
+      {selected && (gated ? <ProBanner variant="explainer" /> : <TradeExplainerPanel trade={selected} explainer={explainers[selected.trade_id]} onClose={() => setSelected(null)} />)}
       <section className="two-col">
         <div><h2>{t('res.quality')}</h2><QualityPanel result={result} /></div>
         <div><h2>{t('res.repro')}</h2><Reproducibility result={result} /></div>

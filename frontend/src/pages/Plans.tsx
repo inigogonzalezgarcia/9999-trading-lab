@@ -9,7 +9,8 @@ export const PRO_LAUNCH = { es: '23 de noviembre de 2026', en: '23 November 2026
 type Avail = boolean | { es: string; en: string };
 const ROWS: { es: string; en: string; free: Avail; pro: Avail }[] = [
   { es: 'Laboratorio completo: 27 ejecuciones reales 2019–2026', en: 'Full lab: 27 real runs 2019–2026', free: true, pro: true },
-  { es: 'Cada operación explicada en su gráfico', en: 'Every trade explained on its chart', free: true, pro: true },
+  { es: 'Cada operación explicada en su gráfico (diez pasos con su minuto)', en: 'Every trade explained on its chart (ten steps with their minute)', free: { es: 'solo 2024', en: '2024 only' }, pro: true },
+  { es: 'Informes de investigación completos (Monte Carlo, benchmark, sensibilidad, walk-forward) y PDF', en: 'Full research reports (Monte Carlo, benchmark, sensitivity, walk-forward) and PDF', free: { es: 'resumen; 2024 completo', en: 'summary; 2024 in full' }, pro: true },
   { es: 'Tres lecciones con cuestionario y nota evaluada', en: 'Three lessons with quiz and graded note', free: true, pro: true },
   { es: 'Simulador: niveles 0–2 (vela, backtest, una operación)', en: 'Simulator: levels 0–2 (candle, backtest, one trade)', free: true, pro: true },
   { es: 'Simulador: niveles 3–8 (cifras, costes, Monte Carlo, azar, fragilidad, tu versión)', en: 'Simulator: levels 3–8 (numbers, costs, Monte Carlo, chance, fragility, your version)', free: false, pro: true },

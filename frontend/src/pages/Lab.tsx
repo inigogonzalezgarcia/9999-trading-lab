@@ -2,17 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, formatR, shortTime, type RunOptions } from '../api';
 import { useT } from '../i18n';
 import { Link, useRoute } from '../router';
-import { REPO_URL, STATIC_MODE } from '../site';
+import { STATIC_MODE } from '../site';
 import { Sparkline } from '../components/Visuals';
 import type { BacktestResult, Job, ResearchReport, RunRow } from '../types';
 import { BacktestView } from '../components/Results';
 import { ResearchView } from '../components/Research';
 import { ProBanner } from '../components/ProBanner';
+import { isPro, useAuth } from '../auth';
 
 type Mode = 'backtest' | 'research';
 type Loaded = { kind: 'backtest'; data: BacktestResult; title: string } | { kind: 'research'; data: ResearchReport; title: string };
 
 export function LabPage({ runId }: { runId?: string }) {
+  const { user, configured } = useAuth();
+  const pro = isPro(user) || !configured;
   const { t, pick, lang } = useT();
   const { navigate } = useRoute();
   const [health, setHealth] = useState<{ version: string; max_upload_mb: number } | null>(null);
@@ -135,11 +138,6 @@ export function LabPage({ runId }: { runId?: string }) {
         ))}
         {!runs.length && <li className="muted small">{error || '…'}</li>}
       </ul>
-      <div className="run-yourself">
-        <h2>{t('lab.runYourself')}</h2>
-        <p className="muted small">{t('lab.runYourselfText')}</p>
-        <code className="block">git clone {REPO_URL}.git{'\n'}pip install -r backend/requirements.txt{'\n'}python -m backend.cli fetch dukascopy --symbol EURUSD --start 2024-01-01 --end 2025-01-01 --out data/raw/EURUSD_2024.csv{'\n'}python -m backend.cli backtest data/raw/EURUSD_2024.csv --symbol EURUSD</code>
-      </div>
     </aside>
   );
 
@@ -224,7 +222,7 @@ export function LabPage({ runId }: { runId?: string }) {
               <span className="tab-actions">
                 <button type="button" className="ghost" onClick={() => window.print()}>{t('lab.print')}</button>
                 {currentId && <a className="ghost button" href={api.resultJsonUrl(currentId)}>JSON</a>}
-                {currentId && (!STATIC_MODE || runs.find((r) => r.id === currentId)?.pdf) && <a className="ghost button" href={api.reportPdfUrl(currentId)} target="_blank" rel="noreferrer">{t('lab.pdf')}</a>}
+                {currentId && (pro || isDemo(currentId)) && (!STATIC_MODE || runs.find((r) => r.id === currentId)?.pdf) && <a className="ghost button" href={api.reportPdfUrl(currentId)} target="_blank" rel="noreferrer">{t('lab.pdf')}</a>}
               </span>
             )}
           </div>
@@ -239,8 +237,8 @@ export function LabPage({ runId }: { runId?: string }) {
           {view === 'result' && loaded && (
             <>
               <p className="muted small result-title">{loaded.title}</p>
-              {loaded.kind === 'backtest' ? <BacktestView result={loaded.data} /> : <ResearchView report={loaded.data} />}
-              {STATIC_MODE && <ProBanner variant="lab" compact />}
+              {loaded.kind === 'backtest' ? <BacktestView result={loaded.data} gated={!pro && !isDemo(currentId)} /> : <ResearchView report={loaded.data} gated={!pro && !isDemo(currentId)} />}
+              {STATIC_MODE && (pro || isDemo(currentId)) && <ProBanner variant="lab" compact />}
             </>
           )}
           {view === 'history' && (
@@ -278,3 +276,6 @@ export function LabPage({ runId }: { runId?: string }) {
     </>
   );
 }
+
+/** The 2024 runs are the public demo: every trade explained and the full research report. Other years need Lab Pro. */
+const isDemo = (id: string | null | undefined) => Boolean(id && id.includes('2024'));
