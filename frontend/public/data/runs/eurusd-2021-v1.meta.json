@@ -26,10 +26,11 @@
   "blocked": false
  },
  "software_version": "0.5.0",
- "pdf": "runs/eurusd-2021-v1.pdf",
+ "pdf": "runs/eurusd-2021-v1.pdf.enc",
  "sparkline": [
   0.0,
   0.37
  ],
- "size_bytes": 2034663
+ "size_bytes": 2001692,
+ "protected": true
 }

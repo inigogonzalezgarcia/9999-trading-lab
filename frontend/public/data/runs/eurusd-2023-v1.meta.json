@@ -26,7 +26,7 @@
   "blocked": false
  },
  "software_version": "0.5.0",
- "pdf": "runs/eurusd-2023-v1.pdf",
+ "pdf": "runs/eurusd-2023-v1.pdf.enc",
  "sparkline": [
   0.0,
   -1.0,
@@ -34,5 +34,6 @@
   -1.026,
   0.974
  ],
- "size_bytes": 1870954
+ "size_bytes": 1748976,
+ "protected": true
 }

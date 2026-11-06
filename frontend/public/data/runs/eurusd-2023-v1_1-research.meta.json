@@ -24,7 +24,8 @@
   "walk_forward_consistency": 0.5
  },
  "software_version": "0.5.0",
- "pdf": "runs/eurusd-2023-v1_1-research.pdf",
+ "pdf": "runs/eurusd-2023-v1_1-research.pdf.enc",
  "sparkline": [],
- "size_bytes": 41683
+ "size_bytes": 19906,
+ "protected": true
 }

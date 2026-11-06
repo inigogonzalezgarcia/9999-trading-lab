@@ -26,12 +26,13 @@
   "blocked": false
  },
  "software_version": "0.5.0",
- "pdf": "runs/eurusd-2026-v1_1.pdf",
+ "pdf": "runs/eurusd-2026-v1_1.pdf.enc",
  "sparkline": [
   0.0,
   -1.0,
   -0.058,
   1.942
  ],
- "size_bytes": 1769945
+ "size_bytes": 1667080,
+ "protected": true
 }

@@ -26,7 +26,7 @@
   "blocked": false
  },
  "software_version": "0.5.0",
- "pdf": "runs/eurusd-2020-v1.pdf",
+ "pdf": "runs/eurusd-2020-v1.pdf.enc",
  "sparkline": [
   0.0,
   0.142,
@@ -35,5 +35,6 @@
   -1.478,
   -2.478
  ],
- "size_bytes": 2162092
+ "size_bytes": 2012362,
+ "protected": true
 }

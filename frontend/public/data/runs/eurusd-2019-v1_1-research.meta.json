@@ -24,7 +24,8 @@
   "walk_forward_consistency": 0.6666666666666666
  },
  "software_version": "0.5.0",
- "pdf": "runs/eurusd-2019-v1_1-research.pdf",
+ "pdf": "runs/eurusd-2019-v1_1-research.pdf.enc",
  "sparkline": [],
- "size_bytes": 42509
+ "size_bytes": 19962,
+ "protected": true
 }
