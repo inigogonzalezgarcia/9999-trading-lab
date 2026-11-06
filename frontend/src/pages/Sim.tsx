@@ -35,7 +35,7 @@ export function SimPage({ n }: { n: string }) {
       <h1 className="page-title">{pick(level.title)}</h1>
       <p className="lead">{pick(level.summary)}</p>
       {isPro(user)
-        ? <div className="notice-box"><p><strong>{es ? 'Este nivel se publica el 23 de noviembre.' : 'This level is published on 23 November.'}</strong> {es ? 'Tu plan Lab Pro ya lo incluye; te avisaremos por correo.' : 'Your Lab Pro plan already includes it; we will email you.'}</p></div>
+        ? <div className="notice-box"><p><strong>{es ? 'Este nivel se publica próximamente.' : 'This level is coming soon.'}</strong> {es ? 'Tu plan Lab Pro ya lo incluye; te avisaremos por correo.' : 'Your Lab Pro plan already includes it; we will email you.'}</p></div>
         : <ProBanner variant="level" />}
       <p><Link to="/app" className="button ghost">{es ? '← Panel' : '← Dashboard'}</Link></p>
     </main>

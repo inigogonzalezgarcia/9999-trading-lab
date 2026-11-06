@@ -1,8 +1,7 @@
 # Changelog
 
-## 0.6.0 — 2026-11-06
+## 0.6.0 — 2026-11-05
 
-- Simulator levels 3–8 (Lab Pro): the five numbers computed by the learner, costs with break-even spread, Monte Carlo resampling in the browser, random-entry benchmark over eight years, sensitivity + walk-forward, and "design your version" on the precomputed 162-cell grid (none positive over 2019–2026).
 - Accounts: `/entrar` (Google OAuth or single-use email link via Brevo), signed session cookie, D1 schema on first use, `/api/me` with the account copy of the simulator progress (browser progress imported on first sign-in). `/app` and `/app/sim/*` require a session when the backend is configured. Plan gating (`free`/`pro`) on levels 3–8; Lab Pro banners in the lab, the lessons, the dashboard and locked levels. Privacy and cookie texts updated.
 - Platform v2, week 1: landing with "Empieza gratis" and the nine-level itinerary; `/tour` (six screens on the live components); `/planes` (Free / Lab Pro 12 € · 89 € · 149 € / Kit 19 €, Lab Pro opens 23-nov, waitlist); `/app` dashboard with progress in the browser; simulator levels 0–2 (`/app/sim/0..2`: candle anatomy on real M1 candles, the backtest clock and look-ahead, one trade step by step with exit prediction), each with quiz and lab note. Levels 3–8 announced as Lab Pro.
 - `scripts/export_grid.py`: precomputes the 162-combination parameter grid (stop reference × max ATR × setup lifetime × target × session) over 2019–2026 for level 8; resumable.

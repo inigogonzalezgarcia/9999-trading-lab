@@ -48,7 +48,7 @@ export function PlansPage() {
           <h2>Lab Pro</h2>
           <p className="plan-price">{PRO_PRICES.month}<span className="muted small"> / {es ? 'mes' : 'month'}</span></p>
           <p className="muted small">{es ? `o ${PRO_PRICES.year} al año (dos meses gratis) · o ${PRO_PRICES.life} de por vida` : `or ${PRO_PRICES.year} a year (two months free) · or ${PRO_PRICES.life} lifetime`}</p>
-          <p className="muted">{es ? 'Los seis niveles avanzados, tu V1.x sobre ocho años, informe PDF, cuenta y novedades mensuales. Cancela cuando quieras.' : 'The six advanced levels, your V1.x over eight years, PDF report, account and monthly updates. Cancel any time.'}</p>
+          <p className="muted">{es ? 'Los seis niveles avanzados, tu V1.x sobre ocho años, cuenta, kit incluido y novedades mensuales. Se activa al instante con la clave que entrega Gumroad. Cancela cuando quieras.' : 'The six advanced levels, your V1.x over eight years, account, kit included and monthly updates. Activates instantly with the key Gumroad delivers. Cancel any time.'}</p>
           {PRO_OPEN
             ? <div className="row-actions"><a className="button" href={PRO_URLS.membership} target="_blank" rel="noopener">{es ? 'Suscribirme' : 'Subscribe'}</a><a className="button ghost" href={PRO_URLS.lifetime} target="_blank" rel="noopener">{es ? 'De por vida · 149 €' : 'Lifetime · 149 €'}</a></div>
             : <a href="#avisame" className="button">{es ? 'Avísame cuando abra' : 'Tell me when it opens'}</a>}
@@ -77,12 +77,10 @@ export function PlansPage() {
           <dd>{es ? 'Al iniciar sesión por primera vez lo importamos desde el navegador a tu cuenta.' : 'On your first sign-in we import it from the browser into your account.'}</dd>
           <dt>{es ? '¿Cómo se paga y se cancela?' : 'How do I pay and cancel?'}</dt>
           <dd>{es ? 'Pago seguro en Gumroad (tarjeta o PayPal), IVA incluido. Cancelas desde Gumroad con un clic; conservas el acceso hasta el fin del periodo pagado.' : 'Secure checkout on Gumroad (card or PayPal), VAT included. Cancel from Gumroad in one click; you keep access until the end of the paid period.'}</dd>
-          <dt>{es ? '¿Por qué no está ya disponible?' : 'Why is it not available yet?'}</dt>
-          <dd>{es ? `Los niveles 3–8 se están construyendo sobre los mismos datos y el mismo motor que el laboratorio. Lab Pro abre el ${PRO_LAUNCH.es}; déjanos tu correo y te avisamos ese día, con el precio de lanzamiento.` : `Levels 3–8 are being built on the same data and engine as the lab. Lab Pro opens on ${PRO_LAUNCH.en}; leave your email and we will tell you that day, with the launch price.`}</dd>
         </dl>
       </section>
 
-      <div id="avisame"><Subscribe /></div>
+      <Subscribe />
       <p className="muted small">{es ? 'Material educativo. No es asesoramiento de inversión. Sin señales ni ejecución real.' : 'Educational material. Not investment advice. No signals, no live execution.'}</p>
     </main>
   );

@@ -59,7 +59,7 @@ export function AccountPage() {
         {state.kind === 'error' && <p className="bad">{state.text}</p>}
         {!pro && (PRO_OPEN
           ? <p className="row-actions"><a className="button" href={PRO_URLS.membership} target="_blank" rel="noopener">{es ? 'Suscribirme · 12 €/mes o 89 €/año' : 'Subscribe · 12 €/month or 89 €/year'}</a><a className="button ghost" href={PRO_URLS.lifetime} target="_blank" rel="noopener">{es ? 'De por vida · 149 €' : 'Lifetime · 149 €'}</a></p>
-          : <p className="muted small">{es ? 'Lab Pro abre el 23 de noviembre. ' : 'Lab Pro opens on 23 November. '}<Link to="/planes">{es ? 'Ver planes y apuntarme al aviso' : 'See plans and join the waitlist'}</Link></p>)}
+          : <p className="muted small"><Link to="/planes">{es ? 'Ver qué incluye Lab Pro' : 'See what Lab Pro includes'}</Link></p>)}
         {pro && <p className="muted small"><a href={GUMROAD_SUBSCRIPTIONS} target="_blank" rel="noopener">{es ? 'Gestionar la suscripción' : 'Manage the subscription'}</a> · <a href={GUMROAD_LIBRARY} target="_blank" rel="noopener">{es ? 'Facturas y descargas (kit) en Gumroad' : 'Invoices and downloads (kit) on Gumroad'}</a></p>}
       </section>
 

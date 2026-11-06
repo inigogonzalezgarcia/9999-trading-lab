@@ -26,7 +26,7 @@ const SCREENS: Screen[] = [
   { id: 'sim', title: { es: '5 · El simulador: nueve niveles sobre estos datos', en: '5 · The simulator: nine levels on this data' },
     text: { es: 'De leer una vela (nivel 0) a diseñar tu propia versión y recibir su protocolo (nivel 8). Cada nivel trabaja sobre operaciones reales, con cuestionario y una nota de laboratorio escrita por ti. Los tres primeros son gratis.', en: 'From reading a candle (level 0) to designing your own version and getting its protocol (level 8). Every level works on real trades, with a quiz and a lab note you write. The first three are free.' } },
   { id: 'go', title: { es: '6 · Empieza por el nivel 0', en: '6 · Start at level 0' },
-    text: { es: 'Seis minutos, sin cuenta. Si al terminar los tres niveles gratis quieres seguir, Lab Pro abre el 23 de noviembre con los seis niveles restantes.', en: 'Six minutes, no account. If after the three free levels you want to go on, Lab Pro opens on 23 November with the remaining six levels.' } },
+    text: { es: 'Seis minutos, sin cuenta. Si al terminar los tres niveles gratis quieres seguir, Lab Pro añade los seis niveles restantes desde 12 € al mes.', en: 'Six minutes, no account. If after the three free levels you want to go on, Lab Pro adds the remaining six levels from 12 € a month.' } },
 ];
 
 /** /tour — six screens showing what the platform is, with the live components (no screenshots). */
