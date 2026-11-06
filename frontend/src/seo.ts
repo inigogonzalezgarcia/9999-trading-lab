@@ -7,7 +7,7 @@ import { LEVELS } from './content/sim';
 import type { Lang } from './i18n';
 
 export const SITE_URL = 'https://fx-trading-lab.pages.dev';
-const SUFFIX = ' · FX Research Lab';
+const SUFFIX = ' · FX Trading Lab';
 
 type Meta = { title: string; description: string; robots?: string };
 
@@ -16,7 +16,7 @@ export function routeMeta(path: string, lang: Lang): Meta {
   const lesson = LESSONS.find((l) => path === `/lessons/${l.slug}`);
   if (lesson) return { title: (es ? lesson.title.es : lesson.title.en) + SUFFIX, description: es ? lesson.summary.es : lesson.summary.en };
   const legal = LEGAL.find((l) => path === `/legal/${l.slug}`);
-  if (legal) return { title: (es ? legal.title.es : legal.title.en) + SUFFIX, description: es ? 'Información legal de FX Research Lab, simulador educativo.' : 'Legal information for FX Research Lab, an educational simulator.' };
+  if (legal) return { title: (es ? legal.title.es : legal.title.en) + SUFFIX, description: es ? 'Información legal de FX Trading Lab, simulador educativo.' : 'Legal information for FX Trading Lab, an educational simulator.' };
   if (path === '/lab' || path.startsWith('/lab/')) {
     return { title: (es ? 'Laboratorio de backtesting: EUR/USD y GBP/USD 2019–2026' : 'Backtesting lab: EUR/USD and GBP/USD 2019–2026') + SUFFIX,
       description: es ? 'Veintisiete ejecuciones reales de una hipótesis intradía sobre ocho años: curva de capital, cada operación explicada en su gráfico, Monte Carlo, benchmark aleatorio, sensibilidad y walk-forward.' : 'Twenty-seven real runs of an intraday hypothesis over eight years: equity curve, every trade explained on its chart, Monte Carlo, random benchmark, sensitivity and walk-forward.' };
@@ -48,7 +48,7 @@ export function routeMeta(path: string, lang: Lang): Meta {
     return { title: (es ? 'Método: cómo investigamos una estrategia (y aviso legal)' : 'Method: how we research a strategy (and legal notice)') + SUFFIX,
       description: es ? 'Hipótesis congelada, motor causal con costes, protocolo de periodos independientes, walk-forward, Monte Carlo, sensibilidad y benchmark aleatorio. Sin señales ni ejecución real.' : 'Frozen hypothesis, causal engine with costs, protocol of independent periods, walk-forward, Monte Carlo, sensitivity and random benchmark. No signals, no live execution.' };
   }
-  return { title: es ? 'FX Research Lab — simulador educativo de investigación de estrategias' : 'FX Research Lab — educational strategy research simulator',
+  return { title: es ? 'FX Trading Lab — simulador educativo de investigación de estrategias' : 'FX Trading Lab — educational strategy research simulator',
     description: es ? 'Simulador educativo: una hipótesis intradía sobre EUR/USD y GBP/USD, un motor de backtesting causal y un protocolo de investigación. Sin señales, sin ejecución real, sin promesas.' : 'Educational simulator: an intraday hypothesis on EUR/USD and GBP/USD, a causal backtesting engine and a research protocol. No signals, no live execution, no promises.' };
 }
 

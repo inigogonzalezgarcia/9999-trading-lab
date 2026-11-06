@@ -146,18 +146,18 @@ export async function upsertUser(env: Env, email: string, provider: string, name
 export async function sendMagicLink(env: Env, email: string, link: string, lang: string): Promise<boolean> {
   if (!env.BREVO_API_KEY || !env.MAIL_FROM) return false;
   const es = lang !== 'en';
-  const subject = es ? 'Tu enlace para entrar en FX Research Lab' : 'Your sign-in link for FX Research Lab';
+  const subject = es ? 'Tu enlace para entrar en FX Trading Lab' : 'Your sign-in link for FX Trading Lab';
   const text = es
-    ? `Hola,\n\nEntra en FX Research Lab con este enlace (caduca en 20 minutos y solo sirve una vez):\n\n${link}\n\nSi no has pedido este correo, ignóralo: nadie puede entrar sin él.\n\nFX Research Lab · material educativo, sin señales ni ejecución real.`
-    : `Hello,\n\nSign in to FX Research Lab with this link (it expires in 20 minutes and works once):\n\n${link}\n\nIf you did not request this email, ignore it: nobody can sign in without it.\n\nFX Research Lab · educational material, no signals, no live execution.`;
-  const html = `<p>${es ? 'Hola,' : 'Hello,'}</p><p>${es ? 'Entra en FX Research Lab con este botón (caduca en 20 minutos y solo sirve una vez):' : 'Sign in to FX Research Lab with this button (it expires in 20 minutes and works once):'}</p>
+    ? `Hola,\n\nEntra en FX Trading Lab con este enlace (caduca en 20 minutos y solo sirve una vez):\n\n${link}\n\nSi no has pedido este correo, ignóralo: nadie puede entrar sin él.\n\nFX Trading Lab · material educativo, sin señales ni ejecución real.`
+    : `Hello,\n\nSign in to FX Trading Lab with this link (it expires in 20 minutes and works once):\n\n${link}\n\nIf you did not request this email, ignore it: nobody can sign in without it.\n\nFX Trading Lab · educational material, no signals, no live execution.`;
+  const html = `<p>${es ? 'Hola,' : 'Hello,'}</p><p>${es ? 'Entra en FX Trading Lab con este botón (caduca en 20 minutos y solo sirve una vez):' : 'Sign in to FX Trading Lab with this button (it expires in 20 minutes and works once):'}</p>
 <p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#c4672b;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">${es ? 'Entrar' : 'Sign in'}</a></p>
 <p style="color:#5c6670;font-size:13px">${es ? 'O copia este enlace:' : 'Or copy this link:'} <br><a href="${link}">${link}</a></p>
 <p style="color:#5c6670;font-size:13px">${es ? 'Si no has pedido este correo, ignóralo: nadie puede entrar sin él.' : 'If you did not request this email, ignore it: nobody can sign in without it.'}</p>`;
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'FX Research Lab' }, to: [{ email }], subject, textContent: text, htmlContent: html, tags: ['magic-link'] }),
+    body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'FX Trading Lab' }, to: [{ email }], subject, textContent: text, htmlContent: html, tags: ['magic-link'] }),
   });
   return response.ok;
 }
